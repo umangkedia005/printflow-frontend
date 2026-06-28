@@ -288,7 +288,7 @@ export default function DashboardPage() {
   const [selectedOrder, setSelectedOrder]   = useState(null)
   const [notifs, setNotifs]                 = useState({ orderReceived: true, orderShipped: true, orderDelivered: false })
   const [autoFulfill, setAutoFulfill]       = useState(false)
-  const [currentPlan, setCurrentPlan]       = useState('free')
+  const [currentPlan, setCurrentPlan]       = useState(() => localStorage.getItem('pf_plan') || 'free')
   const [showUpgrade, setShowUpgrade]       = useState(false)
   const [upgradeSuccess, setUpgradeSuccess] = useState(null)
   const [orders, setOrders]                 = useState([])
@@ -324,6 +324,7 @@ export default function DashboardPage() {
 
   function handleUpgradeSuccess(planId) {
     setCurrentPlan(planId)
+    localStorage.setItem('pf_plan', planId)
     setShowUpgrade(false)
     setUpgradeSuccess(planId)
     setActiveNav('billing')
