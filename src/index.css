@@ -1,0 +1,106 @@
+@import "tailwindcss";
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=Syne:wght@400;500;600;700;800&display=swap');
+
+*, *::before, *::after {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+:root {
+  --bg: #FAFAF8;
+  --bg-card: #FFFFFF;
+  --border: #E8E8E4;
+  --text: #0A0A0A;
+  --text-2: #555555;
+  --text-3: #999999;
+}
+
+html { scroll-behavior: smooth; }
+
+body {
+  background: var(--bg);
+  color: var(--text);
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  min-height: 100vh;
+}
+
+#root {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+}
+
+::-webkit-scrollbar { width: 5px; }
+::-webkit-scrollbar-track { background: #F4F4F0; }
+::-webkit-scrollbar-thumb { background: #D0D0CC; border-radius: 3px; }
+::-webkit-scrollbar-thumb:hover { background: #BABAB6; }
+
+/* Input */
+.pf-input {
+  width: 100%;
+  background: #FFFFFF;
+  border: 1px solid #E8E8E4;
+  border-radius: 10px;
+  color: #0A0A0A;
+  padding: 12px 16px;
+  font-size: 14px;
+  font-family: 'Inter', sans-serif;
+  transition: border-color 0.15s, box-shadow 0.15s;
+  outline: none;
+}
+.pf-input::placeholder { color: #C8C8C4; }
+.pf-input:focus {
+  border-color: #0A0A0A;
+  box-shadow: 0 0 0 3px rgba(10,10,10,0.06);
+}
+.pf-input:disabled { background: #F4F4F0; color: #BABAB6; cursor: not-allowed; }
+
+/* Primary button */
+.pf-btn {
+  background: #0A0A0A;
+  color: white;
+  border: none;
+  border-radius: 10px;
+  padding: 12px 24px;
+  font-size: 14px;
+  font-weight: 600;
+  font-family: 'Inter', sans-serif;
+  cursor: pointer;
+  transition: opacity 0.15s;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+}
+.pf-btn:hover:not(:disabled) { opacity: 0.82; }
+.pf-btn:disabled { opacity: 0.4; cursor: not-allowed; }
+
+/* Outlined button */
+.pf-btn-outline {
+  background: transparent;
+  color: #555;
+  border: 1px solid #E8E8E4;
+  border-radius: 10px;
+  padding: 11px 24px;
+  font-size: 14px;
+  font-weight: 500;
+  font-family: 'Inter', sans-serif;
+  cursor: pointer;
+  transition: border-color 0.15s, color 0.15s;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  text-decoration: none;
+}
+.pf-btn-outline:hover { border-color: #0A0A0A; color: #0A0A0A; }
+
+@keyframes pf-spin { to { transform: rotate(360deg); } }
+@keyframes pf-slide-in { from { transform: translateX(100%); } to { transform: translateX(0); } }
+@keyframes pf-fade-up {
+  from { opacity: 0; transform: translateY(10px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
