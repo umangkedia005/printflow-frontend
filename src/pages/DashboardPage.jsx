@@ -1,18 +1,10 @@
-import React, { useState, useEffect } from 'react'
+import React, { useState, useEffect, useCallback } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useAuth } from '../contexts/AuthContext'
 import { openRazorpaySubscription } from '../utils/razorpay'
+import { fetchOrders } from '../utils/api'
 
 // ── Data ─────────────────────────────────────────────────────────────────────
-
-const MOCK_ORDERS = [
-  { id: '#1048', shopifyId: '5001048', customer: { name: 'Arjun Sharma', email: 'arjun@example.com', address: '14 MG Road, Bengaluru 560001, IN' }, items: [{ sku: 'TSHIRT-BLK-L', name: 'Classic Black Tee', qty: 1, size: 'L', color: 'Black', printFile: null }, { sku: 'TSHIRT-BLK-M', name: 'Classic Black Tee', qty: 1, size: 'M', color: 'Black', printFile: null }], status: 'queued', date: '27 Jun 2026', amount: '$48.00', tracking: null, carrier: null },
-  { id: '#1047', shopifyId: '5001047', customer: { name: 'Priya Mehta', email: 'priya@studio.com', address: '22 Colaba Causeway, Mumbai 400001, IN' }, items: [{ sku: 'HOODIE-GRY-M', name: 'Premium Hoodie', qty: 1, size: 'M', color: 'Grey', printFile: 'hoodie-design-v2.png' }], status: 'printing', date: '26 Jun 2026', amount: '$62.00', tracking: null, carrier: null },
-  { id: '#1046', shopifyId: '5001046', customer: { name: 'Rahul Gupta', email: 'rahul@brand.com', address: '5 Connaught Place, New Delhi 110001, IN' }, items: [{ sku: 'MUG-WHT-STD', name: 'White Mug 11oz', qty: 3, size: 'Standard', color: 'White', printFile: 'mug-art-v1.png' }], status: 'shipped', date: '25 Jun 2026', amount: '$89.00', tracking: 'FX123456789IN', carrier: 'FedEx' },
-  { id: '#1045', shopifyId: '5001045', customer: { name: 'Sneha Patel', email: 'sneha@creative.com', address: '7 Ashram Road, Ahmedabad 380009, IN' }, items: [{ sku: 'POSTER-A3-BLK', name: 'A3 Poster Print', qty: 1, size: 'A3', color: 'Black', printFile: 'poster-final.png' }], status: 'delivered', date: '24 Jun 2026', amount: '$34.00', tracking: 'FX987654001IN', carrier: 'FedEx' },
-  { id: '#1044', shopifyId: '5001044', customer: { name: 'Vikram Singh', email: 'vikram@merch.com', address: '12 Park Street, Kolkata 700016, IN' }, items: [{ sku: 'TSHIRT-WHT-XL', name: 'Classic White Tee', qty: 2, size: 'XL', color: 'White', printFile: null }], status: 'queued', date: '24 Jun 2026', amount: '$54.00', tracking: null, carrier: null },
-  { id: '#1043', shopifyId: '5001043', customer: { name: 'Anjali Nair', email: 'anjali@lifestyle.com', address: '3 MG Road, Kochi 682011, IN' }, items: [{ sku: 'HOODIE-BLK-L', name: 'Premium Hoodie', qty: 1, size: 'L', color: 'Black', printFile: 'hoodie-design-v3.png' }], status: 'shipped', date: '23 Jun 2026', amount: '$67.00', tracking: 'FX654321987IN', carrier: 'FedEx' },
-]
 
 const MOCK_PRODUCTS = [
   { id: 'p1', shopifyId: '8234567890', name: 'Classic Black Tee', variants: ['S','M','L','XL','XXL'], printFile: 'black-tee-design-v2.png', factorySku: 'GILDAN-64000-BLK', status: 'ready' },
@@ -299,17 +291,36 @@ export default function DashboardPage() {
   const [currentPlan, setCurrentPlan]       = useState('free')
   const [showUpgrade, setShowUpgrade]       = useState(false)
   const [upgradeSuccess, setUpgradeSuccess] = useState(null)
+  const [orders, setOrders]                 = useState([])
+  const [ordersLoading, setOrdersLoading]   = useState(true)
+  const [ordersError, setOrdersError]       = useState(null)
 
-  const shopDomain    = localStorage.getItem('pf_shop') || 'yourstore.myshopify.com'
-  const planLimit     = PLAN_LIMITS[currentPlan]
-  const usagePct      = planLimit === Infinity ? 0 : Math.round((ORDERS_USED / planLimit) * 100)
-  const isNearLimit   = currentPlan === 'free' && usagePct >= 80
-  const isOverLimit   = currentPlan === 'free' && usagePct >= 100
+  const shopDomain = localStorage.getItem('pf_shop') || 'yourstore.myshopify.com'
+  const planLimit  = PLAN_LIMITS[currentPlan]
+  const ordersUsed = orders.length
+  const usagePct   = planLimit === Infinity ? 0 : Math.round((ordersUsed / planLimit) * 100)
+  const isNearLimit  = currentPlan === 'free' && usagePct >= 80
+  const isOverLimit  = currentPlan === 'free' && usagePct >= 100
+
+  const loadOrders = useCallback(async () => {
+    if (!shopDomain || shopDomain === 'yourstore.myshopify.com') return
+    setOrdersLoading(true)
+    setOrdersError(null)
+    try {
+      const data = await fetchOrders(shopDomain)
+      setOrders(data)
+    } catch (err) {
+      setOrdersError(err.message)
+    } finally {
+      setOrdersLoading(false)
+    }
+  }, [shopDomain])
 
   useEffect(() => {
     document.body.style.background = '#FAFAF8'
+    loadOrders()
     return () => { document.body.style.background = '' }
-  }, [])
+  }, [loadOrders])
 
   function handleUpgradeSuccess(planId) {
     setCurrentPlan(planId)
@@ -328,14 +339,14 @@ export default function DashboardPage() {
 
   const firstName = currentUser?.displayName?.split(' ')[0] || currentUser?.email?.split('@')[0] || 'there'
 
-  const filtered = statusFilter === 'all' ? MOCK_ORDERS : MOCK_ORDERS.filter(o => o.status === statusFilter)
+  const filtered = statusFilter === 'all' ? orders : orders.filter(o => o.status === statusFilter)
 
   const counts = {
-    total: MOCK_ORDERS.length,
-    queued: MOCK_ORDERS.filter(o => o.status === 'queued').length,
-    printing: MOCK_ORDERS.filter(o => o.status === 'printing').length,
-    shipped: MOCK_ORDERS.filter(o => o.status === 'shipped').length,
-    delivered: MOCK_ORDERS.filter(o => o.status === 'delivered').length,
+    total:     orders.length,
+    queued:    orders.filter(o => o.status === 'queued').length,
+    printing:  orders.filter(o => o.status === 'printing').length,
+    shipped:   orders.filter(o => o.status === 'shipped').length,
+    delivered: orders.filter(o => o.status === 'delivered').length,
   }
 
   // ── Views ──────────────────────────────────────────────────────────────────
@@ -398,7 +409,19 @@ export default function DashboardPage() {
           </div>
           <span style={{ fontSize: '12px', color: '#C8C8C4' }}>{filtered.length} order{filtered.length !== 1 ? 's' : ''}</span>
         </div>
-        {filtered.length > 0 ? (
+        {ordersLoading ? (
+          <div style={{ padding: '72px 32px', textAlign: 'center' }}>
+            <div style={{ width: '20px', height: '20px', border: '2px solid #E8E8E4', borderTop: '2px solid #0A0A0A', borderRadius: '50%', animation: 'pf-spin 0.7s linear infinite', margin: '0 auto 16px' }} />
+            <div style={{ fontSize: '13px', color: '#BABAB6' }}>Loading orders...</div>
+          </div>
+        ) : ordersError ? (
+          <div style={{ padding: '72px 32px', textAlign: 'center' }}>
+            <div style={{ fontSize: '24px', marginBottom: '12px' }}>⚠️</div>
+            <div style={{ fontSize: '14px', fontWeight: 600, color: '#0A0A0A', marginBottom: '6px' }}>Failed to load orders</div>
+            <div style={{ fontSize: '13px', color: '#BABAB6', marginBottom: '16px' }}>{ordersError}</div>
+            <button onClick={loadOrders} className="pf-btn" style={{ padding: '9px 20px', fontSize: '13px' }}>Retry</button>
+          </div>
+        ) : filtered.length > 0 ? (
           <table style={{ width: '100%', borderCollapse: 'collapse' }}>
             <thead>
               <tr>{['Order','Customer','Items','Status','Date','Amount',''].map(h => <th key={h} style={{ padding: '10px 20px', textAlign: 'left', fontSize: '10px', fontWeight: 600, color: '#C8C8C4', textTransform: 'uppercase', letterSpacing: '0.08em', borderBottom: '1px solid #E8E8E4', background: '#FCFCFB' }}>{h}</th>)}</tr>
