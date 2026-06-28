@@ -2,7 +2,7 @@ import React, { useState, useEffect, useCallback } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useAuth } from '../contexts/AuthContext'
 import { openRazorpaySubscription } from '../utils/razorpay'
-import { fetchOrders } from '../utils/api'
+import { fetchOrders, fetchSubscription, updateSubscription } from '../utils/api'
 
 // ── Data ─────────────────────────────────────────────────────────────────────
 
@@ -289,6 +289,11 @@ export default function DashboardPage() {
   const [notifs, setNotifs]                 = useState({ orderReceived: true, orderShipped: true, orderDelivered: false })
   const [autoFulfill, setAutoFulfill]       = useState(false)
   const [currentPlan, setCurrentPlan]       = useState(() => localStorage.getItem('pf_plan') || 'free')
+
+  useEffect(() => {
+    const shop = localStorage.getItem('pf_shop')
+    if (shop) fetchSubscription(shop).then(plan => { setCurrentPlan(plan); localStorage.setItem('pf_plan', plan) })
+  }, [])
   const [showUpgrade, setShowUpgrade]       = useState(false)
   const [upgradeSuccess, setUpgradeSuccess] = useState(null)
   const [orders, setOrders]                 = useState([])
@@ -325,6 +330,8 @@ export default function DashboardPage() {
   function handleUpgradeSuccess(planId) {
     setCurrentPlan(planId)
     localStorage.setItem('pf_plan', planId)
+    const shop = localStorage.getItem('pf_shop')
+    if (shop) updateSubscription(shop, planId)
     setShowUpgrade(false)
     setUpgradeSuccess(planId)
     setActiveNav('billing')

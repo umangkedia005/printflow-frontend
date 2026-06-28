@@ -28,6 +28,21 @@ export async function fetchOrders(shop) {
   return Array.isArray(data) ? data.map(formatOrder) : []
 }
 
+export async function fetchSubscription(shop) {
+  const res = await fetch(`${BASE_URL}/subscription?shop=${encodeURIComponent(shop)}`)
+  const data = await res.json()
+  return data.plan || 'free'
+}
+
+export async function updateSubscription(shop, plan) {
+  const res = await fetch(`${BASE_URL}/subscription`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ shop, plan }),
+  })
+  return res.json()
+}
+
 function formatOrder(o) {
   const raw = o.raw || {}
   const customer = raw.customer || {}
