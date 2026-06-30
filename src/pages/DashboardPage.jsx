@@ -2,7 +2,7 @@ import React, { useState, useEffect, useCallback } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useAuth } from '../contexts/AuthContext'
 import { openRazorpaySubscription } from '../utils/razorpay'
-import { fetchOrders, fetchSubscription, updateSubscription } from '../utils/api'
+import { fetchOrders, fetchSubscription, updateSubscription, fetchMyStore } from '../utils/api'
 
 // ── Data ─────────────────────────────────────────────────────────────────────
 
@@ -291,16 +291,26 @@ export default function DashboardPage() {
   const [currentPlan, setCurrentPlan]       = useState(() => localStorage.getItem('pf_plan') || 'free')
 
   useEffect(() => {
-    const shop = localStorage.getItem('pf_shop')
-    if (shop) fetchSubscription(shop).then(plan => { setCurrentPlan(plan); localStorage.setItem('pf_plan', plan) })
-  }, [])
+    async function resolveShop() {
+      let shop = localStorage.getItem('pf_shop')
+      if (!shop && currentUser?.email) {
+        shop = await fetchMyStore(currentUser.email)
+        if (shop) localStorage.setItem('pf_shop', shop)
+      }
+      if (shop) {
+        setShopDomain(shop)
+        fetchSubscription(shop).then(plan => { setCurrentPlan(plan); localStorage.setItem('pf_plan', plan) })
+      }
+    }
+    resolveShop()
+  }, [currentUser])
   const [showUpgrade, setShowUpgrade]       = useState(false)
   const [upgradeSuccess, setUpgradeSuccess] = useState(null)
   const [orders, setOrders]                 = useState([])
   const [ordersLoading, setOrdersLoading]   = useState(true)
   const [ordersError, setOrdersError]       = useState(null)
 
-  const shopDomain = localStorage.getItem('pf_shop') || 'yourstore.myshopify.com'
+  const [shopDomain, setShopDomain] = useState(localStorage.getItem('pf_shop') || '')
   const planLimit  = PLAN_LIMITS[currentPlan]
   const ordersUsed = orders.length
   const usagePct   = planLimit === Infinity ? 0 : Math.round((ordersUsed / planLimit) * 100)
@@ -308,7 +318,7 @@ export default function DashboardPage() {
   const isOverLimit  = currentPlan === 'free' && usagePct >= 100
 
   const loadOrders = useCallback(async () => {
-    if (!shopDomain || shopDomain === 'yourstore.myshopify.com') return
+    if (!shopDomain) return
     setOrdersLoading(true)
     setOrdersError(null)
     try {

@@ -1,5 +1,7 @@
 import { useEffect, useState } from 'react'
 import { useSearchParams, useNavigate } from 'react-router-dom'
+import { auth } from '../firebase'
+import { linkStore } from '../utils/api'
 
 const STEPS = [
   { icon: '🔄', title: 'Syncing Products', desc: 'Your Shopify product catalog is being imported automatically.' },
@@ -18,6 +20,8 @@ const SuccessPage = () => {
     if (shop) {
       setShopDomain(shop)
       localStorage.setItem('pf_shop', shop)
+      const email = auth.currentUser?.email
+      if (email) linkStore(shop, email)
     }
   }, [searchParams])
 

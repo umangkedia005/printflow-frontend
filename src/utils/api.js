@@ -28,6 +28,12 @@ export async function fetchOrders(shop) {
   return Array.isArray(data) ? data.map(formatOrder) : []
 }
 
+export async function fetchProducts(shop) {
+  const res = await fetch(`${BASE_URL}/products?shop=${encodeURIComponent(shop)}`)
+  const data = await res.json()
+  return Array.isArray(data) ? data : []
+}
+
 export async function fetchSubscription(shop) {
   const res = await fetch(`${BASE_URL}/subscription?shop=${encodeURIComponent(shop)}`)
   const data = await res.json()
@@ -41,6 +47,21 @@ export async function updateSubscription(shop, plan) {
     body: JSON.stringify({ shop, plan }),
   })
   return res.json()
+}
+
+export async function fetchMyStore(email) {
+  const res = await fetch(`${BASE_URL}/my-store?email=${encodeURIComponent(email)}`)
+  if (!res.ok) return null
+  const data = await res.json()
+  return data.shop_domain || null
+}
+
+export async function linkStore(shop, email) {
+  await fetch(`${BASE_URL}/link-store`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ shop, email }),
+  })
 }
 
 function formatOrder(o) {
