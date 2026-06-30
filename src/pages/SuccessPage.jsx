@@ -39,16 +39,8 @@ const SuccessPage = () => {
           display: 'flex', alignItems: 'center',
           height: '60px',
         }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '9px' }}>
-            <div style={{
-              width: '30px', height: '30px', borderRadius: '8px',
-              background: '#0A0A0A',
-              display: 'flex', alignItems: 'center', justifyContent: 'center',
-              fontSize: '13px', color: 'white',
-            }}>✦</div>
-            <span style={{ fontFamily: 'Syne, sans-serif', fontWeight: 700, fontSize: '16px', color: '#0A0A0A' }}>
-              No Limit Studio
-            </span>
+          <div>
+            <img src="/logo.jpeg" alt="No Limits Studio" style={{ height: '36px', objectFit: 'contain' }} />
           </div>
         </div>
       </header>

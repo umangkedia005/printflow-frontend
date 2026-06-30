@@ -57,16 +57,8 @@ export default function AuthPage() {
         <div style={{ width: '100%', maxWidth: '360px' }}>
 
           {/* Logo */}
-          <div style={{ display: 'flex', alignItems: 'center', gap: '9px', marginBottom: '44px' }}>
-            <div style={{
-              width: '32px', height: '32px', borderRadius: '8px',
-              background: '#0A0A0A',
-              display: 'flex', alignItems: 'center', justifyContent: 'center',
-              fontSize: '14px', color: 'white',
-            }}>✦</div>
-            <span style={{ fontFamily: 'Syne, sans-serif', fontWeight: 700, fontSize: '15px', color: '#0A0A0A' }}>
-              No Limit Studio
-            </span>
+          <div style={{ marginBottom: '44px' }}>
+            <img src="/logo.jpeg" alt="No Limits Studio" style={{ height: '48px', objectFit: 'contain' }} />
           </div>
 
           {/* Heading */}

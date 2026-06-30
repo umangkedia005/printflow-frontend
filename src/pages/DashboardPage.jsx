@@ -759,9 +759,8 @@ export default function DashboardPage() {
       {/* Sidebar */}
       <aside style={{ width: '232px', flexShrink: 0, background: '#FFFFFF', borderRight: '1px solid #E8E8E4', position: 'fixed', top: 0, left: 0, bottom: 0, display: 'flex', flexDirection: 'column', zIndex: 100 }}>
         <div style={{ padding: '20px', borderBottom: '1px solid #E8E8E4' }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '9px' }}>
-            <div style={{ width: '30px', height: '30px', borderRadius: '8px', background: '#0A0A0A', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '13px', color: 'white', flexShrink: 0 }}>✦</div>
-            <span style={{ fontFamily: 'Syne, sans-serif', fontWeight: 700, fontSize: '16px', color: '#0A0A0A', letterSpacing: '-0.2px' }}>No Limit Studio</span>
+          <div style={{ display: 'flex', alignItems: 'center' }}>
+            <img src="/logo.jpeg" alt="No Limits Studio" style={{ height: '36px', objectFit: 'contain' }} />
           </div>
         </div>
         <nav style={{ flex: 1, padding: '12px 10px' }}>
