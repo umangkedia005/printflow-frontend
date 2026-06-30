@@ -124,7 +124,7 @@ function UpgradeModal({ currentPlan, onClose, onSuccess }) {
   async function handleSubscribe(plan) {
     setLoadingPlan(plan.id)
     await openRazorpaySubscription({
-      planName: `PrintFlow ${plan.name}`,
+      planName: `No Limit Studio ${plan.name}`,
       amount: cycle === 'annual' ? plan.annualPrice * 12 : plan.monthlyPrice,
       billingCycle: cycle,
       email: currentUser?.email,
@@ -709,7 +709,7 @@ export default function DashboardPage() {
       </SectionCard>
       <SectionCard title="Email Notifications">
         {[
-          { key: 'orderReceived', label: 'Order received',  desc: 'When a new Shopify order arrives in PrintFlow' },
+          { key: 'orderReceived', label: 'Order received',  desc: 'When a new Shopify order arrives in No Limit Studio' },
           { key: 'orderShipped',  label: 'Order shipped',   desc: 'When tracking is confirmed and pushed to Shopify' },
           { key: 'orderDelivered',label: 'Order delivered', desc: 'When the carrier marks an order as delivered' },
         ].map(({ key, label, desc }) => (
@@ -746,7 +746,7 @@ export default function DashboardPage() {
           <div style={{ fontSize: '12px', color: '#999', marginBottom: '4px' }}>Signed in as</div>
           <div style={{ fontSize: '14px', fontWeight: 500, color: '#0A0A0A' }}>{currentUser?.email}</div>
         </div>
-        <button onClick={logout} style={{ background: '#FFF5F5', border: '1px solid #FED7D7', borderRadius: '8px', padding: '9px 18px', fontSize: '13px', fontWeight: 500, color: '#C53030', cursor: 'pointer', fontFamily: 'Inter, sans-serif' }}>Sign out of PrintFlow</button>
+        <button onClick={logout} style={{ background: '#FFF5F5', border: '1px solid #FED7D7', borderRadius: '8px', padding: '9px 18px', fontSize: '13px', fontWeight: 500, color: '#C53030', cursor: 'pointer', fontFamily: 'Inter, sans-serif' }}>Sign out of No Limit Studio</button>
       </SectionCard>
     </>
   )
@@ -761,7 +761,7 @@ export default function DashboardPage() {
         <div style={{ padding: '20px', borderBottom: '1px solid #E8E8E4' }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: '9px' }}>
             <div style={{ width: '30px', height: '30px', borderRadius: '8px', background: '#0A0A0A', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '13px', color: 'white', flexShrink: 0 }}>✦</div>
-            <span style={{ fontFamily: 'Syne, sans-serif', fontWeight: 700, fontSize: '16px', color: '#0A0A0A', letterSpacing: '-0.2px' }}>PrintFlow</span>
+            <span style={{ fontFamily: 'Syne, sans-serif', fontWeight: 700, fontSize: '16px', color: '#0A0A0A', letterSpacing: '-0.2px' }}>No Limit Studio</span>
           </div>
         </div>
         <nav style={{ flex: 1, padding: '12px 10px' }}>

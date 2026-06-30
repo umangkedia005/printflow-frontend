@@ -56,7 +56,7 @@ const HomePage = () => {
               fontSize: '13px', color: 'white',
             }}>✦</div>
             <span style={{ fontFamily: 'Syne, sans-serif', fontWeight: 700, fontSize: '16px', color: '#0A0A0A' }}>
-              PrintFlow
+              No Limit Studio
             </span>
           </div>
 
@@ -128,7 +128,7 @@ const HomePage = () => {
             margin: '0 auto 56px',
             lineHeight: 1.7,
           }}>
-            Connect your Shopify store once and let PrintFlow handle manufacturing,
+            Connect your Shopify store once and let No Limit Studio handle manufacturing,
             printing, and worldwide shipping — all under your brand.
           </p>
 
@@ -229,11 +229,11 @@ const HomePage = () => {
             fontSize: '10px', color: 'white',
           }}>✦</div>
           <span style={{ fontFamily: 'Syne, sans-serif', fontWeight: 700, fontSize: '14px', color: '#0A0A0A' }}>
-            PrintFlow
+            No Limit Studio
           </span>
         </div>
         <p style={{ fontSize: '12px', color: '#BABAB6' }}>
-          © 2026 PrintFlow. Print-on-Demand Platform for Shopify Merchants.
+          © 2026 No Limit Studio. Print-on-Demand Platform for Shopify Merchants.
         </p>
       </footer>
     </div>

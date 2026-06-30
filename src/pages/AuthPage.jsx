@@ -74,7 +74,7 @@ export default function AuthPage() {
           </h1>
           <p style={{ fontSize: '14px', color: '#999', lineHeight: 1.5 }}>
             {isLogin
-              ? 'Sign in to your PrintFlow account.'
+              ? 'Sign in to your No Limit Studio account.'
               : 'Start your print-on-demand journey.'}
           </p>
         </div>

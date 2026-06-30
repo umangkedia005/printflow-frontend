@@ -47,7 +47,7 @@ const SuccessPage = () => {
               fontSize: '13px', color: 'white',
             }}>✦</div>
             <span style={{ fontFamily: 'Syne, sans-serif', fontWeight: 700, fontSize: '16px', color: '#0A0A0A' }}>
-              PrintFlow
+              No Limit Studio
             </span>
           </div>
         </div>
@@ -95,7 +95,7 @@ const SuccessPage = () => {
           {shopDomain && (
             <p style={{ fontSize: '15px', color: '#888', lineHeight: 1.6, marginBottom: '32px' }}>
               <strong style={{ color: '#0A0A0A', fontWeight: 600 }}>{shopDomain}</strong>
-              {' '}is now live on PrintFlow.
+              {' '}is now live on No Limit Studio.
             </p>
           )}
 
