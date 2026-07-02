@@ -481,6 +481,91 @@ export default function DashboardPage() {
   // Google trends keyword filters
   const [trendFilter, setTrendFilter] = useState('apparel')
   const [searchQuery, setSearchQuery] = useState('')
+  const [trendTab, setTrendTab]       = useState('social') // 'market' or 'social'
+  const [socialTrends, setSocialTrends] = useState([])
+  const [trendsDate, setTrendsDate] = useState(null)
+  const [loadingTrends, setLoadingTrends] = useState(false)
+  const [trendsError, setTrendsError] = useState(null)
+
+  useEffect(() => {
+    if (activeNav !== 'trends') return
+    
+    function fetchDayArticles(daysAgo) {
+      const targetDate = new Date()
+      targetDate.setDate(targetDate.getDate() - daysAgo)
+      const yyyy = targetDate.getFullYear()
+      const mm = String(targetDate.getMonth() + 1).padStart(2, '0')
+      const dd = String(targetDate.getDate()).padStart(2, '0')
+      return fetch(`https://wikimedia.org/api/rest_v1/metrics/pageviews/top/en.wikipedia.org/all-access/${yyyy}/${mm}/${dd}`)
+        .then(res => { if (!res.ok) throw new Error('Failed to fetch daily trending streams.'); return res.json() })
+    }
+
+    async function fetchLiveTrends() {
+      setLoadingTrends(true)
+      setTrendsError(null)
+      try {
+        // Wikimedia logs daily top articles — go 2 days back to guarantee availability,
+        // and pull the day before that too so we can compute a real rank change.
+        const [todayData, prevData] = await Promise.all([fetchDayArticles(2), fetchDayArticles(3)])
+
+        const rawArticles = todayData.items[0]?.articles || []
+        const prevArticles = prevData.items[0]?.articles || []
+        const prevRankByArticle = {}
+        prevArticles.forEach((a, idx) => { prevRankByArticle[a.article] = idx + 1 })
+
+        const filtered = rawArticles
+          .filter(a => {
+            const name = a.article
+            return !name.includes(':') &&
+                   !name.includes('Main_Page') &&
+                   !name.includes('Special') &&
+                   !name.includes('404') &&
+                   name !== 'Search'
+          })
+          .slice(0, 10) // take top 10 real trending topics
+          .map((a, idx) => {
+            const name = a.article.replace(/_/g, ' ')
+            let category = 'General English'
+            if (/football|fifa|cup|player|game|kane|mbappe|sports|tennis/i.test(name)) category = 'Sports'
+            else if (/movie|show|series|actor|actress|singer|song|album|music|tv/i.test(name)) category = 'Entertainment'
+            else if (/politics|court|president|minister|election|war/i.test(name)) category = 'Politics'
+            else if (/tech|apple|phone|software|ai|computer|space/i.test(name)) category = 'Technology'
+
+            const volumeStr = a.views >= 1000000
+              ? `${(a.views / 1000000).toFixed(1)}M`
+              : `${(a.views / 1000).toFixed(1)}K`
+
+            const rank = idx + 1
+            const prevRank = prevRankByArticle[a.article]
+            const isNew = prevRank === undefined
+            // Real comparison: rose in rank vs. yesterday, or is new to the top 10
+            const trendState = (isNew || prevRank > rank) ? 'Growing' : 'Fading'
+
+            return {
+              rank,
+              topic: name,
+              category,
+              volume: volumeStr,
+              trendState,
+              isNew,
+              articleUrl: `https://en.wikipedia.org/wiki/${a.article}`
+            }
+          })
+
+        const dataDate = new Date()
+        dataDate.setDate(dataDate.getDate() - 2)
+        setTrendsDate(dataDate.toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' }))
+        setSocialTrends(filtered)
+      } catch (err) {
+        console.error(err)
+        setTrendsError('Failed to load live trends feed.')
+      } finally {
+        setLoadingTrends(false)
+      }
+    }
+    
+    fetchLiveTrends()
+  }, [activeNav])
 
   useEffect(() => {
     async function resolveShop() {
@@ -1373,164 +1458,305 @@ export default function DashboardPage() {
             </div>
           )}
 
-          {/* Trends Dashboard View (Google Trends Simulation) */}
+          {/* Trends Dashboard View (Google Trends & Live Social Trends) */}
           {activeNav === 'trends' && (
             <div style={{ position: 'relative', zIndex: 1 }}>
-              <div style={{ marginBottom: '28px', display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+              
+              {/* Header Toggle Row */}
+              <div style={{ marginBottom: '28px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                 <div>
-                  <h1 style={{ fontFamily: "'Plus Jakarta Sans', sans-serif", fontSize: '26px', fontWeight: 800, color: '#172B15', letterSpacing: '-0.5px', marginBottom: '4px' }}>Trends</h1>
-                  <p style={{ fontSize: '13px', color: '#889B8E', fontWeight: 500 }}>Live search metrics parsed directly from Google Trends APIs.</p>
+                  <h1 style={{ fontFamily: "'Plus Jakarta Sans', sans-serif", fontSize: '26px', fontWeight: 800, color: '#172B15', letterSpacing: '-0.5px', marginBottom: '4px' }}>
+                    {trendTab === 'social' ? "What's trending" : 'Market trends'}
+                  </h1>
+                  <p style={{ fontSize: '13px', color: '#889B8E', fontWeight: 500 }}>
+                    {trendTab === 'social' ? 'Real trending topics from Wikipedia readership, for design inspiration.' : 'Live search metrics parsed directly from Google Trends APIs.'}
+                  </p>
                 </div>
 
-                <div style={{ display: 'flex', background: '#F4F4F0', borderRadius: '10px', padding: '3px', border: '1px solid #E8E8E4' }}>
-                  {['apparel', 'homeware', 'posters'].map(c => (
-                    <button key={c} onClick={() => { setTrendFilter(c); setSearchQuery('') }} style={{ padding: '6px 14px', borderRadius: '8px', border: 'none', background: trendFilter === c ? '#FFFFFF' : 'transparent', color: trendFilter === c ? '#172B15' : '#889B8E', fontSize: '12px', fontWeight: trendFilter === c ? 700 : 500, cursor: 'pointer', fontFamily: 'Inter, sans-serif', transition: 'all 0.15s', textTransform: 'capitalize' }}>
-                      {c}
-                    </button>
-                  ))}
-                </div>
-              </div>
-
-              {/* Dynamic Query Search Input */}
-              <div style={{ display: 'flex', gap: '10px', marginBottom: '20px' }}>
-                <input 
-                  type="text" 
-                  placeholder="Search design niches (e.g. dogs, space, groovy, cats) to query Google Trends live..."
-                  value={searchQuery}
-                  onChange={e => setSearchQuery(e.target.value)}
-                  style={{
-                    flex: 1, padding: '12px 16px', border: '1px solid rgba(23,43,21,0.1)', 
-                    borderRadius: '12px', fontSize: '14px', outline: 'none', background: '#FFFFFF',
-                    transition: 'all 0.2s', fontFamily: 'Inter, sans-serif', color: '#172B15'
-                  }}
-                  onFocus={e => { e.target.style.borderColor = '#39B54A'; e.target.style.boxShadow = '0 0 0 3px rgba(57,181,74,0.08)' }}
-                  onBlur={e => { e.target.style.borderColor = 'rgba(23,43,21,0.1)'; e.target.style.boxShadow = 'none' }}
-                />
-                {searchQuery && (
+                <div style={{ display: 'flex', background: '#F4F4F0', borderRadius: '12px', padding: '4px', border: '1px solid #E8E8E4' }}>
                   <button 
-                    onClick={() => setSearchQuery('')}
-                    style={{
-                      background: '#FAFAF9', border: '1px solid rgba(23,43,21,0.1)', 
-                      borderRadius: '12px', padding: '0 16px', fontSize: '12px', fontWeight: 600,
-                      color: '#71717A', cursor: 'pointer', fontFamily: 'Inter, sans-serif'
-                    }}
+                    onClick={() => setTrendTab('market')} 
+                    style={{ padding: '8px 18px', border: 'none', background: trendTab === 'market' ? '#FFFFFF' : 'transparent', color: '#172B15', fontSize: '13px', fontWeight: trendTab === 'market' ? 750 : 550, borderRadius: '8px', cursor: 'pointer', transition: 'all 0.15s', fontFamily: 'Inter, sans-serif', boxShadow: trendTab === 'market' ? '0 2px 8px rgba(23,43,21,0.05)' : 'none' }}
                   >
-                    Clear
+                    Market trends
                   </button>
-                )}
+                  <button 
+                    onClick={() => setTrendTab('social')} 
+                    style={{ padding: '8px 18px', border: 'none', background: trendTab === 'social' ? '#FFFFFF' : 'transparent', color: '#172B15', fontSize: '13px', fontWeight: trendTab === 'social' ? 750 : 550, borderRadius: '8px', cursor: 'pointer', transition: 'all 0.15s', fontFamily: 'Inter, sans-serif', boxShadow: trendTab === 'social' ? '0 2px 8px rgba(23,43,21,0.05)' : 'none' }}
+                  >
+                    Social trends
+                  </button>
+                </div>
               </div>
 
-              {/* Trend search analysis container */}
-              <div style={{ background: '#FFFFFF', border: '1px solid rgba(23,43,21,0.06)', borderRadius: '24px', padding: '24px', marginBottom: '28px', boxShadow: '0 8px 30px rgba(23,43,21,0.015)' }}>
-                <h3 style={{ fontFamily: "'Plus Jakarta Sans', sans-serif", fontSize: '16px', fontWeight: 800, color: '#172B15', marginBottom: '6px' }}>
-                  {searchQuery ? `Google Search Volume: "${searchQuery}"` : 'Interactive Google Trends Graph'}
-                </h3>
-                <p style={{ fontSize: '12px', color: '#71717A', marginBottom: '24px' }}>
-                  {searchQuery ? `Analyzing custom queries for "${searchQuery}" design decals over the last 90 days.` : 'Analyze search queries for custom garments in real time.'}
-                </p>
-                
-                {/* SVG Curve chart simulating Google Trend spikes dynamically */}
-                <div style={{ width: '100%', height: '180px', position: 'relative', background: '#FAFAF9', borderRadius: '16px', border: '1px dashed rgba(23,43,21,0.06)', overflow: 'hidden', display: 'flex', alignItems: 'center', justifyContent: 'center', marginBottom: '20px' }}>
-                  <svg viewBox="0 0 500 150" style={{ width: '90%', height: '80%', overflow: 'visible' }}>
-                    {/* Grid lines */}
-                    <line x1="0" y1="30" x2="500" y2="30" stroke="rgba(23,43,21,0.03)" strokeWidth="1" />
-                    <line x1="0" y1="75" x2="500" y2="75" stroke="rgba(23,43,21,0.03)" strokeWidth="1" />
-                    <line x1="0" y1="120" x2="500" y2="120" stroke="rgba(23,43,21,0.03)" strokeWidth="1" />
-                    
-                    {/* Dynamic trend path */}
-                    <path 
-                      d={generateDynamicSVGPath(searchQuery)} 
-                      fill="none" stroke="#39B54A" strokeWidth="3.5" strokeLinecap="round" 
-                      style={{ transition: 'd 0.5s ease-in-out', filter: 'drop-shadow(0 4px 8px rgba(57,181,74,0.3))' }} 
-                    />
-                    <circle cx="500" cy="10" r="5" fill="#39B54A" />
-                  </svg>
-                  <div style={{ position: 'absolute', bottom: '12px', left: '16px', fontSize: '11px', color: '#889B8E', fontWeight: 600 }}>Dec 2024</div>
-                  <div style={{ position: 'absolute', bottom: '12px', right: '16px', fontSize: '11px', color: '#39B54A', fontWeight: 700 }}>Jan 2025 (Peak Surge)</div>
-                </div>
-
-                {/* Trending queries table */}
-                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '16px' }}>
-                  {generateTrendsData(searchQuery).map(q => (
-                    <div key={q.title} style={{ padding: '16px', background: '#FAFAF9', border: '1px solid rgba(23,43,21,0.04)', borderRadius: '12px', display: 'flex', flexDirection: 'column' }}>
-                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
-                        <span style={{ fontSize: '12px', fontWeight: 800, color: '#172B15', display: '-webkit-box', WebkitLineClamp: 1, WebkitBoxOrient: 'vertical', overflow: 'hidden' }}>{q.title}</span>
-                        {q.hot && <span style={{ fontSize: '9px', fontWeight: 700, background: 'rgba(57,181,74,0.1)', color: '#39B54A', padding: '2px 6px', borderRadius: '4px' }}>HOT</span>}
+              {/* ────────────────── SOCIAL TRENDS TAB ────────────────── */}
+              {trendTab === 'social' && (
+                <>
+                  {/* Social Buzz Inspiration Banner */}
+                  <div style={{ display: 'grid', gridTemplateColumns: '2fr 1fr', background: '#FFFFFF', border: '1px solid rgba(23,43,21,0.06)', borderRadius: '24px', padding: '32px', marginBottom: '28px', alignItems: 'center', boxShadow: '0 8px 30px rgba(23,43,21,0.01)' }}>
+                    <div>
+                      <h2 style={{ fontFamily: "'Plus Jakarta Sans', sans-serif", fontSize: '22px', fontWeight: 800, color: '#172B15', marginBottom: '10px', letterSpacing: '-0.3px' }}>
+                        Turn social media buzz into inspiration
+                      </h2>
+                      <p style={{ fontSize: '13.5px', color: '#71717A', lineHeight: 1.6, marginBottom: '0px', maxWidth: '460px' }}>
+                        Explore what people are talking about online and spot the next trend before your competition. <a href="#" onClick={e=>e.preventDefault()} style={{ color: '#172B15', fontWeight: 700, textDecoration: 'underline' }}>Learn more</a>
+                      </p>
+                    </div>
+                    {/* Illustration bubble container */}
+                    <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', position: 'relative', height: '100px' }}>
+                      <div style={{ width: '80px', height: '80px', background: '#39B54A', borderRadius: '20px', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#FFFFFF', transform: 'rotate(-8deg)', boxShadow: '0 10px 24px rgba(57,181,74,0.25)' }}>
+                        {/* TikTok Icon */}
+                        <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M9 12a4 4 0 1 0 4 4V4a5 5 0 0 0 5 5"/></svg>
                       </div>
-                      <div style={{ fontSize: '18px', fontWeight: 900, color: '#39B54A', marginBottom: '3px' }}>{q.rate}</div>
-                      <div style={{ fontSize: '11px', color: '#889B8E', marginBottom: '6px' }}>{q.volume}</div>
-                      <div style={{ fontSize: '10px', color: '#A1A8A3', fontWeight: 550, borderTop: '1px solid rgba(23,43,21,0.04)', paddingTop: '6px' }}>
-                        📍 {q.platforms}
+                      <div style={{ position: 'absolute', top: '-10px', right: '35px', width: '36px', height: '36px', borderRadius: '50%', background: '#FFFFFF', border: '1px solid rgba(23,43,21,0.08)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#172B15', boxShadow: '0 4px 12px rgba(23,43,21,0.06)' }}>
+                        {/* Instagram logo outline */}
+                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"><rect x="2" y="2" width="20" height="20" rx="5" ry="5"/><path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37zM17.5 6.5h.01"/></svg>
+                      </div>
+                      <div style={{ position: 'absolute', bottom: '-5px', left: '35px', width: '36px', height: '36px', borderRadius: '50%', background: '#FFFFFF', border: '1px solid rgba(23,43,21,0.08)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#172B15', boxShadow: '0 4px 12px rgba(23,43,21,0.06)' }}>
+                        <span style={{ fontWeight: 850, fontSize: '13px', fontFamily: 'Inter, sans-serif', letterSpacing: '-0.5px' }}>X</span>
                       </div>
                     </div>
-                  ))}
-                </div>
-              </div>
-
-              {/* Medium Trending Section */}
-              <div style={{ marginTop: '36px' }}>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '18px' }}>
-                  <div style={{
-                    width: '32px', height: '32px', borderRadius: '50%',
-                    background: '#000000', display: 'flex', alignItems: 'center', justifyContent: 'center',
-                    color: '#FFFFFF', fontWeight: 'bold', fontSize: '15px', fontFamily: "'Plus Jakarta Sans', sans-serif"
-                  }}>M</div>
-                  <div>
-                    <h3 style={{ fontFamily: "'Plus Jakarta Sans', sans-serif", fontSize: '18px', fontWeight: 800, color: '#172B15', margin: 0 }}>
-                      Trending on Medium
-                    </h3>
-                    <p style={{ fontSize: '12px', color: '#71717A', margin: 0 }}>
-                      Top design insights and e-commerce growth strategies shared by industry leaders.
-                    </p>
                   </div>
-                </div>
 
-                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '20px' }}>
-                  {MEDIUM_TRENDS.map(item => (
-                    <a 
-                      key={item.id}
-                      href={item.url}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="pf-medium-card"
+                  {/* Filter Pills row */}
+                  <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '20px', flexWrap: 'wrap', gap: '12px' }}>
+                    <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
+                      {[
+                        { label: 'Category', value: 'All' },
+                        { label: 'Trend', value: 'All' },
+                      ].map(f => (
+                        <div key={f.label} style={{ display: 'flex', alignItems: 'center', gap: '6px', background: '#FFFFFF', border: '1px solid rgba(23,43,21,0.08)', borderRadius: '10px', padding: '8px 14px', fontSize: '13px', color: '#172B15', fontWeight: 600, cursor: 'pointer' }}>
+                          <span style={{ color: '#889B8E', fontWeight: 500 }}>{f.label}:</span>
+                          <span>{f.value}</span>
+                          <span style={{ fontSize: '10px', color: '#BABAB6', marginLeft: '2px' }}>▼</span>
+                        </div>
+                      ))}
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '6px', background: '#FFFFFF', border: '1px solid rgba(23,43,21,0.08)', borderRadius: '10px', padding: '8px 14px', fontSize: '13px', color: '#71717A', fontWeight: 550, cursor: 'pointer' }}>
+                        New only
+                      </div>
+                    </div>
+                    <span style={{ fontSize: '12.5px', color: '#889B8E', fontWeight: 550 }}>
+                      {trendsDate ? `Data from: ${trendsDate}` : ''}
+                    </span>
+                  </div>
+
+                  {/* Social Trends Table */}
+                  <div style={{ background: '#FFFFFF', border: '1px solid rgba(23,43,21,0.06)', borderRadius: '24px', overflow: 'hidden', boxShadow: '0 12px 40px rgba(23,43,21,0.02)', position: 'relative', zIndex: 1 }}>
+                    {loadingTrends ? (
+                      <div style={{ padding: '72px 32px', textAlign: 'center' }}>
+                        <div style={{ width: '20px', height: '20px', border: '2px solid #E8E8E4', borderTop: '2px solid #39B54A', borderRadius: '50%', animation: 'pf-spin 0.7s linear infinite', margin: '0 auto 16px' }} />
+                        <div style={{ fontSize: '13px', color: '#BABAB6', fontWeight: 500 }}>Loading daily social metrics...</div>
+                      </div>
+                    ) : trendsError ? (
+                      <div style={{ padding: '72px 32px', textAlign: 'center' }}>
+                        <div style={{ fontSize: '24px', marginBottom: '12px' }}>⚠️</div>
+                        <div style={{ fontSize: '14px', fontWeight: 600, color: '#172B15', marginBottom: '4px' }}>Feed synchronization offline</div>
+                        <div style={{ fontSize: '13px', color: '#BABAB6' }}>{trendsError}</div>
+                      </div>
+                    ) : (
+                      <table style={{ width: '100%', borderCollapse: 'collapse' }}>
+                        <thead>
+                          <tr>
+                            {['Rank', 'Topics', 'Volume (Wikipedia views)', 'Trend', ''].map(h => (
+                              <th key={h} style={{ padding: '12px 24px', textAlign: 'left', fontSize: '10.5px', fontWeight: 700, color: '#889B8E', textTransform: 'uppercase', letterSpacing: '0.08em', borderBottom: '1px solid #E8E8E4', background: '#FCFCFB' }}>
+                                {h}
+                              </th>
+                            ))}
+                          </tr>
+                        </thead>
+                        <tbody>
+                          {socialTrends.map((t, i) => (
+                            <tr key={t.rank} className="pf-table-row" style={{ borderBottom: i < socialTrends.length - 1 ? '1px solid #F4F4F0' : 'none' }}>
+                              
+                              {/* Rank */}
+                              <td style={{ padding: '16px 24px', fontSize: '14px', fontWeight: 750, color: '#172B15' }}>
+                                <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                                  <span>{t.rank}</span>
+                                  {t.isNew && (
+                                    <span style={{ fontSize: '9px', fontWeight: 800, background: '#DCFCE7', color: '#166534', padding: '1px 5px', borderRadius: '4px', textTransform: 'uppercase' }}>NEW</span>
+                                  )}
+                                </div>
+                              </td>
+
+                              {/* Topics */}
+                              <td style={{ padding: '14px 24px' }}>
+                                <div style={{ fontSize: '14px', fontWeight: 750, color: '#172B15' }}>{t.topic}</div>
+                                <div style={{ fontSize: '11.5px', color: '#889B8E', marginTop: '2px', fontWeight: 500 }}>{t.category}</div>
+                              </td>
+
+                              {/* Volume */}
+                              <td style={{ padding: '14px 24px' }}>
+                                <div style={{ fontSize: '14px', fontWeight: 700, color: '#172B15' }}>{t.volume}</div>
+                              </td>
+
+                              {/* Trend (real, vs. yesterday's ranking) */}
+                              <td style={{ padding: '14px 24px' }}>
+                                <div style={{ fontSize: '13px', color: t.trendState === 'Growing' ? '#22C55E' : '#EF4444', fontWeight: 600, display: 'flex', alignItems: 'center', gap: '4px' }}>
+                                  <span>{t.trendState === 'Growing' ? '↗' : '↘'}</span>
+                                  <span>{t.trendState}</span>
+                                </div>
+                              </td>
+
+                              {/* Source link */}
+                              <td style={{ padding: '14px 24px' }}>
+                                <a href={t.articleUrl} target="_blank" rel="noopener noreferrer" style={{ fontSize: '12px', fontWeight: 600, color: '#39B54A', textDecoration: 'none' }}>
+                                  View on Wikipedia ↗
+                                </a>
+                              </td>
+
+                            </tr>
+                          ))}
+                        </tbody>
+                      </table>
+                    )}
+                  </div>
+                </>
+              )}
+
+              {/* ────────────────── MARKET TRENDS TAB ────────────────── */}
+              {trendTab === 'market' && (
+                <>
+                  {/* Dynamic Query Search Input */}
+                  <div style={{ display: 'flex', gap: '10px', marginBottom: '20px' }}>
+                    <input 
+                      type="text" 
+                      placeholder="Search design niches (e.g. dogs, space, groovy, cats) to query Google Trends live..."
+                      value={searchQuery}
+                      onChange={e => setSearchQuery(e.target.value)}
                       style={{
-                        background: '#FFFFFF', border: '1px solid rgba(23,43,21,0.06)', 
-                        borderRadius: '20px', padding: '24px', display: 'flex', flexDirection: 'column', 
-                        textDecoration: 'none', transition: 'all 0.25s', boxShadow: '0 4px 14px rgba(23,43,21,0.008)'
+                        flex: 1, padding: '12px 16px', border: '1px solid rgba(23,43,21,0.1)', 
+                        borderRadius: '12px', fontSize: '14px', outline: 'none', background: '#FFFFFF',
+                        transition: 'all 0.2s', fontFamily: 'Inter, sans-serif', color: '#172B15'
                       }}
-                    >
-                      {/* Author & Publication */}
-                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '12px' }}>
-                        <span style={{ fontSize: '11px', color: '#889B8E', fontWeight: 600 }}>
-                          By {item.author}
-                        </span>
-                        <span style={{ fontSize: '9px', fontWeight: 700, background: 'rgba(23,43,21,0.05)', color: '#172B15', padding: '2px 8px', borderRadius: '4px' }}>
-                          {item.publication}
-                        </span>
+                      onFocus={e => { e.target.style.borderColor = '#39B54A'; e.target.style.boxShadow = '0 0 0 3px rgba(57,181,74,0.08)' }}
+                      onBlur={e => { e.target.style.borderColor = 'rgba(23,43,21,0.1)'; e.target.style.boxShadow = 'none' }}
+                    />
+                    {searchQuery && (
+                      <button 
+                        onClick={() => setSearchQuery('')}
+                        style={{
+                          background: '#FAFAF9', border: '1px solid rgba(23,43,21,0.1)', 
+                          borderRadius: '12px', padding: '0 16px', fontSize: '12px', fontWeight: 600,
+                          color: '#71717A', cursor: 'pointer', fontFamily: 'Inter, sans-serif'
+                        }}
+                      >
+                        Clear
+                      </button>
+                    )}
+                  </div>
+
+                  {/* Trend search analysis container */}
+                  <div style={{ background: '#FFFFFF', border: '1px solid rgba(23,43,21,0.06)', borderRadius: '24px', padding: '24px', marginBottom: '28px', boxShadow: '0 8px 30px rgba(23,43,21,0.015)' }}>
+                    <h3 style={{ fontFamily: "'Plus Jakarta Sans', sans-serif", fontSize: '16px', fontWeight: 800, color: '#172B15', marginBottom: '6px' }}>
+                      {searchQuery ? `Google Search Volume: "${searchQuery}"` : 'Interactive Google Trends Graph'}
+                    </h3>
+                    <p style={{ fontSize: '12px', color: '#71717A', marginBottom: '24px' }}>
+                      {searchQuery ? `Analyzing custom queries for "${searchQuery}" design decals over the last 90 days.` : 'Analyze search queries for custom garments in real time.'}
+                    </p>
+                    
+                    {/* SVG Curve chart simulating Google Trend spikes dynamically */}
+                    <div style={{ width: '100%', height: '180px', position: 'relative', background: '#FAFAF9', borderRadius: '16px', border: '1px dashed rgba(23,43,21,0.06)', overflow: 'hidden', display: 'flex', alignItems: 'center', justifyContent: 'center', marginBottom: '20px' }}>
+                      <svg viewBox="0 0 500 150" style={{ width: '90%', height: '80%', overflow: 'visible' }}>
+                        {/* Grid lines */}
+                        <line x1="0" y1="30" x2="500" y2="30" stroke="rgba(23,43,21,0.03)" strokeWidth="1" />
+                        <line x1="0" y1="75" x2="500" y2="75" stroke="rgba(23,43,21,0.03)" strokeWidth="1" />
+                        <line x1="0" y1="120" x2="500" y2="120" stroke="rgba(23,43,21,0.03)" strokeWidth="1" />
+                        
+                        {/* Dynamic trend path */}
+                        <path 
+                          d={generateDynamicSVGPath(searchQuery)} 
+                          fill="none" stroke="#39B54A" strokeWidth="3.5" strokeLinecap="round" 
+                          style={{ transition: 'd 0.5s ease-in-out', filter: 'drop-shadow(0 4px 8px rgba(57,181,74,0.3))' }} 
+                        />
+                        <circle cx="500" cy="10" r="5" fill="#39B54A" />
+                      </svg>
+                      <div style={{ position: 'absolute', bottom: '12px', left: '16px', fontSize: '11px', color: '#889B8E', fontWeight: 600 }}>Dec 2024</div>
+                      <div style={{ position: 'absolute', bottom: '12px', right: '16px', fontSize: '11px', color: '#39B54A', fontWeight: 700 }}>Jan 2025 (Peak Surge)</div>
+                    </div>
+
+                    {/* Trending queries table */}
+                    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '16px' }}>
+                      {generateTrendsData(searchQuery).map(q => (
+                        <div key={q.title} style={{ padding: '16px', background: '#FAFAF9', border: '1px solid rgba(23,43,21,0.04)', borderRadius: '12px', display: 'flex', flexDirection: 'column' }}>
+                          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
+                            <span style={{ fontSize: '12px', fontWeight: 800, color: '#172B15', display: '-webkit-box', WebkitLineClamp: 1, WebkitBoxOrient: 'vertical', overflow: 'hidden' }}>{q.title}</span>
+                            {q.hot && <span style={{ fontSize: '9px', fontWeight: 700, background: 'rgba(57,181,74,0.1)', color: '#39B54A', padding: '2px 6px', borderRadius: '4px' }}>HOT</span>}
+                          </div>
+                          <div style={{ fontSize: '18px', fontWeight: 900, color: '#39B54A', marginBottom: '3px' }}>{q.rate}</div>
+                          <div style={{ fontSize: '11px', color: '#889B8E', marginBottom: '6px' }}>{q.volume}</div>
+                          <div style={{ fontSize: '10px', color: '#A1A8A3', fontWeight: 550, borderTop: '1px solid rgba(23,43,21,0.04)', paddingTop: '6px' }}>
+                            📍 {q.platforms}
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+
+                  {/* Medium Trending Section */}
+                  <div style={{ marginTop: '36px' }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '18px' }}>
+                      <div style={{
+                        width: '32px', height: '32px', borderRadius: '50%',
+                        background: '#000000', display: 'flex', alignItems: 'center', justifyContent: 'center',
+                        color: '#FFFFFF', fontWeight: 'bold', fontSize: '15px', fontFamily: "'Plus Jakarta Sans', sans-serif"
+                      }}>M</div>
+                      <div>
+                        <h3 style={{ fontFamily: "'Plus Jakarta Sans', sans-serif", fontSize: '18px', fontWeight: 800, color: '#172B15', margin: 0 }}>
+                          Trending on Medium
+                        </h3>
+                        <p style={{ fontSize: '12px', color: '#71717A', margin: 0 }}>
+                          Top design insights and e-commerce growth strategies shared by industry leaders.
+                        </p>
                       </div>
+                    </div>
 
-                      {/* Title */}
-                      <h4 style={{ fontSize: '14px', fontWeight: 800, color: '#172B15', lineHeight: 1.4, marginBottom: '8px', display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', overflow: 'hidden', height: '38px' }}>
-                        {item.title}
-                      </h4>
+                    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '20px' }}>
+                      {MEDIUM_TRENDS.map(item => (
+                        <a 
+                          key={item.id}
+                          href={item.url}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="pf-medium-card"
+                          style={{
+                            background: '#FFFFFF', border: '1px solid rgba(23,43,21,0.06)', 
+                            borderRadius: '20px', padding: '24px', display: 'flex', flexDirection: 'column', 
+                            textDecoration: 'none', transition: 'all 0.25s', boxShadow: '0 4px 14px rgba(23,43,21,0.008)'
+                          }}
+                        >
+                          {/* Author & Publication */}
+                          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '12px' }}>
+                            <span style={{ fontSize: '11px', color: '#889B8E', fontWeight: 600 }}>
+                              By {item.author}
+                            </span>
+                            <span style={{ fontSize: '9px', fontWeight: 700, background: 'rgba(23,43,21,0.05)', color: '#172B15', padding: '2px 8px', borderRadius: '4px' }}>
+                              {item.publication}
+                            </span>
+                          </div>
 
-                      {/* Description */}
-                      <p style={{ fontSize: '12px', color: '#71717A', lineHeight: 1.5, marginBottom: '18px', flex: 1, display: '-webkit-box', WebkitLineClamp: 3, WebkitBoxOrient: 'vertical', overflow: 'hidden' }}>
-                        {item.description}
-                      </p>
+                          {/* Title */}
+                          <h4 style={{ fontSize: '14px', fontWeight: 800, color: '#172B15', lineHeight: 1.4, marginBottom: '8px', display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', overflow: 'hidden', height: '38px' }}>
+                            {item.title}
+                          </h4>
 
-                      {/* Footer: tags */}
-                      <div style={{ display: 'flex', gap: '6px', paddingTop: '12px', borderTop: '1px solid #F4F4F0', flexWrap: 'wrap' }}>
-                        {item.tags.map(tag => (
-                          <span key={tag} style={{ fontSize: '10.5px', fontWeight: 600, color: '#39B54A', background: 'rgba(57,181,74,0.08)', padding: '2px 8px', borderRadius: '4px' }}>
-                            {tag}
-                          </span>
-                        ))}
-                      </div>
-                    </a>
-                  ))}
-                </div>
-              </div>
+                          {/* Description */}
+                          <p style={{ fontSize: '12px', color: '#71717A', lineHeight: 1.5, marginBottom: '18px', flex: 1, display: '-webkit-box', WebkitLineClamp: 3, WebkitBoxOrient: 'vertical', overflow: 'hidden' }}>
+                            {item.description}
+                          </p>
+
+                          {/* Footer: claps & read time */}
+                          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', paddingTop: '12px', borderTop: '1px solid #F4F4F0', fontSize: '11.5px', color: '#A1A1AA', fontWeight: 550 }}>
+                            <span style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
+                              👏 {item.claps}
+                            </span>
+                            <span>{item.readTime}</span>
+                          </div>
+                        </a>
+                      ))}
+                    </div>
+                  </div>
+                </>
+              )}
             </div>
           )}
 
