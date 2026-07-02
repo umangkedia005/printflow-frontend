@@ -180,36 +180,30 @@ const BLOG_ARTICLES = [
 const MEDIUM_TRENDS = [
   {
     id: 'm1',
-    author: 'Sarah Jenkins',
-    publication: 'The Startup',
-    title: 'The Rise of Hyper-Personalized Print on Demand in 2025',
-    description: 'How custom design micro-niches are outcompeting massive fast-fashion retail brands directly on Shopify.',
-    claps: '4.8K',
-    readTime: '6 min read',
-    url: 'https://medium.com',
-    tags: ['Dropshipping', 'Design']
+    author: 'The POD Insider',
+    publication: 'Medium',
+    title: 'Why Print on Demand Is the Best Way to Start an Ecommerce Business',
+    description: 'A look at why print-on-demand remains one of the lowest-risk ways to launch an online store, without holding inventory.',
+    url: 'https://medium.com/the-pod-insider/print-on-demand-best-way-ecommerce-business-04bc99d20968',
+    tags: ['Print on Demand', 'E-Commerce']
   },
   {
     id: 'm2',
-    author: 'David Chen',
-    publication: 'UX Collective',
-    title: 'Why Vintage Typography Decals Sell 3x Better Than Modern Vectors',
-    description: 'An analysis of font choices, color contrasts, and vintage emotional triggers in e-commerce apparel purchases.',
-    claps: '3.2K',
-    readTime: '8 min read',
-    url: 'https://medium.com',
-    tags: ['E-Commerce', 'Typography']
+    author: 'Derek Ryans',
+    publication: 'Not Zero Yet',
+    title: 'How Does Print on Demand Work in 2024',
+    description: 'A breakdown of the print-on-demand supply chain, from order placement to production and shipping.',
+    url: 'https://medium.com/not-zero-yet/how-does-print-on-demand-work-in-2024-4f1d09a7c331',
+    tags: ['Print on Demand', 'Supply Chain']
   },
   {
     id: 'm3',
-    author: 'Elena Rostova',
-    publication: 'Medium Creators',
-    title: 'From Doodle to $10k/Month: Scaling Pet Streetwear in 60 Days',
-    description: 'A step-by-step case study on designing high-quality pet hoodies and marketing them on TikTok.',
-    claps: '1.9K',
-    readTime: '5 min read',
-    url: 'https://medium.com',
-    tags: ['Case Study', 'Marketing']
+    author: 'Mehdi Aoussiad',
+    publication: 'Medium',
+    title: '7+ Best Shopify Dropshipping Apps and Suppliers',
+    description: 'A roundup of Shopify apps and suppliers merchants use to source and fulfill dropshipping and POD orders.',
+    url: 'https://mehdiouss.medium.com/best-shopify-dropshipping-apps-and-suppliers-f0dce58a945f',
+    tags: ['Shopify', 'Dropshipping']
   }
 ]
 
@@ -1525,12 +1519,13 @@ export default function DashboardPage() {
                         {item.description}
                       </p>
 
-                      {/* Footer: claps & read time */}
-                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', paddingTop: '12px', borderTop: '1px solid #F4F4F0', fontSize: '11.5px', color: '#A1A1AA', fontWeight: 550 }}>
-                        <span style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
-                          👏 {item.claps}
-                        </span>
-                        <span>{item.readTime}</span>
+                      {/* Footer: tags */}
+                      <div style={{ display: 'flex', gap: '6px', paddingTop: '12px', borderTop: '1px solid #F4F4F0', flexWrap: 'wrap' }}>
+                        {item.tags.map(tag => (
+                          <span key={tag} style={{ fontSize: '10.5px', fontWeight: 600, color: '#39B54A', background: 'rgba(57,181,74,0.08)', padding: '2px 8px', borderRadius: '4px' }}>
+                            {tag}
+                          </span>
+                        ))}
                       </div>
                     </a>
                   ))}
