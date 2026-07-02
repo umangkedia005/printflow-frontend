@@ -1,241 +1,1249 @@
+import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import StoreConnectForm from '../components/StoreConnectForm'
 import { useAuth } from '../contexts/AuthContext'
 
 const STATS = [
-  { value: '10K+', label: 'Stores connected' },
-  { value: '2M+',  label: 'Orders fulfilled' },
-  { value: '99.9%', label: 'Uptime SLA' },
-  { value: '4.9★', label: 'Merchant rating' },
+  { value: '10K+', label: 'Stores connected', desc: 'Active Shopify stores synced' },
+  { value: '2M+',  label: 'Orders fulfilled', desc: 'Printed & shipped worldwide' },
+  { value: '99.9%', label: 'Fulfillment SLA', desc: 'On-time tracking & delivery' },
+  { value: '4.9★', label: 'Merchant rating', desc: 'Rated by e-commerce founders' },
 ]
 
 const FEATURES = [
   {
+    icon: '💸',
+    title: 'Highest Profit Margins',
+    desc: 'We offer industry-leading low base prices on premium cotton apparel, giving you the room to scale your business with healthy margins.',
+  },
+  {
     icon: '⚡',
-    title: 'Instant Integration',
-    desc: 'Connect your Shopify store in seconds via secure OAuth — no code, no plugins.',
+    title: 'Automated 1-Click Sync',
+    desc: 'Connect your Shopify store in seconds. Orders are automatically received, sent to printing, and shipped under your own white-label brand.',
   },
   {
-    icon: '📦',
-    title: 'Auto Fulfillment',
-    desc: 'Every order is automatically received, queued, and shipped with real-time tracking.',
-  },
-  {
-    icon: '🎨',
-    title: 'Your Brand',
-    desc: 'Premium printing and branded packaging that feels like luxury to your customers.',
+    icon: '✨',
+    title: 'Premium Quality Control',
+    desc: 'Each product undergoes dual-stage quality checking. Archival inks, precise stitching, and premium packaging come standard.',
   },
 ]
+
+const PRODUCTS = [
+  {
+    id: 'tshirts',
+    name: 'Premium T-Shirts',
+    description: '100% combed ring-spun cotton graphic tees, standard retail fit.',
+    basePrice: '₹349',
+    images: ['/images/tshirt_1.jpg', '/images/tshirt_2.jpg'],
+    labels: ['On Model', 'Flat Lay'],
+    sizes: ['S', 'M', 'L', 'XL', '2XL'],
+    colors: ['#FFFFFF', '#18181B', '#4B5563', '#1E3A8A'],
+    features: ['Combed cotton', 'Retail fit', 'Side-seamed', 'Tear-away label']
+  },
+  {
+    id: 'pet_tshirts',
+    name: 'Pet T-Shirts',
+    description: 'Comfy and cute premium pet apparel designed for active cats and dogs.',
+    basePrice: '₹449',
+    images: ['/images/pet_tshirt_1.jpg', '/images/pet_tshirt_2.jpg'],
+    labels: ['Frenchie Mockup', 'Golden Retriever'],
+    sizes: ['XS', 'S', 'M', 'L', 'XL'],
+    colors: ['#F5E6CC', '#D6EDFA', '#E2D6F5', '#F5D6EB'],
+    features: ['100% Polyester', 'Easy-stretch cuffs', 'Breathable fabric', 'Machine washable']
+  },
+  {
+    id: 'hoodies',
+    name: 'Streetwear Hoodies',
+    description: 'Heavyweight organic blend pullover hoodies with soft fleece lining.',
+    basePrice: '₹899',
+    images: ['/images/hoodie_1.jpg', '/images/hoodie_2.jpg'],
+    labels: ['On Model', 'Hanger Shot'],
+    sizes: ['S', 'M', 'L', 'XL', '3XL'],
+    colors: ['#F3EFE9', '#1C1C1C', '#808080', '#1C3144'],
+    features: ['Heavyweight fleece', 'Double-needle stitching', 'Pouch pocket', 'Ribbed cuffs']
+  },
+  {
+    id: 'kids_tshirts',
+    name: 'Kids Organic Tees',
+    description: 'Super-soft combed cotton shirts for children, hypoallergenic and durable.',
+    basePrice: '₹299',
+    images: ['/images/kids_tshirt_1.jpg', '/images/kids_tshirt_2.jpg'],
+    labels: ['Outdoor Play', 'Studio Portrait'],
+    sizes: ['2T', '3T', '4T', '5-6Y', '7-8Y'],
+    colors: ['#E2ECE9', '#FBEAE6', '#E6EEFA', '#FFF6E2'],
+    features: ['Organic combed cotton', 'Hypoallergenic dyes', 'Double-stitched hems', 'Pre-shrunk']
+  },
+  {
+    id: 'poster_frames',
+    name: 'Posters & Frames',
+    description: 'Premium museum-grade paper posters with solid wood custom frames.',
+    basePrice: '₹399',
+    images: ['/images/poster_frame_1.jpg', '/images/poster_frame_2.jpg'],
+    labels: ['Living Room', 'Office Desk'],
+    sizes: ['8"x10"', '12"x16"', '18"x24"', '24"x36"'],
+    colors: ['#F5F5F5', '#F5E3D7', '#FFFFFF', '#0A0A0A'],
+    features: ['Museum-grade paper', 'Archival ink', 'Solid wood frame', 'Ready to hang']
+  }
+]
+
+const STEPS = [
+  { num: '01', title: 'Choose Products', desc: 'Select from our T-shirts, hoodies, kids apparel, pet wear, or framed wall art posters.' },
+  { num: '02', title: 'Apply Your Designs', desc: 'Easily upload your brand logo or custom illustrations using our modern mockup visualizer.' },
+  { num: '03', title: 'Connect Your Store', desc: 'Sync with your Shopify store instantly using secure OAuth. No coding required.' },
+  { num: '04', title: 'We Print & Ship', desc: 'When a customer orders, we manufacture, print, pack, and ship directly to them.' },
+]
+
+const TESTIMONIALS = [
+  { quote: "The pet t-shirts became our store's best seller overnight. Printing resolution on fabric is outstanding.", name: 'Ananya R.', role: 'Founder, PawStyle Apparel' },
+  { quote: 'Switched from Printify to No Limits Studio because of the lower base costs and faster shipping times in the region.', name: 'Rohit M.', role: 'CEO, Northline Streetwear' },
+  { quote: 'Excellent poster frame quality. The solid wood feel and archival inks get regular praise from our art buyers.', name: 'Kavya S.', role: 'Creative Director, Palette & Frame' },
+]
+
+const PRICING = [
+  { name: 'Free Starter', price: '₹0', period: '/forever', tag: 'Great for beginners', features: ['1 connected store', 'Full access to mockups', 'Manual order fulfillment', 'Standard email support'] },
+  { name: 'Growth Pro', price: '₹1,999', period: '/mo', tag: 'Most Popular', features: ['3 connected stores', 'Automatic order syncing', 'Premium custom mockups', 'Up to 20% discount on base prices', '24/7 priority chat support'] },
+  { name: 'Enterprise', price: '₹5,499', period: '/mo', tag: 'For scaling brands', features: ['Unlimited stores', 'Dedicated account manager', 'Custom white-label packaging inserts', 'Custom product sourcing APIs', 'Bulk order discounts'] },
+]
+
+const CUSTOMIZER_PRODUCTS = [
+  {
+    id: 'tshirt',
+    name: 'T-Shirts',
+    bgColor: '#FF9E3D', // Orange
+    stickerEmoji: '☀️',
+    stickerText1: 'Go With',
+    stickerText2: 'The Flow',
+    modelImg: '/images/tshirt_1.jpg',
+    designOverlay: (
+      <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', textAlign: 'center' }}>
+        <span style={{ fontSize: '32px', filter: 'drop-shadow(0 2px 4px rgba(0,0,0,0.15))' }}>☀️</span>
+        <span style={{ fontFamily: "'Plus Jakarta Sans', sans-serif", fontWeight: 900, fontSize: '11px', textTransform: 'uppercase', color: '#172B15', lineHeight: 1.0 }}>Go With<br />The Flow</span>
+      </div>
+    ),
+    designTop: '47%',
+    designLeft: '52%',
+    designScale: 'scale(0.7)',
+    svgPath: "M 30,12 L 42,7 C 45,10 55,10 58,7 L 70,12 L 82,24 L 72,32 L 69,29 L 69,92 L 31,92 L 31,29 L 28,32 L 18,24 Z"
+  },
+  {
+    id: 'hoodie',
+    name: 'Hoodies',
+    bgColor: '#3D9BFF', // Blue
+    stickerEmoji: '🧑‍🚀',
+    stickerText1: 'Space',
+    stickerText2: 'Explorer',
+    modelImg: '/images/hoodie_1.jpg',
+    designOverlay: (
+      <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', textAlign: 'center' }}>
+        <span style={{ fontSize: '32px', filter: 'drop-shadow(0 2px 4px rgba(0,0,0,0.15))' }}>🧑‍🚀</span>
+        <span style={{ fontFamily: "'Plus Jakarta Sans', sans-serif", fontWeight: 900, fontSize: '10px', textTransform: 'uppercase', color: '#172B15', lineHeight: 1.0 }}>Space<br />Explorer</span>
+      </div>
+    ),
+    designTop: '42%',
+    designLeft: '51%',
+    designScale: 'scale(0.65)',
+    svgPath: "M 30,18 L 38,10 L 42,14 L 58,14 L 62,10 L 70,18 L 80,32 L 70,38 L 68,36 L 68,90 C 68,92 32,92 32,90 L 32,36 L 30,38 L 20,32 Z M 40,14 C 40,8 60,8 60,14 Z"
+  },
+  {
+    id: 'pet_tshirt',
+    name: 'Pet Shirts',
+    bgColor: '#4ADE80', // Green
+    stickerEmoji: '🐾',
+    stickerText1: 'Bark',
+    stickerText2: 'Squad',
+    modelImg: '/images/pet_tshirt_1.jpg',
+    designOverlay: (
+      <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', textAlign: 'center' }}>
+        <span style={{ fontSize: '32px', filter: 'drop-shadow(0 2px 4px rgba(0,0,0,0.15))' }}>🐾</span>
+        <span style={{ fontFamily: "'Plus Jakarta Sans', sans-serif", fontWeight: 900, fontSize: '11px', textTransform: 'uppercase', color: '#172B15', lineHeight: 1.0 }}>Bark<br />Squad</span>
+      </div>
+    ),
+    designTop: '50%',
+    designLeft: '50%',
+    designScale: 'scale(0.75)',
+    svgPath: "M 32,15 L 42,10 C 45,13 55,13 58,10 L 68,15 L 75,28 L 66,33 L 64,31 L 64,80 C 64,82 36,82 36,80 L 36,31 L 34,33 L 25,28 Z"
+  }
+]
+
+function Logo() {
+  return (
+    <div style={{ display: 'flex', alignItems: 'center', gap: '9px' }}>
+      <img 
+        src="/images/logo.jpg" 
+        alt="No Limits Studio" 
+        style={{ width: '32px', height: '32px', borderRadius: '50%', objectFit: 'cover' }} 
+      />
+      <span style={{ fontFamily: "'Plus Jakarta Sans', sans-serif", fontWeight: 800, fontSize: '18px', color: '#172B15', letterSpacing: '-0.5px' }}>
+        No Limits Studio
+      </span>
+    </div>
+  )
+}
 
 const HomePage = () => {
   const { currentUser, logout } = useAuth()
   const navigate = useNavigate()
 
-  return (
-    <div style={{ minHeight: '100vh', background: '#FAFAF8', fontFamily: 'Inter, sans-serif', color: '#0A0A0A' }}>
+  // Intro Splash Loader states
+  const [showSplash, setShowSplash] = useState(true)
+  const [splashFade, setSplashFade] = useState(false)
 
-      {/* Header */}
+  // Track the active image index (0 or 1) for each product ID
+  const [imageIndices, setImageIndices] = useState({
+    tshirts: 0,
+    pet_tshirts: 0,
+    hoodies: 0,
+    kids_tshirts: 0,
+    poster_frames: 0
+  })
+
+  const [activeProd, setActiveProd] = useState(0)
+  const [animStep, setAnimStep] = useState(0)
+
+  // Splash Curtain effect timer
+  useEffect(() => {
+    const fadeTimer = setTimeout(() => setSplashFade(true), 1200)
+    const removeTimer = setTimeout(() => setShowSplash(false), 2000)
+    return () => {
+      clearTimeout(fadeTimer)
+      clearTimeout(removeTimer)
+    }
+  }, [])
+
+  // Auto-run the schematic mockup customizer animation loop
+  useEffect(() => {
+    const timer = setInterval(() => {
+      setAnimStep(prev => {
+        if (prev === 2) {
+          // Once the drop is finished, cycle to the next product and reset step
+          setActiveProd(p => (p + 1) % CUSTOMIZER_PRODUCTS.length)
+          return 0
+        }
+        return prev + 1
+      })
+    }, 2000) // 2s per stage (6s total per product)
+    return () => clearInterval(timer)
+  }, [])
+
+  // Toggle active image index for a product card
+  const toggleProductImage = (productId, index) => {
+    setImageIndices(prev => ({
+      ...prev,
+      [productId]: index
+    }))
+  }
+
+  return (
+    <div style={{ minHeight: '100vh', background: '#FAFAFA', fontFamily: 'Inter, sans-serif', color: '#172B15' }}>
+      
+      {/* Premium Cinematic Curtain Intro Loader */}
+      {showSplash && (
+        <div style={{
+          position: 'fixed',
+          inset: 0,
+          background: '#172B15',
+          zIndex: 9999,
+          display: 'flex',
+          flexDirection: 'column',
+          alignItems: 'center',
+          justifyContent: 'center',
+          transform: splashFade ? 'translateY(-100%)' : 'translateY(0)',
+          transition: 'transform 0.85s cubic-bezier(0.85, 0, 0.15, 1)',
+          pointerEvents: 'none'
+        }}>
+          <div style={{
+            display: 'flex',
+            flexDirection: 'column',
+            alignItems: 'center',
+            gap: '24px',
+            opacity: splashFade ? 0 : 1,
+            transform: splashFade ? 'scale(0.95)' : 'scale(1)',
+            transition: 'all 0.4s ease'
+          }}>
+            {/* Spinning & Pulse Glow Logo */}
+            <div style={{
+              width: '64px',
+              height: '64px',
+              borderRadius: '50%',
+              overflow: 'hidden',
+              boxShadow: '0 0 40px rgba(185,249,93,0.3)',
+              animation: 'pf-loader-spin 1.8s cubic-bezier(0.68, -0.6, 0.32, 1.6) infinite'
+            }}>
+              <img src="/images/logo.jpg" alt="Logo" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+            </div>
+
+            {/* Glowing Text */}
+            <h2 style={{
+              fontFamily: "'Plus Jakarta Sans', sans-serif",
+              color: '#FFFFFF',
+              fontSize: '24px',
+              fontWeight: 800,
+              letterSpacing: '-0.5px'
+            }}>
+              No Limits Studio
+            </h2>
+          </div>
+        </div>
+      )}
+
+      {/* Premium Header */}
       <header style={{
-        position: 'sticky', top: 0, zIndex: 50,
-        background: 'rgba(250,250,248,0.9)',
+        position: 'sticky', top: 0, zIndex: 100,
+        background: 'rgba(255, 255, 255, 0.9)',
         backdropFilter: 'blur(16px)',
         WebkitBackdropFilter: 'blur(16px)',
-        borderBottom: '1px solid #E8E8E4',
+        borderBottom: '1px solid #E4E4E7',
       }}>
         <div style={{
-          maxWidth: '1100px', margin: '0 auto',
+          maxWidth: '1200px', margin: '0 auto',
           padding: '0 24px',
           display: 'flex', alignItems: 'center', justifyContent: 'space-between',
-          height: '60px',
+          height: '68px',
         }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '9px' }}>
-            <div style={{
-              width: '30px', height: '30px', borderRadius: '8px',
-              background: '#0A0A0A',
-              display: 'flex', alignItems: 'center', justifyContent: 'center',
-              fontSize: '13px', color: 'white',
-            }}>✦</div>
-            <span style={{ fontFamily: 'Syne, sans-serif', fontWeight: 700, fontSize: '16px', color: '#0A0A0A' }}>
-              No Limit Studio
-            </span>
-          </div>
+          <Logo />
 
-          <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-            <span style={{ fontSize: '13px', color: '#BABAB6' }}>{currentUser?.email}</span>
-            <button
-              onClick={() => navigate('/dashboard')}
-              style={{
-                background: '#0A0A0A', color: 'white',
-                border: 'none', borderRadius: '8px',
-                padding: '7px 16px', fontSize: '12px', fontWeight: 600,
-                cursor: 'pointer', fontFamily: 'Inter, sans-serif',
-                transition: 'opacity 0.15s',
+          <nav style={{ display: 'flex', alignItems: 'center', gap: '32px' }} className="pf-nav-links">
+            {['Catalog', 'Pricing', 'How It Works'].map(l => (
+              <a key={l} href={`#${l.toLowerCase().replace(/\s+/g, '-')}`} style={{ 
+                fontSize: '14px', 
+                color: '#3F3F46', 
+                textDecoration: 'none', 
+                fontWeight: 600,
+                transition: 'color 0.2s' 
               }}
-              onMouseOver={e => e.currentTarget.style.opacity = '0.8'}
-              onMouseOut={e => e.currentTarget.style.opacity = '1'}
-            >
-              Dashboard →
-            </button>
-            <button
-              onClick={logout}
-              style={{
-                background: 'transparent', color: '#888',
-                border: '1px solid #E8E8E4', borderRadius: '8px',
-                padding: '7px 14px', fontSize: '12px', fontWeight: 500,
-                cursor: 'pointer', fontFamily: 'Inter, sans-serif',
-                transition: 'border-color 0.15s, color 0.15s',
-              }}
-              onMouseOver={e => { e.currentTarget.style.borderColor = '#CCC'; e.currentTarget.style.color = '#333' }}
-              onMouseOut={e => { e.currentTarget.style.borderColor = '#E8E8E4'; e.currentTarget.style.color = '#888' }}
-            >
-              Sign out
-            </button>
+              onMouseOver={e => e.currentTarget.style.color = '#39B54A'}
+              onMouseOut={e => e.currentTarget.style.color = '#3F3F46'}
+              >{l}</a>
+            ))}
+          </nav>
+
+          <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+            {currentUser ? (
+              <>
+                <span style={{ fontSize: '13px', color: '#71717A', marginRight: '6px' }} className="pf-hide-mobile">
+                  {currentUser.email}
+                </span>
+                <button
+                  onClick={() => navigate('/dashboard')}
+                  style={{
+                    background: '#B9F95D', color: '#172B15',
+                    border: 'none', borderRadius: '10px',
+                    padding: '10px 20px', fontSize: '13px', fontWeight: 700,
+                    cursor: 'pointer', fontFamily: 'Inter, sans-serif',
+                    transition: 'all 0.2s',
+                    boxShadow: '0 4px 12px rgba(185,249,93,0.2)',
+                  }}
+                  onMouseOver={e => {
+                    e.currentTarget.style.transform = 'translateY(-1px)';
+                    e.currentTarget.style.boxShadow = '0 6px 16px rgba(185,249,93,0.3)';
+                  }}
+                  onMouseOut={e => {
+                    e.currentTarget.style.transform = 'translateY(0)';
+                    e.currentTarget.style.boxShadow = '0 4px 12px rgba(185,249,93,0.2)';
+                  }}
+                >
+                  My Store
+                </button>
+                <button
+                  onClick={logout}
+                  style={{
+                    background: 'transparent', color: '#71717A',
+                    border: '1px solid #E4E4E7', borderRadius: '10px',
+                    padding: '10px 16px', fontSize: '13px', fontWeight: 600,
+                    cursor: 'pointer', fontFamily: 'Inter, sans-serif',
+                    transition: 'all 0.2s',
+                  }}
+                  onMouseOver={e => { 
+                    e.currentTarget.style.borderColor = '#A1A1AA'; 
+                    e.currentTarget.style.color = '#172B15' 
+                  }}
+                  onMouseOut={e => { 
+                    e.currentTarget.style.borderColor = '#E4E4E7'; 
+                    e.currentTarget.style.color = '#71717A' 
+                  }}
+                >
+                  Sign out
+                </button>
+              </>
+            ) : (
+              <button
+                onClick={() => navigate('/auth')}
+                style={{
+                  background: '#B9F95D', color: '#172B15',
+                  border: 'none', borderRadius: '10px',
+                  padding: '10px 20px', fontSize: '13px', fontWeight: 700,
+                  cursor: 'pointer', fontFamily: 'Inter, sans-serif',
+                  transition: 'all 0.2s',
+                  boxShadow: '0 4px 12px rgba(185,249,93,0.2)',
+                }}
+                onMouseOver={e => {
+                  e.currentTarget.style.transform = 'translateY(-1px)';
+                  e.currentTarget.style.boxShadow = '0 6px 16px rgba(185,249,93,0.3)';
+                }}
+                onMouseOut={e => {
+                  e.currentTarget.style.transform = 'translateY(0)';
+                  e.currentTarget.style.boxShadow = '0 4px 12px rgba(185,249,93,0.2)';
+                }}
+              >
+                Sign in
+              </button>
+            )}
           </div>
         </div>
       </header>
 
-      <main style={{ maxWidth: '1100px', margin: '0 auto', padding: '0 24px' }}>
+      <main style={{ maxWidth: '1200px', margin: '0 auto', padding: '0 24px' }}>
 
-        {/* Hero */}
-        <section style={{ padding: '90px 0 72px', textAlign: 'center', animation: 'pf-fade-up 0.5s ease' }}>
-          <div style={{
-            display: 'inline-flex', alignItems: 'center', gap: '7px',
-            background: '#FFFFFF', border: '1px solid #E8E8E4',
-            borderRadius: '100px', padding: '5px 14px',
-            marginBottom: '32px',
-          }}>
-            <div style={{ width: '6px', height: '6px', borderRadius: '50%', background: '#22C55E' }} />
-            <span style={{ fontSize: '12px', color: '#555', fontWeight: 500 }}>
-              Shopify Print-on-Demand Platform
-            </span>
-          </div>
-
+        {/* Printify-Style Centered Hero Section */}
+        <section style={{ padding: '80px 0 60px', textAlign: 'center' }}>
+          
+          {/* Main Headline */}
           <h1 style={{
-            fontFamily: 'Syne, sans-serif',
-            fontSize: 'clamp(40px, 6vw, 72px)',
-            fontWeight: 800, lineHeight: 1.05,
-            letterSpacing: '-2px', color: '#0A0A0A',
+            fontFamily: "'Plus Jakarta Sans', sans-serif",
+            fontSize: 'clamp(44px, 6vw, 76px)',
+            fontWeight: 800,
+            lineHeight: 1.05,
+            letterSpacing: '-2.5px',
+            color: '#172B15',
             marginBottom: '24px',
+            textTransform: 'uppercase',
+            animation: 'pf-fade-in-up 0.6s cubic-bezier(0.16, 1, 0.3, 1) forwards'
           }}>
-            Your store.<br />
-            <span style={{ color: '#555' }}>Our fulfilment.</span><br />
-            Zero friction.
+            Create and sell<br />custom products
           </h1>
 
-          <p style={{
-            fontSize: 'clamp(15px, 2vw, 18px)',
-            color: '#888', maxWidth: '520px',
-            margin: '0 auto 56px',
-            lineHeight: 1.7,
-          }}>
-            Connect your Shopify store once and let No Limit Studio handle manufacturing,
-            printing, and worldwide shipping — all under your brand.
-          </p>
-
-          {/* Stats */}
+          {/* Centered Checkmarks Row */}
           <div style={{
-            display: 'inline-flex', gap: '1px',
-            background: '#E8E8E4', borderRadius: '14px',
-            overflow: 'hidden', marginBottom: '72px',
-            border: '1px solid #E8E8E4',
+            display: 'flex',
+            justifyContent: 'center',
+            gap: '32px',
+            marginBottom: '36px',
+            flexWrap: 'wrap',
+            animation: 'pf-fade-in-up 0.6s cubic-bezier(0.16, 1, 0.3, 1) 0.15s forwards',
+            opacity: 0
           }}>
-            {STATS.map((s, i) => (
-              <div key={i} style={{
-                background: '#FFFFFF', padding: '18px 28px', textAlign: 'center',
-              }}>
-                <div style={{ fontFamily: 'Syne, sans-serif', fontWeight: 800, fontSize: '20px', color: '#0A0A0A', marginBottom: '2px' }}>
-                  {s.value}
-                </div>
-                <div style={{ fontSize: '11px', color: '#BABAB6', fontWeight: 500 }}>{s.label}</div>
+            {[
+              '100% Free to use',
+              '1000+ Premium items',
+              'Global fulfillment shipping'
+            ].map((check, idx) => (
+              <div key={idx} style={{ display: 'flex', alignItems: 'center', gap: '8px', fontSize: '15px', color: '#172B15', fontWeight: 600 }}>
+                <span style={{ color: '#39B54A', fontWeight: 'bold', fontSize: '18px' }}>✓</span>
+                <span>{check}</span>
               </div>
             ))}
           </div>
 
-          {/* Connect card */}
+          {/* Centered Lime green CTA Button */}
           <div style={{
-            maxWidth: '440px', margin: '0 auto 96px',
-            background: '#FFFFFF',
-            border: '1px solid #E8E8E4',
-            borderRadius: '16px',
-            padding: '32px',
-            boxShadow: '0 2px 8px rgba(0,0,0,0.04), 0 8px 32px rgba(0,0,0,0.04)',
-            textAlign: 'left',
+            display: 'flex',
+            flexDirection: 'column',
+            alignItems: 'center',
+            gap: '10px',
+            marginBottom: '64px',
+            animation: 'pf-fade-in-up 0.6s cubic-bezier(0.16, 1, 0.3, 1) 0.3s forwards',
+            opacity: 0
           }}>
-            <div style={{ marginBottom: '24px', textAlign: 'center' }}>
+            <a href="#shopify-connect" style={{
+              display: 'inline-block',
+              background: '#B9F95D',
+              color: '#172B15',
+              padding: '16px 36px',
+              borderRadius: '12px',
+              fontSize: '16px',
+              fontWeight: 700,
+              textDecoration: 'none',
+              boxShadow: '0 8px 24px rgba(185,249,93,0.25)',
+              transition: 'all 0.2s',
+            }}
+            onMouseOver={e => {
+              e.currentTarget.style.transform = 'translateY(-2px)';
+              e.currentTarget.style.boxShadow = '0 12px 32px rgba(185,249,93,0.35)';
+            }}
+            onMouseOut={e => {
+              e.currentTarget.style.transform = 'translateY(0)';
+              e.currentTarget.style.boxShadow = '0 8px 24px rgba(185,249,93,0.25)';
+            }}
+            >
+              Get started for free
+            </a>
+            <span style={{ fontSize: '12px', color: '#71717A', fontWeight: 500 }}>
+              No credit card required
+            </span>
+          </div>
+
+          {/* Double Mockup Showcase Card Section (Schematic & Lifestyle Animation) */}
+          <div style={{
+            display: 'grid',
+            gridTemplateColumns: '1fr 1.15fr',
+            gap: '32px',
+            maxWidth: '1000px',
+            margin: '0 auto 64px',
+            animation: 'pf-fade-in-up 0.8s cubic-bezier(0.16, 1, 0.3, 1) 0.4s forwards',
+            opacity: 0
+          }} className="pf-hero-grid">
+            
+            {/* Card 1: Schematic Vector mockup with Lottie-style guide lines, success ripples & sparks */}
+            <div style={{
+              background: CUSTOMIZER_PRODUCTS[activeProd].bgColor,
+              borderRadius: '24px',
+              aspectRatio: '1.15',
+              position: 'relative',
+              overflow: 'hidden',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              boxShadow: '0 20px 40px rgba(0, 0, 0, 0.05)',
+              border: '1px solid rgba(255,255,255,0.1)',
+              transition: 'background 0.8s ease'
+            }}>
+              {/* Grid background lines */}
               <div style={{
-                width: '44px', height: '44px',
-                background: '#F4F4F0', border: '1px solid #E8E8E4',
-                borderRadius: '12px',
-                display: 'flex', alignItems: 'center', justifyContent: 'center',
-                fontSize: '20px', margin: '0 auto 14px',
-              }}>🔗</div>
-              <h2 style={{ fontFamily: 'Syne, sans-serif', fontSize: '18px', fontWeight: 700, color: '#0A0A0A', marginBottom: '4px' }}>
-                Connect Your Store
-              </h2>
-              <p style={{ fontSize: '13px', color: '#999' }}>OAuth-secured · Takes 30 seconds</p>
+                position: 'absolute', inset: 0,
+                backgroundImage: 'radial-gradient(rgba(255,255,255,0.15) 1px, transparent 1px)',
+                backgroundSize: '16px 16px',
+                pointerEvents: 'none'
+              }} />
+
+              {/* T-Shirt/Hoodie/Pet vector outline */}
+              <svg viewBox="0 0 100 100" style={{ width: '65%', height: '65%', fill: '#FFFFFF', stroke: '#172B15', strokeWidth: 1.5, filter: 'drop-shadow(0 10px 20px rgba(0,0,0,0.06))', transition: 'all 0.5s' }}>
+                <path d={CUSTOMIZER_PRODUCTS[activeProd].svgPath} />
+              </svg>
+
+              {/* Alignment Guide Lines (Lottie-style centering) */}
+              <div style={{
+                position: 'absolute', top: 0, bottom: 0, left: '50%', width: '1px',
+                borderLeft: '1.5px dashed #39B54A', opacity: animStep === 1 ? 0.6 : 0,
+                transform: animStep === 1 ? 'scaleY(1)' : 'scaleY(0)', transformOrigin: 'top',
+                transition: 'all 0.5s cubic-bezier(0.16, 1, 0.3, 1)', zIndex: 5
+              }} />
+              <div style={{
+                position: 'absolute', left: 0, right: 0, top: '46%', height: '1px',
+                borderTop: '1.5px dashed #39B54A', opacity: animStep === 1 ? 0.6 : 0,
+                transform: animStep === 1 ? 'scaleX(1)' : 'scaleX(0)', transformOrigin: 'left',
+                transition: 'all 0.5s cubic-bezier(0.16, 1, 0.3, 1)', zIndex: 5
+              }} />
+
+              {/* Bounding box design box */}
+              <div style={{
+                position: 'absolute',
+                top: '32%',
+                left: '38%',
+                width: '24%',
+                height: '28%',
+                border: '2px dashed #39B54A',
+                borderRadius: '6px',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center'
+              }}>
+                <span style={{ fontSize: '9px', color: '#39B54A', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.05em' }}>
+                  Design Area
+                </span>
+              </div>
+
+              {/* Lottie-style Success Ripple Ring */}
+              <div style={{
+                position: 'absolute', top: '46%', left: '50%', width: '120px', height: '120px', borderRadius: '50%',
+                border: '3px solid #B9F95D', transform: 'translate(-50%, -50%) scale(0)', opacity: 0, pointerEvents: 'none', zIndex: 8,
+                animation: animStep === 2 ? 'pf-ripple 0.9s cubic-bezier(0.1, 0.8, 0.3, 1) forwards' : 'none'
+              }} />
+
+              {/* Lottie-style Burst Sparkles */}
+              {[
+                { sIdx: 0, top: '35%', left: '42%' },
+                { sIdx: 1, top: '35%', right: '42%' },
+                { sIdx: 2, top: '57%', left: '42%' },
+                { sIdx: 3, top: '57%', right: '42%' }
+              ].map(spark => (
+                <div
+                  key={spark.sIdx}
+                  style={{
+                    position: 'absolute', top: spark.top, left: spark.left || 'auto', right: spark.right || 'auto',
+                    width: '6px', height: '6px', borderRadius: '50%', background: '#B9F95D', pointerEvents: 'none', zIndex: 8, opacity: 0,
+                    animation: animStep === 2 ? `pf-spark-${spark.sIdx} 0.8s cubic-bezier(0.1, 0.8, 0.3, 1) forwards` : 'none'
+                  }}
+                />
+              ))}
+
+              {/* Flying Sticker Graphic Card */}
+              <div 
+                style={{
+                  position: 'absolute',
+                  background: '#FFFFFF',
+                  border: '1.5px solid #172B15',
+                  borderRadius: '12px',
+                  padding: '8px 12px',
+                  boxShadow: '0 10px 24px rgba(0,0,0,0.12)',
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '8px',
+                  zIndex: 10,
+                  pointerEvents: 'none',
+                  // Transition from corner to center
+                  top: animStep === 0 ? '10%' : '46%',
+                  left: animStep === 0 ? '10%' : '50%',
+                  transform: animStep === 0 
+                    ? 'rotate(-10deg) scale(1)' 
+                    : 'translate(-50%, -50%) scale(0.65) rotate(0deg)',
+                  transition: 'all 1.2s cubic-bezier(0.25, 1, 0.5, 1)'
+                }}
+              >
+                <div style={{ fontSize: '18px' }}>{CUSTOMIZER_PRODUCTS[activeProd].stickerEmoji}</div>
+                <div style={{ textAlign: 'left' }}>
+                  <div style={{ fontSize: '9px', fontWeight: 800, textTransform: 'uppercase', color: '#172B15', lineHeight: 1.1 }}>
+                    {CUSTOMIZER_PRODUCTS[activeProd].stickerText1}
+                  </div>
+                  <div style={{ fontSize: '9px', fontWeight: 800, textTransform: 'uppercase', color: '#172B15', lineHeight: 1.1 }}>
+                    {CUSTOMIZER_PRODUCTS[activeProd].stickerText2}
+                  </div>
+                </div>
+              </div>
             </div>
 
-            <StoreConnectForm />
-
+            {/* Card 2: Lifestyle Model Photo Showcase (Cross-fades different products) */}
             <div style={{
-              display: 'flex', justifyContent: 'center', gap: '20px',
-              marginTop: '20px', paddingTop: '20px',
-              borderTop: '1px solid #F0F0EC',
+              background: '#FFFFFF',
+              borderRadius: '24px',
+              aspectRatio: '1.15',
+              position: 'relative',
+              overflow: 'hidden',
+              boxShadow: '0 20px 40px rgba(0, 0, 0, 0.05)',
+              border: '1px solid #E4E4E7'
             }}>
-              {['🔒 Secure OAuth', '✓ No credit card', '⚡ Instant setup'].map(t => (
-                <span key={t} style={{ fontSize: '11px', color: '#BABAB6', whiteSpace: 'nowrap' }}>{t}</span>
+              {CUSTOMIZER_PRODUCTS.map((p, idx) => (
+                <div
+                  key={p.id}
+                  style={{
+                    position: 'absolute',
+                    inset: 0,
+                    opacity: activeProd === idx ? 1 : 0,
+                    transition: 'opacity 0.6s ease-in-out',
+                    pointerEvents: activeProd === idx ? 'auto' : 'none'
+                  }}
+                >
+                  {/* White mockup t-shirt photo */}
+                  <img 
+                    src={p.modelImg} 
+                    alt={p.name} 
+                    style={{
+                      width: '100%',
+                      height: '100%',
+                      objectFit: 'cover'
+                    }}
+                  />
+
+                  {/* Floating applied design on model chest (fades in cleanly at animStep >= 1) */}
+                  <div style={{
+                    position: 'absolute',
+                    top: p.designTop,
+                    left: p.designLeft,
+                    transform: `translate(-50%, -50%) ${p.designScale}`,
+                    pointerEvents: 'none',
+                    opacity: animStep >= 1 ? 0.85 : 0,
+                    transition: 'opacity 0.6s ease-in-out',
+                  }}>
+                    {p.designOverlay}
+                  </div>
+                </div>
               ))}
+
+              {/* Clean category label */}
+              <div style={{
+                position: 'absolute',
+                top: '16px',
+                left: '16px',
+                background: 'rgba(255, 255, 255, 0.85)',
+                backdropFilter: 'blur(12px)',
+                WebkitBackdropFilter: 'blur(12px)',
+                border: '1px solid #E4E4E7',
+                padding: '5px 12px',
+                borderRadius: '8px',
+                fontSize: '11px',
+                fontWeight: 700,
+                color: '#172B15',
+                display: 'flex',
+                alignItems: 'center',
+                gap: '6px',
+                zIndex: 20
+              }}>
+                <span style={{ color: '#39B54A' }}>✦</span> Live Mockup Preview
+              </div>
             </div>
           </div>
 
-          {/* Features */}
+          {/* Connection Input Box underneath */}
+          <div id="shopify-connect" style={{
+            background: '#111A13', // Carbon dark green
+            border: '1.5px solid rgba(185, 249, 93, 0.15)',
+            borderRadius: '24px',
+            padding: '36px 32px',
+            boxShadow: '0 25px 50px -12px rgba(9, 26, 14, 0.5), 0 0 40px rgba(185, 249, 93, 0.04)',
+            maxWidth: '560px',
+            margin: '0 auto 64px',
+            animation: 'pf-fade-in-up 0.6s cubic-bezier(0.16, 1, 0.3, 1) 0.5s forwards',
+            opacity: 0,
+            position: 'relative',
+            overflow: 'hidden'
+          }}>
+            {/* Ambient background glow */}
+            <div style={{
+              position: 'absolute',
+              top: '-50%',
+              right: '-50%',
+              width: '100%',
+              height: '100%',
+              background: 'radial-gradient(circle, rgba(185,249,93,0.06) 0%, transparent 60%)',
+              pointerEvents: 'none'
+            }} />
+
+            <div style={{ display: 'flex', alignItems: 'center', gap: '16px', marginBottom: '28px', textAlign: 'left', position: 'relative', zIndex: 1 }}>
+              <div style={{
+                width: '48px', height: '48px', borderRadius: '14px',
+                background: 'rgba(185,249,93,0.08)',
+                border: '1px solid rgba(185,249,93,0.2)',
+                display: 'flex', alignItems: 'center', justifyContent: 'center',
+                fontSize: '22px', boxShadow: '0 0 15px rgba(185,249,93,0.1)'
+              }}>
+                🔌
+              </div>
+              <div>
+                <h3 style={{ fontSize: '17px', fontWeight: 800, color: '#FFFFFF', letterSpacing: '-0.3px' }}>
+                  Shopify Store Integration
+                </h3>
+                <p style={{ fontSize: '13px', color: '#889B8E', marginTop: '2px', lineHeight: 1.4 }}>
+                  Connect your store to sync products and fulfill orders automatically.
+                </p>
+              </div>
+            </div>
+            <div style={{ position: 'relative', zIndex: 1 }}>
+              <StoreConnectForm />
+            </div>
+          </div>
+        </section>
+
+        {/* Stats Bar */}
+        <section style={{ padding: '48px 0 64px' }}>
           <div style={{
             display: 'grid',
-            gridTemplateColumns: 'repeat(3, 1fr)',
-            gap: '16px',
-            marginBottom: '80px',
-            textAlign: 'left',
-          }}>
-            {FEATURES.map((f, i) => (
-              <div key={i} style={{
-                background: '#FFFFFF',
-                border: '1px solid #E8E8E4',
-                borderRadius: '14px',
-                padding: '28px',
-              }}>
-                <div style={{
-                  width: '44px', height: '44px',
-                  background: '#F4F4F0', border: '1px solid #E8E8E4',
-                  borderRadius: '12px',
-                  display: 'flex', alignItems: 'center', justifyContent: 'center',
-                  fontSize: '20px', marginBottom: '18px',
-                }}>{f.icon}</div>
-                <h3 style={{ fontFamily: 'Syne, sans-serif', fontSize: '15px', fontWeight: 700, color: '#0A0A0A', marginBottom: '8px' }}>
-                  {f.title}
-                </h3>
-                <p style={{ fontSize: '13px', color: '#888', lineHeight: 1.65 }}>{f.desc}</p>
+            gridTemplateColumns: 'repeat(4, 1fr)',
+            gap: '1px',
+            background: '#E4E4E7',
+            borderRadius: '20px',
+            overflow: 'hidden',
+            boxShadow: '0 4px 20px rgba(0,0,0,0.01)',
+            border: '1px solid #E4E4E7'
+          }} className="pf-product-grid">
+            {STATS.map((s, i) => (
+              <div key={i} style={{ background: '#FFFFFF', padding: '24px 32px', textAlign: 'left' }}>
+                <div style={{ fontFamily: "'Plus Jakarta Sans', sans-serif", fontWeight: 800, fontSize: '32px', color: '#39B54A', marginBottom: '4px' }}>
+                  {s.value}
+                </div>
+                <div style={{ fontSize: '14px', color: '#18181B', fontWeight: 700, marginBottom: '2px' }}>{s.label}</div>
+                <div style={{ fontSize: '12px', color: '#71717A', fontWeight: 400 }}>{s.desc}</div>
               </div>
             ))}
           </div>
         </section>
+
+        {/* Catalog Showcase Section */}
+        <section id="catalog" style={{ padding: '40px 0 80px' }}>
+          <div style={{ textAlign: 'center', marginBottom: '56px' }}>
+            <div style={{ fontSize: '12px', fontWeight: 700, color: '#39B54A', letterSpacing: '0.1em', textTransform: 'uppercase', marginBottom: '8px' }}>
+              Explore Our Premium Catalog
+            </div>
+            <h2 style={{ fontFamily: "'Plus Jakarta Sans', sans-serif", fontSize: '38px', fontWeight: 800, color: '#172B15', letterSpacing: '-1px', marginBottom: '14px' }}>
+              Designed to print, made to wear
+            </h2>
+            <p style={{ fontSize: '15px', color: '#52525B', maxWidth: '520px', margin: '0 auto' }}>
+              Sell premium custom apparel. Click the photo swappers below to preview the multiple high-fidelity mockups generated for each product.
+            </p>
+          </div>
+
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '28px' }} className="pf-product-grid">
+            {PRODUCTS.map((p) => {
+              const activeIndex = imageIndices[p.id] ?? 0
+              return (
+                <div
+                  key={p.id}
+                  style={{
+                    background: '#FFFFFF',
+                    border: '1px solid #E4E4E7',
+                    borderRadius: '20px',
+                    padding: '20px',
+                    display: 'flex',
+                    flexDirection: 'column',
+                    transition: 'all 0.3s ease',
+                    position: 'relative',
+                  }}
+                  className="pf-product-card"
+                >
+                  {/* Base price tag */}
+                  <div style={{
+                    position: 'absolute',
+                    top: '32px',
+                    right: '32px',
+                    background: 'rgba(255, 255, 255, 0.9)',
+                    backdropFilter: 'blur(8px)',
+                    border: '1px solid #E4E4E7',
+                    padding: '4px 10px',
+                    borderRadius: '8px',
+                    fontSize: '12px',
+                    fontWeight: 700,
+                    zIndex: 10
+                  }}>
+                    From <span style={{ color: '#39B54A' }}>{p.basePrice}</span>
+                  </div>
+
+                  {/* Product Mockup Image Frame */}
+                  <div style={{
+                    width: '100%',
+                    aspectRatio: '1',
+                    borderRadius: '12px',
+                    background: '#F4F4F5',
+                    overflow: 'hidden',
+                    position: 'relative',
+                    marginBottom: '18px',
+                    border: '1px solid #E4E4E7'
+                  }}>
+                    <img
+                      src={p.images[activeIndex]}
+                      alt={p.name}
+                      style={{
+                        width: '100%',
+                        height: '100%',
+                        objectFit: 'cover',
+                        transition: 'transform 0.5s ease',
+                      }}
+                      className="pf-card-img"
+                    />
+
+                    {/* Quick switch mockup badges */}
+                    <div style={{
+                      position: 'absolute',
+                      bottom: '12px',
+                      left: '12px',
+                      right: '12px',
+                      display: 'flex',
+                      gap: '6px',
+                      justifyContent: 'center',
+                    }}>
+                      {p.images.map((img, idx) => (
+                        <button
+                          key={idx}
+                          onClick={() => toggleProductImage(p.id, idx)}
+                          style={{
+                            flex: 1,
+                            background: activeIndex === idx ? '#39B54A' : 'rgba(255, 255, 255, 0.85)',
+                            color: activeIndex === idx ? 'white' : '#3F3F46',
+                            border: 'none',
+                            padding: '6px 8px',
+                            borderRadius: '6px',
+                            fontSize: '10px',
+                            fontWeight: 600,
+                            cursor: 'pointer',
+                            transition: 'all 0.2s',
+                            boxShadow: '0 2px 6px rgba(0,0,0,0.05)',
+                            textAlign: 'center',
+                            whiteSpace: 'nowrap'
+                          }}
+                        >
+                          {p.labels[idx]}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+
+                  {/* Title and details */}
+                  <h3 style={{ fontFamily: "'Plus Jakarta Sans', sans-serif", fontSize: '18px', fontWeight: 800, color: '#172B15', marginBottom: '6px' }}>
+                    {p.name}
+                  </h3>
+                  <p style={{ fontSize: '13px', color: '#52525B', lineHeight: 1.5, marginBottom: '16px', flex: 1 }}>
+                    {p.description}
+                  </p>
+
+                  {/* Details pill row */}
+                  <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px', marginBottom: '20px' }}>
+                    {p.features.slice(0, 3).map((f, idx) => (
+                      <span key={idx} style={{ fontSize: '11px', color: '#71717A', background: '#F4F4F5', padding: '3px 8px', borderRadius: '6px', fontWeight: 500 }}>
+                        {f}
+                      </span>
+                    ))}
+                  </div>
+
+                  {/* Product Footer / Designing triggers */}
+                  <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', borderTop: '1px solid #F4F4F5', paddingTop: '16px' }}>
+                    <div style={{ display: 'flex', gap: '4px' }}>
+                      {p.colors.map(col => (
+                        <span key={col} style={{ width: '10px', height: '10px', borderRadius: '50%', background: col, border: '1px solid #D4D4D8' }} />
+                      ))}
+                    </div>
+                    <a
+                      href="#shopify-connect"
+                      style={{
+                        fontSize: '13px',
+                        color: '#39B54A',
+                        fontWeight: 600,
+                        textDecoration: 'none',
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: '4px',
+                        transition: 'color 0.2s'
+                      }}
+                      onMouseOver={e => e.currentTarget.style.color = '#2e8c39'}
+                      onMouseOut={e => e.currentTarget.style.color = '#39B54A'}
+                    >
+                      Start designing →
+                    </a>
+                  </div>
+                </div>
+              )
+            })}
+          </div>
+        </section>
+
+        {/* How It Works Section */}
+        <section id="how-it-works" style={{ padding: '60px 0 80px' }}>
+          <div style={{
+            background: '#FFFFFF',
+            border: '1px solid #E4E4E7',
+            borderRadius: '24px',
+            padding: '56px 40px',
+            boxShadow: '0 4px 30px rgba(0,0,0,0.01)',
+          }}>
+            <div style={{ textAlign: 'center', marginBottom: '48px' }}>
+              <div style={{ fontSize: '12px', fontWeight: 700, color: '#39B54A', letterSpacing: '0.1em', textTransform: 'uppercase', marginBottom: '8px' }}>
+                Simple 4-Step Process
+              </div>
+              <h2 style={{ fontFamily: "'Plus Jakarta Sans', sans-serif", fontSize: '32px', fontWeight: 800, color: '#172B15', letterSpacing: '-0.5px' }}>
+                How No Limits Studio works
+              </h2>
+            </div>
+
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '24px' }} className="pf-product-grid">
+              {STEPS.map((s, i) => (
+                <div key={i} style={{ position: 'relative' }}>
+                  {/* Step numbering */}
+                  <div style={{
+                    fontFamily: "'Plus Jakarta Sans', sans-serif",
+                    fontSize: '48px',
+                    fontWeight: 800,
+                    color: '#E1F5FE',
+                    background: 'linear-gradient(180deg, rgba(57,181,74,0.12) 0%, transparent 100%)',
+                    WebkitBackgroundClip: 'text',
+                    WebkitTextFillColor: 'transparent',
+                    lineHeight: 1,
+                    marginBottom: '8px'
+                  }}>
+                    {s.num}
+                  </div>
+                  <h3 style={{ fontFamily: "'Plus Jakarta Sans', sans-serif", fontSize: '16px', fontWeight: 700, color: '#172B15', marginBottom: '8px' }}>
+                    {s.title}
+                  </h3>
+                  <p style={{ fontSize: '13px', color: '#52525B', lineHeight: 1.6 }}>
+                    {s.desc}
+                  </p>
+                </div>
+              ))}
+            </div>
+          </div>
+        </section>
+
+        {/* Features & Benefits grid */}
+        <section id="features" style={{ padding: '40px 0 80px' }}>
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '24px' }} className="pf-product-grid">
+            {FEATURES.map((f, i) => (
+              <div key={i} style={{
+                background: '#FFFFFF',
+                border: '1px solid #E4E4E7',
+                borderRadius: '16px',
+                padding: '32px',
+                transition: 'transform 0.2s',
+              }}
+              onMouseOver={e => e.currentTarget.style.transform = 'translateY(-2px)'}
+              onMouseOut={e => e.currentTarget.style.transform = 'translateY(0)'}
+              >
+                <div style={{
+                  width: '48px', height: '48px',
+                  background: '#E6F4EA', border: '1px solid rgba(57,181,74,0.1)',
+                  borderRadius: '12px',
+                  display: 'flex', alignItems: 'center', justifyContent: 'center',
+                  fontSize: '24px', marginBottom: '24px',
+                }}>{f.icon}</div>
+                <h3 style={{ fontFamily: "'Plus Jakarta Sans', sans-serif", fontSize: '18px', fontWeight: 700, color: '#172B15', marginBottom: '10px' }}>
+                  {f.title}
+                </h3>
+                <p style={{ fontSize: '14px', color: '#52525B', lineHeight: 1.6 }}>
+                  {f.desc}
+                </p>
+              </div>
+            ))}
+          </div>
+        </section>
+
+        {/* Customer Testimonials */}
+        <section style={{ padding: '40px 0 80px' }}>
+          <div style={{ textAlign: 'center', marginBottom: '48px' }}>
+            <h2 style={{ fontFamily: "'Plus Jakarta Sans', sans-serif", fontSize: '32px', fontWeight: 800, color: '#172B15', letterSpacing: '-0.5px' }}>
+              Trusted by 10,000+ store owners
+            </h2>
+          </div>
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '24px' }} className="pf-product-grid">
+            {TESTIMONIALS.map((t, i) => (
+              <div key={i} style={{
+                background: '#FFFFFF', border: '1px solid #E4E4E7', borderRadius: '16px',
+                padding: '28px', display: 'flex', flexDirection: 'column',
+              }}>
+                <div style={{ display: 'flex', gap: '2px', color: '#F59E0B', fontSize: '14px', marginBottom: '14px' }}>
+                  {['★','★','★','★','★'].map((star, sIdx) => <span key={sIdx}>{star}</span>)}
+                </div>
+                <p style={{ fontSize: '14px', color: '#27272A', lineHeight: 1.6, marginBottom: '20px', flex: 1, fontStyle: 'italic' }}>
+                  "{t.quote}"
+                </p>
+                <div>
+                  <div style={{ fontSize: '14px', fontWeight: 700, color: '#172B15' }}>{t.name}</div>
+                  <div style={{ fontSize: '12px', color: '#71717A' }}>{t.role}</div>
+                </div>
+              </div>
+            ))}
+          </div>
+        </section>
+
+        {/* Pricing preview section */}
+        <section id="pricing" style={{ padding: '40px 0 80px' }}>
+          <div style={{ textAlign: 'center', marginBottom: '56px' }}>
+            <div style={{ fontSize: '12px', fontWeight: 700, color: '#39B54A', letterSpacing: '0.1em', textTransform: 'uppercase', marginBottom: '8px' }}>
+              Flexible Printing Subscriptions
+            </div>
+            <h2 style={{ fontFamily: "'Plus Jakarta Sans', sans-serif", fontSize: '32px', fontWeight: 800, color: '#172B15', letterSpacing: '-0.5px', marginBottom: '12px' }}>
+              Simple, transparent pricing plans
+            </h2>
+            <p style={{ fontSize: '14px', color: '#52525B' }}>No hidden manufacturing setup fees. Scale as you sell.</p>
+          </div>
+
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '24px' }} className="pf-product-grid">
+            {PRICING.map((p, i) => (
+              <div key={i} style={{
+                background: '#FFFFFF',
+                border: p.name.includes('Growth') ? '2px solid #39B54A' : '1px solid #E4E4E7',
+                borderRadius: '20px', padding: '32px', position: 'relative',
+                boxShadow: p.name.includes('Growth') ? '0 10px 30px rgba(57,181,74,0.08)' : 'none',
+              }}>
+                {p.name.includes('Growth') && (
+                  <div style={{
+                    position: 'absolute', top: '-12px', left: '50%', transform: 'translateX(-50%)',
+                    background: '#39B54A', color: 'white', fontSize: '11px', fontWeight: 700,
+                    letterSpacing: '0.05em', padding: '3px 12px', borderRadius: '100px', whiteSpace: 'nowrap',
+                    textTransform: 'uppercase'
+                  }}>{p.tag}</div>
+                )}
+                <div style={{ fontSize: '15px', fontWeight: 700, color: '#71717A', marginBottom: '10px' }}>{p.name}</div>
+                <div style={{ marginBottom: '20px' }}>
+                  <span style={{ fontFamily: "'Plus Jakarta Sans', sans-serif", fontSize: '36px', fontWeight: 800, color: '#172B15' }}>{p.price}</span>
+                  <span style={{ fontSize: '14px', color: '#71717A', fontWeight: 500 }}>{p.period}</span>
+                </div>
+                
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '10px', marginBottom: '24px' }}>
+                  {p.features.map((f, j) => (
+                    <div key={j} style={{ display: 'flex', alignItems: 'flex-start', gap: '8px' }}>
+                      <span style={{ color: '#39B54A', fontSize: '13px', fontWeight: 'bold', marginTop: '2px' }}>✓</span>
+                      <span style={{ fontSize: '13px', color: '#3F3F46', lineHeight: 1.4 }}>{f}</span>
+                    </div>
+                  ))}
+                </div>
+
+                <a
+                  href="#shopify-connect"
+                  style={{
+                    display: 'block',
+                    textAlign: 'center',
+                    background: p.name.includes('Growth') ? '#B9F95D' : '#FFFFFF',
+                    color: '#172B15',
+                    border: '1px solid',
+                    borderColor: p.name.includes('Growth') ? '#B9F95D' : '#D4D4D8',
+                    padding: '12px',
+                    borderRadius: '10px',
+                    fontSize: '13px',
+                    fontWeight: 700,
+                    textDecoration: 'none',
+                    transition: 'all 0.2s'
+                  }}
+                  onMouseOver={e => {
+                    if (p.name.includes('Growth')) {
+                      e.currentTarget.style.opacity = '0.9';
+                    } else {
+                      e.currentTarget.style.borderColor = '#172B15';
+                      e.currentTarget.style.background = '#F4F4F5';
+                    }
+                  }}
+                  onMouseOut={e => {
+                    if (p.name.includes('Growth')) {
+                      e.currentTarget.style.opacity = '1';
+                    } else {
+                      e.currentTarget.style.borderColor = '#D4D4D8';
+                      e.currentTarget.style.background = '#FFFFFF';
+                    }
+                  }}
+                >
+                  Start free trial
+                </a>
+              </div>
+            ))}
+          </div>
+        </section>
+
+        {/* CTA banner */}
+        <section style={{ padding: '40px 0 80px' }}>
+          <div style={{
+            background: 'linear-gradient(135deg, #172B15 0%, #244221 100%)',
+            borderRadius: '24px', padding: '64px 48px',
+            textAlign: 'center', position: 'relative', overflow: 'hidden',
+            boxShadow: '0 20px 40px rgba(0,0,0,0.1)'
+          }}>
+            <div style={{ position: 'absolute', top: '-120px', right: '-60px', width: '320px', height: '320px', background: 'radial-gradient(circle, rgba(185,249,93,0.15) 0%, transparent 70%)' }} />
+            <div style={{ position: 'absolute', bottom: '-120px', left: '-60px', width: '320px', height: '320px', background: 'radial-gradient(circle, rgba(185,249,93,0.1) 0%, transparent 70%)' }} />
+            
+            <h2 style={{
+              fontFamily: "'Plus Jakarta Sans', sans-serif", fontSize: 'clamp(28px, 4.5vw, 40px)', fontWeight: 800,
+              color: 'white', letterSpacing: '-1px', marginBottom: '16px', position: 'relative',
+              lineHeight: 1.15
+            }}>
+              Ready to sell custom clothing<br />without inventory limits?
+            </h2>
+            <p style={{ fontSize: '15px', color: '#E4E4E7', marginBottom: '32px', position: 'relative', maxWidth: '520px', margin: '0 auto 32px' }}>
+              Sync your Shopify store, choose your products, and launch your brand design in under 5 minutes.
+            </p>
+            <a href="#shopify-connect" style={{
+              display: 'inline-block', background: '#B9F95D', color: '#172B15',
+              padding: '14px 32px', borderRadius: '12px', fontSize: '14px', fontWeight: 700,
+              textDecoration: 'none', position: 'relative',
+              boxShadow: '0 4px 14px rgba(185,249,93,0.25)',
+              transition: 'all 0.2s'
+            }}
+            onMouseOver={e => {
+              e.currentTarget.style.opacity = '0.9';
+              e.currentTarget.style.transform = 'translateY(-1px)';
+            }}
+            onMouseOut={e => {
+              e.currentTarget.style.opacity = '1';
+              e.currentTarget.style.transform = 'translateY(0)';
+            }}
+            >
+              Connect My Store & Start Free →
+            </a>
+          </div>
+        </section>
       </main>
 
-      {/* Footer */}
-      <footer style={{ borderTop: '1px solid #E8E8E4', padding: '28px 24px', textAlign: 'center' }}>
-        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px', marginBottom: '6px' }}>
-          <div style={{
-            width: '22px', height: '22px', background: '#0A0A0A', borderRadius: '6px',
-            display: 'flex', alignItems: 'center', justifyContent: 'center',
-            fontSize: '10px', color: 'white',
-          }}>✦</div>
-          <span style={{ fontFamily: 'Syne, sans-serif', fontWeight: 700, fontSize: '14px', color: '#0A0A0A' }}>
-            No Limit Studio
-          </span>
+      {/* Premium Footer */}
+      <footer style={{ background: '#172B15', borderTop: '1px solid #244221', padding: '64px 24px 32px', color: '#A1A1AA' }}>
+        <div style={{ maxWidth: '1200px', margin: '0 auto' }}>
+          <div style={{ display: 'grid', gridTemplateColumns: '1.4fr 1fr 1fr 1fr', gap: '48px', marginBottom: '48px' }} className="pf-footer-grid">
+            <div>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '9px', marginBottom: '16px' }}>
+                <img 
+                  src="/images/logo.jpg" 
+                  alt="No Limits Studio" 
+                  style={{ width: '30px', height: '30px', borderRadius: '50%', objectFit: 'cover' }} 
+                />
+                <span style={{ fontFamily: "'Plus Jakarta Sans', sans-serif", fontWeight: 800, fontSize: '18px', color: 'white', letterSpacing: '-0.5px' }}>
+                  No Limits Studio
+                </span>
+              </div>
+              <p style={{ fontSize: '13px', color: '#A1A1AA', lineHeight: 1.6, maxWidth: '240px' }}>
+                Premium global print-on-demand platform for Shopify merchants. Design clothes, pet tees, kids shirts, and framed poster art.
+              </p>
+            </div>
+            {[
+              { title: 'Products', links: ['T-Shirts & Tees', 'Pet Hoodies & Shirts', 'Streetwear Hoodies', 'Kids Collections', 'Posters & Frame Art'] },
+              { title: 'Integrations', links: ['Shopify Store Sync', 'Custom API Access', 'Fulfillment Services', 'Merchant Tools'] },
+              { title: 'Support', links: ['Help Center', 'Shipping Rates', 'Archival Printing FAQ', 'Contact Sales'] },
+            ].map(col => (
+              <div key={col.title}>
+                <div style={{ fontSize: '12px', fontWeight: 700, letterSpacing: '0.05em', textTransform: 'uppercase', color: 'white', marginBottom: '18px' }}>{col.title}</div>
+                {col.links.map(l => (
+                  <div key={l} style={{ marginBottom: '11px' }}>
+                    <a href="#" style={{ fontSize: '13px', color: '#A1A1AA', textDecoration: 'none', transition: 'color 0.2s' }}
+                    onMouseOver={e => e.currentTarget.style.color = '#B9F95D'}
+                    onMouseOut={e => e.currentTarget.style.color = '#A1A1AA'}
+                    >{l}</a>
+                  </div>
+                ))}
+              </div>
+            ))}
+          </div>
+          <div style={{ borderTop: '1px solid #244221', paddingTop: '28px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '14px' }}>
+            <p style={{ fontSize: '12px', color: '#A1A1AA' }}>
+              © 2026 No Limits Studio. All rights reserved. Made for e-commerce builders.
+            </p>
+            <div style={{ display: 'flex', gap: '20px' }}>
+              {['Terms of Service', 'Privacy Policy', 'Sitemap'].map(l => (
+                <a key={l} href="#" style={{ fontSize: '12px', color: '#A1A1AA', textDecoration: 'none', transition: 'color 0.2s' }}
+                onMouseOver={e => e.currentTarget.style.color = '#B9F95D'}
+                onMouseOut={e => e.currentTarget.style.color = '#A1A1AA'}
+                >{l}</a>
+              ))}
+            </div>
+          </div>
         </div>
-        <p style={{ fontSize: '12px', color: '#BABAB6' }}>
-          © 2026 No Limit Studio. Print-on-Demand Platform for Shopify Merchants.
-        </p>
       </footer>
+
+      {/* Global CSS for grids, hover effects, animations, and keyframes */}
+      <style>{`
+        .pf-product-card:hover {
+          border-color: #39B54A !important;
+          box-shadow: 0 10px 30px rgba(57,181,74,0.06) !important;
+          transform: translateY(-4px);
+        }
+        .pf-product-card:hover .pf-card-img {
+          transform: scale(1.03);
+        }
+
+        /* Curtain Intro animations */
+        @keyframes pf-loader-spin {
+          0% { transform: rotate(0deg); }
+          100% { transform: rotate(360deg); }
+        }
+
+        /* Staggered entrance animations */
+        @keyframes pf-fade-in-up {
+          0% { opacity: 0; transform: translateY(24px); }
+          100% { opacity: 1; transform: translateY(0); }
+        }
+
+        /* Lottie-style Customizer Shockwave Ripple */
+        @keyframes pf-ripple {
+          0% { transform: translate(-50%, -50%) scale(0.2); opacity: 1; }
+          100% { transform: translate(-50%, -50%) scale(1.4); opacity: 0; }
+        }
+
+        /* Lottie-style sparkle particles burst */
+        @keyframes pf-spark-0 {
+          0% { transform: translate(0, 0) scale(1); opacity: 1; }
+          100% { transform: translate(-25px, -25px) scale(0.2); opacity: 0; }
+        }
+        @keyframes pf-spark-1 {
+          0% { transform: translate(0, 0) scale(1); opacity: 1; }
+          100% { transform: translate(25px, -25px) scale(0.2); opacity: 0; }
+        }
+        @keyframes pf-spark-2 {
+          0% { transform: translate(0, 0) scale(1); opacity: 1; }
+          100% { transform: translate(-25px, 25px) scale(0.2); opacity: 0; }
+        }
+        @keyframes pf-spark-3 {
+          0% { transform: translate(0, 0) scale(1); opacity: 1; }
+          100% { transform: translate(25px, 25px) scale(0.2); opacity: 0; }
+        }
+
+        @media (max-width: 992px) {
+          .pf-hero-grid { grid-template-columns: 1fr !important; gap: 36px !important; }
+        }
+        @media (max-width: 768px) {
+          .pf-nav-links { display: none !important; }
+          .pf-product-grid { grid-template-columns: 1fr !important; }
+          .pf-footer-grid { grid-template-columns: 1fr 1fr !important; }
+        }
+      `}</style>
     </div>
   )
 }

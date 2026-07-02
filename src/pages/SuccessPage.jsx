@@ -39,8 +39,16 @@ const SuccessPage = () => {
           display: 'flex', alignItems: 'center',
           height: '60px',
         }}>
-          <div>
-            <img src="/logo.jpeg" alt="No Limits Studio" style={{ height: '36px', objectFit: 'contain' }} />
+          <div style={{ display: 'flex', alignItems: 'center', gap: '9px' }}>
+            <div style={{
+              width: '28px', height: '28px', borderRadius: '8px',
+              background: '#B9F95D',
+              display: 'flex', alignItems: 'center', justifyContent: 'center',
+              fontSize: '13px', color: '#172B15', fontWeight: 'bold'
+            }}>✦</div>
+            <span style={{ fontFamily: "'Plus Jakarta Sans', sans-serif", fontWeight: 800, fontSize: '15px', color: '#172B15', letterSpacing: '-0.3px' }}>
+              No Limits Studio
+            </span>
           </div>
         </div>
       </header>
@@ -76,7 +84,7 @@ const SuccessPage = () => {
           </div>
 
           <h1 style={{
-            fontFamily: 'Syne, sans-serif',
+            fontFamily: "'Plus Jakarta Sans', sans-serif",
             fontSize: '26px', fontWeight: 800,
             color: '#0A0A0A', marginBottom: '10px',
             letterSpacing: '-0.3px',
@@ -87,7 +95,7 @@ const SuccessPage = () => {
           {shopDomain && (
             <p style={{ fontSize: '15px', color: '#888', lineHeight: 1.6, marginBottom: '32px' }}>
               <strong style={{ color: '#0A0A0A', fontWeight: 600 }}>{shopDomain}</strong>
-              {' '}is now live on No Limit Studio.
+              {' '}is now live on No Limits Studio.
             </p>
           )}
 

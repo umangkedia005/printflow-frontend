@@ -13,14 +13,7 @@ function App() {
       <Router>
         <Routes>
           <Route path="/auth" element={<AuthPage />} />
-          <Route
-            path="/"
-            element={
-              <ProtectedRoute>
-                <HomePage />
-              </ProtectedRoute>
-            }
-          />
+          <Route path="/" element={<HomePage />} />
           <Route
             path="/success"
             element={
