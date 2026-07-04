@@ -229,7 +229,7 @@ function Logo() {
   return (
     <div style={{ display: 'flex', alignItems: 'center', gap: '9px' }}>
       <img 
-        src="/images/logo.jpg" 
+        src="/images/logo.jpeg" 
         alt="No Limits Studio" 
         style={{ width: '32px', height: '32px', borderRadius: '50%', objectFit: 'cover' }} 
       />
@@ -346,7 +346,7 @@ const HomePage = () => {
               boxShadow: '0 0 40px rgba(185,249,93,0.3)',
               animation: 'pf-loader-spin 1.8s cubic-bezier(0.68, -0.6, 0.32, 1.6) infinite'
             }}>
-              <img src="/images/logo.jpg" alt="Logo" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+              <img src="/images/logo.jpeg" alt="Logo" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
             </div>
 
             {/* Glowing Text */}
@@ -561,120 +561,39 @@ const HomePage = () => {
           }} className="pf-hero-grid">
             
             {/* Card 1: Schematic Vector mockup with Lottie-style guide lines, success ripples & sparks */}
-            <div style={{
-              background: CUSTOMIZER_PRODUCTS[activeProd].bgColor,
-              borderRadius: '24px',
-              aspectRatio: '1.15',
-              position: 'relative',
-              overflow: 'hidden',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              boxShadow: '0 20px 40px rgba(0, 0, 0, 0.05)',
-              border: '1px solid rgba(255,255,255,0.1)',
-              transition: 'background 0.8s ease'
+            {/* Elegant Copywriting & Features Column */}
+            <div style={{ 
+              display: 'flex', 
+              flexDirection: 'column', 
+              justifyContent: 'center', 
+              paddingRight: '16px',
+              textAlign: 'left'
             }}>
-              {/* Grid background lines */}
-              <div style={{
-                position: 'absolute', inset: 0,
-                backgroundImage: 'radial-gradient(rgba(255,255,255,0.15) 1px, transparent 1px)',
-                backgroundSize: '16px 16px',
-                pointerEvents: 'none'
-              }} />
-
-              {/* T-Shirt/Hoodie/Pet vector outline */}
-              <svg viewBox="0 0 100 100" style={{ width: '65%', height: '65%', fill: '#FFFFFF', stroke: '#172B15', strokeWidth: 1.5, filter: 'drop-shadow(0 10px 20px rgba(0,0,0,0.06))', transition: 'all 0.5s' }}>
-                <path d={CUSTOMIZER_PRODUCTS[activeProd].svgPath} />
-              </svg>
-
-              {/* Alignment Guide Lines (Lottie-style centering) */}
-              <div style={{
-                position: 'absolute', top: 0, bottom: 0, left: '50%', width: '1px',
-                borderLeft: '1.5px dashed #39B54A', opacity: animStep === 1 ? 0.6 : 0,
-                transform: animStep === 1 ? 'scaleY(1)' : 'scaleY(0)', transformOrigin: 'top',
-                transition: 'all 0.5s cubic-bezier(0.16, 1, 0.3, 1)', zIndex: 5
-              }} />
-              <div style={{
-                position: 'absolute', left: 0, right: 0, top: '46%', height: '1px',
-                borderTop: '1.5px dashed #39B54A', opacity: animStep === 1 ? 0.6 : 0,
-                transform: animStep === 1 ? 'scaleX(1)' : 'scaleX(0)', transformOrigin: 'left',
-                transition: 'all 0.5s cubic-bezier(0.16, 1, 0.3, 1)', zIndex: 5
-              }} />
-
-              {/* Bounding box design box */}
-              <div style={{
-                position: 'absolute',
-                top: '32%',
-                left: '38%',
-                width: '24%',
-                height: '28%',
-                border: '2px dashed #39B54A',
-                borderRadius: '6px',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center'
-              }}>
-                <span style={{ fontSize: '9px', color: '#39B54A', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.05em' }}>
-                  Design Area
-                </span>
+              <div style={{ fontSize: '12px', fontWeight: 750, color: '#39B54A', letterSpacing: '0.12em', textTransform: 'uppercase', marginBottom: '14px' }}>
+                Fulfillment Automation
               </div>
-
-              {/* Lottie-style Success Ripple Ring */}
-              <div style={{
-                position: 'absolute', top: '46%', left: '50%', width: '120px', height: '120px', borderRadius: '50%',
-                border: '3px solid #B9F95D', transform: 'translate(-50%, -50%) scale(0)', opacity: 0, pointerEvents: 'none', zIndex: 8,
-                animation: animStep === 2 ? 'pf-ripple 0.9s cubic-bezier(0.1, 0.8, 0.3, 1) forwards' : 'none'
-              }} />
-
-              {/* Lottie-style Burst Sparkles */}
-              {[
-                { sIdx: 0, top: '35%', left: '42%' },
-                { sIdx: 1, top: '35%', right: '42%' },
-                { sIdx: 2, top: '57%', left: '42%' },
-                { sIdx: 3, top: '57%', right: '42%' }
-              ].map(spark => (
-                <div
-                  key={spark.sIdx}
-                  style={{
-                    position: 'absolute', top: spark.top, left: spark.left || 'auto', right: spark.right || 'auto',
-                    width: '6px', height: '6px', borderRadius: '50%', background: '#B9F95D', pointerEvents: 'none', zIndex: 8, opacity: 0,
-                    animation: animStep === 2 ? `pf-spark-${spark.sIdx} 0.8s cubic-bezier(0.1, 0.8, 0.3, 1) forwards` : 'none'
-                  }}
-                />
-              ))}
-
-              {/* Flying Sticker Graphic Card */}
-              <div 
-                style={{
-                  position: 'absolute',
-                  background: '#FFFFFF',
-                  border: '1.5px solid #172B15',
-                  borderRadius: '12px',
-                  padding: '8px 12px',
-                  boxShadow: '0 10px 24px rgba(0,0,0,0.12)',
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: '8px',
-                  zIndex: 10,
-                  pointerEvents: 'none',
-                  // Transition from corner to center
-                  top: animStep === 0 ? '10%' : '46%',
-                  left: animStep === 0 ? '10%' : '50%',
-                  transform: animStep === 0 
-                    ? 'rotate(-10deg) scale(1)' 
-                    : 'translate(-50%, -50%) scale(0.65) rotate(0deg)',
-                  transition: 'all 1.2s cubic-bezier(0.25, 1, 0.5, 1)'
-                }}
-              >
-                <div style={{ fontSize: '18px' }}>{CUSTOMIZER_PRODUCTS[activeProd].stickerEmoji}</div>
-                <div style={{ textAlign: 'left' }}>
-                  <div style={{ fontSize: '9px', fontWeight: 800, textTransform: 'uppercase', color: '#172B15', lineHeight: 1.1 }}>
-                    {CUSTOMIZER_PRODUCTS[activeProd].stickerText1}
+              <h3 style={{ fontFamily: "'Plus Jakarta Sans', sans-serif", fontSize: '32px', fontWeight: 800, color: '#172B15', letterSpacing: '-0.8px', lineHeight: 1.25, marginBottom: '18px' }}>
+                Your store orders, fulfilled automatically
+              </h3>
+              <p style={{ fontSize: '15px', color: '#52525B', lineHeight: 1.6, marginBottom: '28px' }}>
+                We act as the invisible backend for your brand. Once a customer orders from your Shopify store, our factory instantly prints, pack-slips, and ships directly to their doorstep. 
+              </p>
+              
+              {/* Key points with subtle checkmarks */}
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
+                {[
+                  { title: 'Zero Manual Intervention', desc: 'Orders sync, print, and ship with no clicks needed.' },
+                  { title: 'White-Label Branding', desc: 'Shipped under your shop name with custom packing slips.' },
+                  { title: 'Factory Direct Sourcing', desc: 'No middleman markups, securing maximum merchant margins.' }
+                ].map((item, idx) => (
+                  <div key={idx} style={{ display: 'flex', gap: '10px', alignItems: 'flex-start' }}>
+                    <span style={{ color: '#39B54A', fontWeight: 'bold', fontSize: '16px', lineHeight: 1.1 }}>✓</span>
+                    <div>
+                      <div style={{ fontSize: '14px', fontWeight: 700, color: '#172B15' }}>{item.title}</div>
+                      <div style={{ fontSize: '12.5px', color: '#71717A', marginTop: '2px', lineHeight: 1.4 }}>{item.desc}</div>
+                    </div>
                   </div>
-                  <div style={{ fontSize: '9px', fontWeight: 800, textTransform: 'uppercase', color: '#172B15', lineHeight: 1.1 }}>
-                    {CUSTOMIZER_PRODUCTS[activeProd].stickerText2}
-                  </div>
-                </div>
+                ))}
               </div>
             </div>
 
@@ -855,22 +774,7 @@ const HomePage = () => {
                   }}
                   className="pf-product-card"
                 >
-                  {/* Base price tag */}
-                  <div style={{
-                    position: 'absolute',
-                    top: '32px',
-                    right: '32px',
-                    background: 'rgba(255, 255, 255, 0.9)',
-                    backdropFilter: 'blur(8px)',
-                    border: '1px solid #E4E4E7',
-                    padding: '4px 10px',
-                    borderRadius: '8px',
-                    fontSize: '12px',
-                    fontWeight: 700,
-                    zIndex: 10
-                  }}>
-                    From <span style={{ color: '#39B54A' }}>{p.basePrice}</span>
-                  </div>
+
 
                   {/* Product Mockup Image Frame */}
                   <div style={{
@@ -1308,7 +1212,7 @@ const HomePage = () => {
             <div>
               <div style={{ display: 'flex', alignItems: 'center', gap: '9px', marginBottom: '16px' }}>
                 <img 
-                  src="/images/logo.jpg" 
+                  src="/images/logo.jpeg" 
                   alt="No Limits Studio" 
                   style={{ width: '30px', height: '30px', borderRadius: '50%', objectFit: 'cover' }} 
                 />

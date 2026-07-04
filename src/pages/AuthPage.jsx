@@ -59,7 +59,7 @@ export default function AuthPage() {
           {/* Logo */}
           <div style={{ marginBottom: '36px', display: 'flex', alignItems: 'center', gap: '8px' }}>
             <img 
-              src="/images/logo.jpg" 
+              src="/images/logo.jpeg" 
               alt="No Limits Studio" 
               style={{ width: '32px', height: '32px', borderRadius: '50%', objectFit: 'cover' }} 
             />

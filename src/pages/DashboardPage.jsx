@@ -1240,7 +1240,7 @@ export default function DashboardPage() {
         <div style={{ padding: '20px 24px', borderBottom: '1px solid rgba(23,43,21,0.06)' }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: '9px' }}>
             <img 
-              src="/images/logo.jpg" 
+              src="/images/logo.jpeg" 
               alt="No Limits Studio" 
               style={{ width: '28px', height: '28px', borderRadius: '50%', objectFit: 'cover' }} 
             />
