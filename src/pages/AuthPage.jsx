@@ -14,7 +14,7 @@ export default function AuthPage() {
   const navigate = useNavigate()
 
   useEffect(() => {
-    if (currentUser) navigate('/', { replace: true })
+    if (currentUser) navigate('/dashboard', { replace: true })
   }, [currentUser, navigate])
 
   async function handleSubmit(e) {

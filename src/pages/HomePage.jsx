@@ -31,24 +31,47 @@ const FEATURES = [
 const PRODUCTS = [
   {
     id: 'tshirts',
-    name: 'Premium T-Shirts',
-    description: '100% combed ring-spun cotton graphic tees, standard retail fit.',
+    name: 'Streetwear Graphic Tees',
+    description: '100% combed ring-spun cotton graphic tees, standard retail fit. Excellent for custom streetwear.',
     basePrice: '₹349',
-    images: ['/images/tshirt_1.jpg', '/images/tshirt_2.jpg'],
-    labels: ['On Model', 'Flat Lay'],
+    images: [
+      '/images/fulfillment/tee_back_flirt.jpg',
+      '/images/fulfillment/tee_back_playlist.jpg',
+      '/images/fulfillment/tee_back_drink.jpg',
+      '/images/fulfillment/tee_back_bull.jpg'
+    ],
+    labels: ['Fear Women', 'Send Playlist', 'Done Drinking', 'Red Flags'],
     sizes: ['S', 'M', 'L', 'XL', '2XL'],
     colors: ['#FFFFFF', '#18181B', '#4B5563', '#1E3A8A'],
     features: ['Combed cotton', 'Retail fit', 'Side-seamed', 'Tear-away label']
+  },
+  {
+    id: 'caps',
+    name: 'Embroidered Hats',
+    description: 'Premium cotton twill baseball caps. Optimized for structured textured embroidery stitching.',
+    basePrice: '₹299',
+    images: [
+      '/images/fulfillment/cap_embroidered.jpg',
+      '/images/fulfillment/cap_embroidered_2.jpg'
+    ],
+    labels: ['Beige Cap', 'Black Cap'],
+    sizes: ['One Size Fits All'],
+    colors: ['#F5E6CC', '#0A0A0A'],
+    features: ['Cotton twill', 'Premium stitching', 'Adjustable buckle strap', 'Breathable eyelets']
   },
   {
     id: 'pet_tshirts',
     name: 'Pet T-Shirts',
     description: 'Comfy and cute premium pet apparel designed for active cats and dogs.',
     basePrice: '₹449',
-    images: ['/images/pet_tshirt_1.jpg', '/images/pet_tshirt_2.jpg'],
-    labels: ['Frenchie Mockup', 'Golden Retriever'],
+    images: [
+      '/images/fulfillment/pet_tee_frenchie_1.jpg',
+      '/images/fulfillment/pet_tee_frenchie_2.jpg',
+      '/images/fulfillment/pet_tee_frenchie_3.jpg'
+    ],
+    labels: ['Red Slogan', 'Black Slogan 1', 'Black Slogan 2'],
     sizes: ['XS', 'S', 'M', 'L', 'XL'],
-    colors: ['#F5E6CC', '#D6EDFA', '#E2D6F5', '#F5D6EB'],
+    colors: ['#EF4444', '#18181B'],
     features: ['100% Polyester', 'Easy-stretch cuffs', 'Breathable fabric', 'Machine washable']
   },
   {
@@ -78,19 +101,56 @@ const PRODUCTS = [
     name: 'Posters & Frames',
     description: 'Premium museum-grade paper posters with solid wood custom frames.',
     basePrice: '₹399',
-    images: ['/images/poster_frame_1.jpg', '/images/poster_frame_2.jpg'],
-    labels: ['Living Room', 'Office Desk'],
+    images: [
+      '/images/fulfillment/framed_poster_1.jpg',
+      '/images/fulfillment/framed_poster_2.jpg',
+      '/images/fulfillment/framed_poster_3.jpg',
+      '/images/fulfillment/framed_poster_4.jpg',
+      '/images/fulfillment/framed_poster_5.jpg',
+      '/images/fulfillment/framed_poster_6.jpg'
+    ],
+    labels: ['Frame 1', 'Frame 2', 'Frame 3', 'Frame 4', 'Frame 5', 'Frame 6'],
     sizes: ['8"x10"', '12"x16"', '18"x24"', '24"x36"'],
     colors: ['#F5F5F5', '#F5E3D7', '#FFFFFF', '#0A0A0A'],
     features: ['Museum-grade paper', 'Archival ink', 'Solid wood frame', 'Ready to hang']
   }
 ]
 
+const CAROUSEL_CATEGORIES = [
+  { id: 'tshirts', name: 'T-shirts', icon: '👕', color: '#E0F2FE', textColor: '#0369A1' },
+  { id: 'sweatshirts', name: 'Sweatshirt', icon: '🧥', color: '#EEF2F6', textColor: '#1E3A8A' },
+  { id: 'mugs', name: 'Mugs', icon: '☕', color: '#F3F4F6', textColor: '#374151' },
+  { id: 'hoodies', name: 'Hoodie', icon: '🧥', color: '#DCFCE7', textColor: '#15803D' },
+  { id: 'kids', name: 'Kids clothing', icon: '👶', color: '#FEF9C3', textColor: '#A16207' },
+  { id: 'stickers', name: 'Stickers', icon: '🏷️', color: '#FCE7F3', textColor: '#BE185D' },
+  { id: 'phonecases', name: 'Phone cases', icon: '📱', color: '#E0F2FE', textColor: '#0369A1' },
+  { id: 'caps', name: 'Custom Caps', icon: '🧢', color: '#F3E8FF', textColor: '#6B21A8' },
+  { id: 'posters', name: 'Wall Posters', icon: '🖼️', color: '#FFF7ED', textColor: '#C2410C' },
+]
+
+const LOOKBOOK_IMAGES = [
+  { src: '/images/fulfillment/cap_embroidered.jpg', tag: 'Custom Cap' },
+  { src: '/images/fulfillment/pet_tee_frenchie_1.jpg', tag: 'Pet Apparel' },
+  { src: '/images/fulfillment/framed_poster_1.jpg', tag: 'Poster Frame' },
+  { src: '/images/fulfillment/tee_back_flirt.jpg', tag: 'Fear Women' },
+  { src: '/images/fulfillment/cap_embroidered_2.jpg', tag: 'Custom Cap' },
+  { src: '/images/fulfillment/pet_tee_frenchie_2.jpg', tag: 'Pet Apparel' },
+  { src: '/images/fulfillment/framed_poster_2.jpg', tag: 'Poster Frame' },
+  { src: '/images/fulfillment/tee_back_playlist.jpg', tag: 'Send Playlist' },
+  { src: '/images/fulfillment/framed_poster_3.jpg', tag: 'Poster Frame' },
+  { src: '/images/fulfillment/framed_poster_4.jpg', tag: 'Poster Frame' },
+  { src: '/images/fulfillment/tee_back_drink.jpg', tag: 'Done Drinking' },
+  { src: '/images/fulfillment/framed_poster_5.jpg', tag: 'Poster Frame' },
+  { src: '/images/fulfillment/framed_poster_6.jpg', tag: 'Poster Frame' },
+  { src: '/images/fulfillment/pet_tee_frenchie_3.jpg', tag: 'Pet Apparel' },
+  { src: '/images/fulfillment/tee_back_bull.jpg', tag: 'Red Flags' }
+]
+
 const STEPS = [
-  { num: '01', title: 'Choose Products', desc: 'Select from our T-shirts, hoodies, kids apparel, pet wear, or framed wall art posters.' },
-  { num: '02', title: 'Apply Your Designs', desc: 'Easily upload your brand logo or custom illustrations using our modern mockup visualizer.' },
-  { num: '03', title: 'Connect Your Store', desc: 'Sync with your Shopify store instantly using secure OAuth. No coding required.' },
-  { num: '04', title: 'We Print & Ship', desc: 'When a customer orders, we manufacture, print, pack, and ship directly to them.' },
+  { num: '01', title: 'Choose Products', desc: 'Select blank garment fits, hats, or posters from our catalog.' },
+  { num: '02', title: 'Upload Completed Designs', desc: 'Upload your finished graphic design print files. We do not design for you—we print what you send.' },
+  { num: '03', title: 'Connect Your Store', desc: 'Sync with your Shopify store instantly. Customer orders flow directly into our printing queue.' },
+  { num: '04', title: 'We Print & Ship', desc: 'Our factory prints the exact file, packs, and ships to the customer under your brand.' },
 ]
 
 const TESTIMONIALS = [
@@ -233,8 +293,25 @@ const HomePage = () => {
     }))
   }
 
+  // Bestseller slider offset & hotspot hover state
+  const [slideOffset, setSlideOffset] = useState(0)
+  const [hoveredHotspot, setHoveredHotspot] = useState(null)
+  const [visibleLookbook, setVisibleLookbook] = useState(8)
+
+  const handlePrevSlide = () => {
+    setSlideOffset(prev => Math.max(prev - 320, 0))
+  }
+  const handleNextSlide = () => {
+    setSlideOffset(prev => Math.min(prev + 320, 480))
+  }
+
   return (
     <div style={{ minHeight: '100vh', background: '#FAFAFA', fontFamily: 'Inter, sans-serif', color: '#172B15' }}>
+      <style>{`
+        .pf-scroll-hide::-webkit-scrollbar {
+          display: none;
+        }
+      `}</style>
       
       {/* Premium Cinematic Curtain Intro Loader */}
       {showSplash && (
@@ -409,7 +486,7 @@ const HomePage = () => {
             textTransform: 'uppercase',
             animation: 'pf-fade-in-up 0.6s cubic-bezier(0.16, 1, 0.3, 1) forwards'
           }}>
-            Create and sell<br />custom products
+            We print your orders.<br />Fulfillment automated.
           </h1>
 
           {/* Centered Checkmarks Row */}
@@ -819,28 +896,36 @@ const HomePage = () => {
                     />
 
                     {/* Quick switch mockup badges */}
-                    <div style={{
-                      position: 'absolute',
-                      bottom: '12px',
-                      left: '12px',
-                      right: '12px',
-                      display: 'flex',
-                      gap: '6px',
-                      justifyContent: 'center',
-                    }}>
+                    <div 
+                      className="pf-scroll-hide"
+                      style={{
+                        position: 'absolute',
+                        bottom: '12px',
+                        left: '12px',
+                        right: '12px',
+                        display: 'flex',
+                        gap: '6px',
+                        overflowX: 'auto',
+                        scrollbarWidth: 'none',
+                        msOverflowStyle: 'none',
+                        padding: '4px 0',
+                        justifyContent: 'flex-start',
+                        zIndex: 10
+                      }}
+                    >
                       {p.images.map((img, idx) => (
                         <button
                           key={idx}
                           onClick={() => toggleProductImage(p.id, idx)}
                           style={{
-                            flex: 1,
-                            background: activeIndex === idx ? '#39B54A' : 'rgba(255, 255, 255, 0.85)',
-                            color: activeIndex === idx ? 'white' : '#3F3F46',
+                            flexShrink: 0,
+                            background: activeIndex === idx ? '#39B54A' : 'rgba(255, 255, 255, 0.9)',
+                            color: activeIndex === idx ? 'white' : '#172B15',
                             border: 'none',
-                            padding: '6px 8px',
+                            padding: '6px 12px',
                             borderRadius: '6px',
-                            fontSize: '10px',
-                            fontWeight: 600,
+                            fontSize: '11px',
+                            fontWeight: 700,
                             cursor: 'pointer',
                             transition: 'all 0.2s',
                             boxShadow: '0 2px 6px rgba(0,0,0,0.05)',
@@ -893,13 +978,94 @@ const HomePage = () => {
                       onMouseOver={e => e.currentTarget.style.color = '#2e8c39'}
                       onMouseOut={e => e.currentTarget.style.color = '#39B54A'}
                     >
-                      Start designing →
+                      Fulfill with us →
                     </a>
                   </div>
                 </div>
               )
             })}
           </div>
+        </section>
+
+        {/* Factory Print Lookbook Showcase Gallery */}
+        <section id="lookbook" style={{ padding: '20px 0 80px' }}>
+          <div style={{ textAlign: 'center', marginBottom: '44px' }}>
+            <div style={{ fontSize: '12.5px', fontWeight: 750, color: '#39B54A', letterSpacing: '0.12em', textTransform: 'uppercase', marginBottom: '8px' }}>
+              Factory Production Lookbook
+            </div>
+            <h2 style={{ fontFamily: "'Plus Jakarta Sans', sans-serif", fontSize: '36px', fontWeight: 800, color: '#172B15', letterSpacing: '-1px', marginBottom: '12px' }}>
+              Real print quality on real bases
+            </h2>
+            <p style={{ fontSize: '14.5px', color: '#71717A', maxWidth: '560px', margin: '0 auto' }}>
+              Review our direct factory manufacturing output across caps, model apparel back-prints, slogan dog tees, and framed posters.
+            </p>
+          </div>
+
+          {/* Grid showing images */}
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '20px', marginBottom: '40px' }} className="pf-product-grid">
+            {LOOKBOOK_IMAGES.slice(0, visibleLookbook).map((img, idx) => (
+              <div 
+                key={idx} 
+                style={{
+                  position: 'relative', borderRadius: '16px', overflow: 'hidden',
+                  border: '1px solid #E4E4E7', aspectRatio: '1', cursor: 'pointer',
+                  boxShadow: '0 4px 10px rgba(0,0,0,0.015)', transition: 'all 0.3s ease'
+                }}
+                className="pf-lookbook-tile"
+                onMouseOver={e => {
+                  e.currentTarget.style.transform = 'scale(1.02)';
+                  e.currentTarget.style.boxShadow = '0 12px 30px rgba(0,0,0,0.08)';
+                }}
+                onMouseOut={e => {
+                  e.currentTarget.style.transform = 'scale(1)';
+                  e.currentTarget.style.boxShadow = '0 4px 10px rgba(0,0,0,0.015)';
+                }}
+              >
+                <img 
+                  src={img.src} 
+                  alt={img.tag} 
+                  style={{ width: '100%', height: '100%', objectFit: 'cover' }} 
+                />
+                
+                {/* Floating Tag */}
+                <div style={{
+                  position: 'absolute', bottom: '12px', left: '12px',
+                  background: 'rgba(255, 255, 255, 0.95)', backdropFilter: 'blur(8px)',
+                  padding: '4px 10px', borderRadius: '6px', fontSize: '10.5px',
+                  fontWeight: 750, color: '#172B15', border: '1px solid #E4E4E7'
+                }}>
+                  {img.tag}
+                </div>
+              </div>
+            ))}
+          </div>
+
+          {/* Load More Button */}
+          {visibleLookbook < LOOKBOOK_IMAGES.length && (
+            <div style={{ textAlign: 'center' }}>
+              <button
+                onClick={() => setVisibleLookbook(prev => Math.min(prev + 8, LOOKBOOK_IMAGES.length))}
+                style={{
+                  background: '#FFFFFF', border: '1px solid #E4E4E7', borderRadius: '12px',
+                  padding: '12px 28px', fontSize: '13px', fontWeight: 700, color: '#172B15',
+                  cursor: 'pointer', fontFamily: 'Inter, sans-serif', transition: 'all 0.2s',
+                  boxShadow: '0 4px 12px rgba(0,0,0,0.02)'
+                }}
+                onMouseOver={e => {
+                  e.currentTarget.style.background = '#FAFAFA';
+                  e.currentTarget.style.borderColor = '#39B54A';
+                  e.currentTarget.style.color = '#39B54A';
+                }}
+                onMouseOut={e => {
+                  e.currentTarget.style.background = '#FFFFFF';
+                  e.currentTarget.style.borderColor = '#E4E4E7';
+                  e.currentTarget.style.color = '#172B15';
+                }}
+              >
+                Show More Mockups ({LOOKBOOK_IMAGES.length - visibleLookbook} remaining)
+              </button>
+            </div>
+          )}
         </section>
 
         {/* How It Works Section */}
@@ -1111,7 +1277,7 @@ const HomePage = () => {
               Ready to sell custom clothing<br />without inventory limits?
             </h2>
             <p style={{ fontSize: '15px', color: '#E4E4E7', marginBottom: '32px', position: 'relative', maxWidth: '520px', margin: '0 auto 32px' }}>
-              Sync your Shopify store, choose your products, and launch your brand design in under 5 minutes.
+              Sync your Shopify store, choose your products, and start automating your fulfillment in under 5 minutes.
             </p>
             <a href="#shopify-connect" style={{
               display: 'inline-block', background: '#B9F95D', color: '#172B15',
