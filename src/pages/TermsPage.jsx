@@ -46,7 +46,7 @@ const TermsPage = () => {
 
         <Section title="8. Contact">
           Questions about these terms can be sent to{' '}
-          <a href="mailto:umangkedia5@gmail.com" style={{ color: '#39B54A', fontWeight: 600 }}>umangkedia5@gmail.com</a>.
+          <a href="mailto:hiddenappleclub@gmail.com" style={{ color: '#39B54A', fontWeight: 600 }}>hiddenappleclub@gmail.com</a>.
         </Section>
       </div>
     </div>
