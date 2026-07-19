@@ -8,7 +8,7 @@ const PrivacyPage = () => {
         <p style={{ fontSize: '13px', color: '#889B8E', marginBottom: '40px' }}>Last updated: July 2026</p>
 
         <Section title="1. Introduction">
-          No Limits Studio ("we", "us", "our") provides a print-on-demand fulfillment platform that connects to
+          No Limit Studio ("we", "us", "our") provides a print-on-demand fulfillment platform that connects to
           your Shopify store. This policy explains what information we collect, why we collect it, and how we use it.
         </Section>
 
