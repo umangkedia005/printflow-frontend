@@ -60,11 +60,11 @@ export default function AuthPage() {
           <div style={{ marginBottom: '36px', display: 'flex', alignItems: 'center', gap: '8px' }}>
             <img 
               src="/images/logo.jpeg" 
-              alt="No Limit Studio" 
+              alt="No Limits Studio" 
               style={{ width: '32px', height: '32px', borderRadius: '50%', objectFit: 'cover' }} 
             />
             <span style={{ fontFamily: "'Plus Jakarta Sans', sans-serif", fontWeight: 800, fontSize: '18px', color: '#172B15', letterSpacing: '-0.5px' }}>
-              No Limit Studio
+              No Limits Studio
             </span>
           </div>
 
@@ -231,7 +231,7 @@ export default function AuthPage() {
           </form>
 
           <p style={{ textAlign: 'center', fontSize: '13px', color: '#71717A', marginTop: '8px' }}>
-            {isLogin ? 'New to No Limit Studio? ' : 'Already have an account? '}
+            {isLogin ? 'New to No Limits Studio? ' : 'Already have an account? '}
             <button
               type="button"
               onClick={() => { setIsLogin(!isLogin); setError('') }}
@@ -281,7 +281,7 @@ export default function AuthPage() {
             <span style={{ color: '#B9F95D' }}>Printed & shipped.</span>
           </h2>
           <p style={{ fontSize: '14px', color: '#A1A8A3', lineHeight: 1.6, maxWidth: '280px', margin: '0 auto 32px' }}>
-            Connect your Shopify store and let No Limit Studio handle manufacturing, printing, and delivery.
+            Connect your Shopify store and let No Limits Studio handle manufacturing, printing, and delivery.
           </p>
 
           {/* Stats row */}

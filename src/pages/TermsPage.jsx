@@ -8,11 +8,11 @@ const TermsPage = () => {
         <p style={{ fontSize: '13px', color: '#889B8E', marginBottom: '40px' }}>Last updated: July 2026</p>
 
         <Section title="1. Acceptance of Terms">
-          By connecting your Shopify store to No Limit Studio, you agree to these Terms of Service.
+          By connecting your Shopify store to No Limits Studio, you agree to these Terms of Service.
         </Section>
 
         <Section title="2. The Service">
-          No Limit Studio is a print-on-demand fulfillment platform. When a customer places an order on your
+          No Limits Studio is a print-on-demand fulfillment platform. When a customer places an order on your
           connected Shopify store, we manufacture, print, and ship the order on your behalf, under your brand.
         </Section>
 
@@ -40,7 +40,7 @@ const TermsPage = () => {
         </Section>
 
         <Section title="7. Limitation of Liability">
-          No Limit Studio is provided "as is". We are not liable for indirect or consequential damages arising
+          No Limits Studio is provided "as is". We are not liable for indirect or consequential damages arising
           from use of the service.
         </Section>
 
