@@ -47,7 +47,7 @@ const SuccessPage = () => {
               fontSize: '13px', color: '#172B15', fontWeight: 'bold'
             }}>✦</div>
             <span style={{ fontFamily: "'Plus Jakarta Sans', sans-serif", fontWeight: 800, fontSize: '15px', color: '#172B15', letterSpacing: '-0.3px' }}>
-              No Limits Studio
+              No Limit Studio
             </span>
           </div>
         </div>
@@ -95,7 +95,7 @@ const SuccessPage = () => {
           {shopDomain && (
             <p style={{ fontSize: '15px', color: '#888', lineHeight: 1.6, marginBottom: '32px' }}>
               <strong style={{ color: '#0A0A0A', fontWeight: 600 }}>{shopDomain}</strong>
-              {' '}is now live on No Limits Studio.
+              {' '}is now live on No Limit Studio.
             </p>
           )}
 

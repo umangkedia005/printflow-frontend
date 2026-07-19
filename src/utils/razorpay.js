@@ -33,7 +33,7 @@ export async function openRazorpaySubscription({ planName, amount, billingCycle,
     // In production: subscription_id from your backend replaces amount
     amount: amount * 100,
     currency: 'INR',
-    name: 'No Limits Studio',
+    name: 'No Limit Studio',
     description: `${planName} — ${billingCycle === 'annual' ? 'Annual' : 'Monthly'}`,
     image: '/images/logo.jpeg',
     prefill: { email },

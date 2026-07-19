@@ -155,7 +155,7 @@ const STEPS = [
 
 const TESTIMONIALS = [
   { quote: "The pet t-shirts became our store's best seller overnight. Printing resolution on fabric is outstanding.", name: 'Ananya R.', role: 'Founder, PawStyle Apparel' },
-  { quote: 'Switched from Printify to No Limits Studio because of the lower base costs and faster shipping times in the region.', name: 'Rohit M.', role: 'CEO, Northline Streetwear' },
+  { quote: 'Switched from Printify to No Limit Studio because of the lower base costs and faster shipping times in the region.', name: 'Rohit M.', role: 'CEO, Northline Streetwear' },
   { quote: 'Excellent poster frame quality. The solid wood feel and archival inks get regular praise from our art buyers.', name: 'Kavya S.', role: 'Creative Director, Palette & Frame' },
 ]
 
@@ -230,11 +230,11 @@ function Logo() {
     <div style={{ display: 'flex', alignItems: 'center', gap: '9px' }}>
       <img 
         src="/images/logo.jpeg" 
-        alt="No Limits Studio" 
+        alt="No Limit Studio" 
         style={{ width: '32px', height: '32px', borderRadius: '50%', objectFit: 'cover' }} 
       />
       <span style={{ fontFamily: "'Plus Jakarta Sans', sans-serif", fontWeight: 800, fontSize: '18px', color: '#172B15', letterSpacing: '-0.5px' }}>
-        No Limits Studio
+        No Limit Studio
       </span>
     </div>
   )
@@ -357,7 +357,7 @@ const HomePage = () => {
               fontWeight: 800,
               letterSpacing: '-0.5px'
             }}>
-              No Limits Studio
+              No Limit Studio
             </h2>
           </div>
         </div>
@@ -986,7 +986,7 @@ const HomePage = () => {
                 Simple 4-Step Process
               </div>
               <h2 style={{ fontFamily: "'Plus Jakarta Sans', sans-serif", fontSize: '32px', fontWeight: 800, color: '#172B15', letterSpacing: '-0.5px' }}>
-                How No Limits Studio works
+                How No Limit Studio works
               </h2>
             </div>
 
@@ -1172,10 +1172,10 @@ const HomePage = () => {
               About This App
             </div>
             <h2 style={{ fontFamily: "'Plus Jakarta Sans', sans-serif", fontSize: '24px', fontWeight: 800, color: '#09090B', marginBottom: '16px' }}>
-              What No Limits Studio does
+              What No Limit Studio does
             </h2>
             <p style={{ fontSize: '14px', color: '#3F3F46', lineHeight: 1.7, marginBottom: '16px' }}>
-              No Limits Studio is a print-on-demand fulfillment app for Shopify merchants. Once you connect your
+              No Limit Studio is a print-on-demand fulfillment app for Shopify merchants. Once you connect your
               Shopify store, we automatically receive your orders, print and manufacture the products (t-shirts,
               hoodies, kids apparel, pet apparel, and framed posters), and ship them directly to your customers
               under your own brand — with no inventory required on your end.
@@ -1247,11 +1247,11 @@ const HomePage = () => {
               <div style={{ display: 'flex', alignItems: 'center', gap: '9px', marginBottom: '16px' }}>
                 <img 
                   src="/images/logo.jpeg" 
-                  alt="No Limits Studio" 
+                  alt="No Limit Studio" 
                   style={{ width: '30px', height: '30px', borderRadius: '50%', objectFit: 'cover' }} 
                 />
                 <span style={{ fontFamily: "'Plus Jakarta Sans', sans-serif", fontWeight: 800, fontSize: '18px', color: 'white', letterSpacing: '-0.5px' }}>
-                  No Limits Studio
+                  No Limit Studio
                 </span>
               </div>
               <p style={{ fontSize: '13px', color: '#A1A1AA', lineHeight: 1.6, maxWidth: '240px' }}>
@@ -1278,7 +1278,7 @@ const HomePage = () => {
           </div>
           <div style={{ borderTop: '1px solid #244221', paddingTop: '28px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '14px' }}>
             <p style={{ fontSize: '12px', color: '#A1A1AA' }}>
-              © 2026 No Limits Studio. All rights reserved. Made for e-commerce builders.
+              © 2026 No Limit Studio. All rights reserved. Made for e-commerce builders.
             </p>
             <div style={{ display: 'flex', gap: '20px' }}>
               {['Terms of Service', 'Privacy Policy', 'Sitemap'].map(l => (

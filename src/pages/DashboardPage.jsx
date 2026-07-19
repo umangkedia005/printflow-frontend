@@ -139,8 +139,8 @@ const BLOG_ARTICLES = [
       <p>Building a clothing business from home requires a clear focus. Rather than launching a generic store, focus on a specific segment (e.g., eco-friendly pet streetwear, minimalist graphic tees, space-themed oversized hoodies).</p>
       <h2>2. Design Custom Vector Art</h2>
       <p>Leverage tools like Figma, Illustrator, or Canva to generate vector decals. Ensure your artwork has transparent backgrounds and high contrast to pop cleanly on fabric.</p>
-      <h2>3. Partner with No Limits Studio</h2>
-      <p>By connecting your Shopify store to No Limits Studio, you bypass inventory risks. We handle the printing, quality control, packaging, and global logistics, enabling you to focus on marketing and scaling.</p>
+      <h2>3. Partner with No Limit Studio</h2>
+      <p>By connecting your Shopify store to No Limit Studio, you bypass inventory risks. We handle the printing, quality control, packaging, and global logistics, enabling you to focus on marketing and scaling.</p>
     `
   },
   {
@@ -154,7 +154,7 @@ const BLOG_ARTICLES = [
       <h2>1. Set Up Your E-commerce Store</h2>
       <p>Use Shopify to launch your online showcase in under an hour. Keep the styling clean, typography simple, and product grids easy to navigate.</p>
       <h2>2. Mockup Customization</h2>
-      <p>Using the No Limits Studio dashboard, preview vector graphics on lifestyle model shots. Make sure mockup photo lighting feels authentic and fits a premium brand aesthetic.</p>
+      <p>Using the No Limit Studio dashboard, preview vector graphics on lifestyle model shots. Make sure mockup photo lighting feels authentic and fits a premium brand aesthetic.</p>
       <h2>3. Test Orders and Quality Assurance</h2>
       <p>Always place self-test orders to inspect stitching, color accuracy, and delivery speeds. A successful brand is built on premium customer experiences.</p>
     `
@@ -168,7 +168,7 @@ const BLOG_ARTICLES = [
     img: 'https://images.unsplash.com/photo-1522202176988-66273c2fd55f?auto=format&fit=crop&w=600&q=80',
     content: `
       <h2>1. Shopify (Highly Recommended)</h2>
-      <p>Shopify remains the absolute gold standard for custom clothing brands. It offers complete domain ownership, deep analytics, and native integrations with No Limits Studio fulfillment.</p>
+      <p>Shopify remains the absolute gold standard for custom clothing brands. It offers complete domain ownership, deep analytics, and native integrations with No Limit Studio fulfillment.</p>
       <h2>2. Etsy Marketplace</h2>
       <p>Excellent for hand-crafted, vintage, and creative merchandise. Ideal for reaching an active, design-focused consumer base without hefty marketing costs.</p>
       <h2>3. WooCommerce & Squarespace</h2>
@@ -300,7 +300,7 @@ function UpgradeModal({ currentPlan, onClose, onSuccess }) {
   async function handleSubscribe(plan) {
     setLoadingPlan(plan.id)
     await openRazorpaySubscription({
-      planName: `No Limits Studio ${plan.name}`,
+      planName: `No Limit Studio ${plan.name}`,
       amount: cycle === 'annual' ? plan.annualPrice * 12 : plan.monthlyPrice,
       billingCycle: cycle,
       email: currentUser?.email,
@@ -1188,7 +1188,7 @@ export default function DashboardPage() {
       </SectionCard>
       <SectionCard title="Email Notifications">
         {[
-          { key: 'orderReceived', label: 'Order received',  desc: 'When a new Shopify order arrives in No Limits Studio' },
+          { key: 'orderReceived', label: 'Order received',  desc: 'When a new Shopify order arrives in No Limit Studio' },
           { key: 'orderShipped',  label: 'Order shipped',   desc: 'When tracking is confirmed and pushed to Shopify' },
           { key: 'orderDelivered',label: 'Order delivered', desc: 'When the carrier marks an order as delivered' },
         ].map(({ key, label, desc }) => (
@@ -1225,7 +1225,7 @@ export default function DashboardPage() {
           <div style={{ fontSize: '12px', color: '#999', marginBottom: '4px' }}>Signed in as</div>
           <div style={{ fontSize: '14px', fontWeight: 500, color: '#0A0A0A' }}>{currentUser?.email}</div>
         </div>
-        <button onClick={logout} style={{ background: '#FFF5F5', border: '1px solid #FED7D7', borderRadius: '8px', padding: '9px 18px', fontSize: '13px', fontWeight: 500, color: '#C53030', cursor: 'pointer', fontFamily: 'Inter, sans-serif' }}>Sign out of No Limits Studio</button>
+        <button onClick={logout} style={{ background: '#FFF5F5', border: '1px solid #FED7D7', borderRadius: '8px', padding: '9px 18px', fontSize: '13px', fontWeight: 500, color: '#C53030', cursor: 'pointer', fontFamily: 'Inter, sans-serif' }}>Sign out of No Limit Studio</button>
       </SectionCard>
     </>
   )
@@ -1241,11 +1241,11 @@ export default function DashboardPage() {
           <div style={{ display: 'flex', alignItems: 'center', gap: '9px' }}>
             <img 
               src="/images/logo.jpeg" 
-              alt="No Limits Studio" 
+              alt="No Limit Studio" 
               style={{ width: '28px', height: '28px', borderRadius: '50%', objectFit: 'cover' }} 
             />
             <span style={{ fontFamily: "'Plus Jakarta Sans', sans-serif", fontWeight: 800, fontSize: '15px', color: '#172B15', letterSpacing: '-0.3px' }}>
-              No Limits Studio
+              No Limit Studio
             </span>
           </div>
         </div>
@@ -1774,7 +1774,7 @@ export default function DashboardPage() {
                   <h3 style={{ fontFamily: "'Plus Jakarta Sans', sans-serif", fontSize: '16px', fontWeight: 800, color: '#172B15', marginBottom: '18px' }}>Frequently Asked Questions</h3>
                   
                   {[
-                    { q: 'How does No Limits Studio connect with Shopify?', a: 'When you paste your shopify domain, we request read/write access to sync your catalog inventory and download order payloads automatically.' },
+                    { q: 'How does No Limit Studio connect with Shopify?', a: 'When you paste your shopify domain, we request read/write access to sync your catalog inventory and download order payloads automatically.' },
                     { q: 'What is the printing and fulfillment timeframe?', a: 'All print-on-demand files are processed instantly. Production takes 24-48 hours, followed by priority global delivery shipping.' },
                     { q: 'How do I upload custom mockup designs?', a: 'Navigate to the Products view, click upload, and place your transparent PNG file onto the active apparel outline bounding box.' },
                   ].map((faq, idx) => (
