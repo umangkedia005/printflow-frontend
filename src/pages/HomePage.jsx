@@ -1162,6 +1162,40 @@ const HomePage = () => {
           </div>
         </section>
 
+        {/* About this app */}
+        <section id="about" style={{ padding: '20px 0 60px' }}>
+          <div style={{
+            background: '#FFFFFF', border: '1px solid #E4E4E7', borderRadius: '20px',
+            padding: '40px', maxWidth: '760px', margin: '0 auto',
+          }}>
+            <div style={{ fontSize: '12px', fontWeight: 700, color: '#39B54A', letterSpacing: '0.1em', textTransform: 'uppercase', marginBottom: '12px' }}>
+              About This App
+            </div>
+            <h2 style={{ fontFamily: "'Plus Jakarta Sans', sans-serif", fontSize: '24px', fontWeight: 800, color: '#09090B', marginBottom: '16px' }}>
+              What No Limits Studio does
+            </h2>
+            <p style={{ fontSize: '14px', color: '#3F3F46', lineHeight: 1.7, marginBottom: '16px' }}>
+              No Limits Studio is a print-on-demand fulfillment app for Shopify merchants. Once you connect your
+              Shopify store, we automatically receive your orders, print and manufacture the products (t-shirts,
+              hoodies, kids apparel, pet apparel, and framed posters), and ship them directly to your customers
+              under your own brand — with no inventory required on your end.
+            </p>
+            <p style={{ fontSize: '14px', color: '#3F3F46', lineHeight: 1.7, marginBottom: '20px' }}>
+              To do this, the app requests access to your Shopify store's <strong>orders</strong> (to know what to
+              fulfill and ship) and <strong>products</strong> (to let you map your catalog to our print-ready
+              items). We do not access customer payment information, and we never sell your data. See our{' '}
+              <a href="/privacy" style={{ color: '#39B54A', fontWeight: 600 }}>Privacy Policy</a> for full details.
+            </p>
+            <div style={{ display: 'flex', gap: '10px', flexWrap: 'wrap' }}>
+              {['read_orders', 'write_orders', 'read_products', 'read_fulfillments', 'write_fulfillments'].map(scope => (
+                <span key={scope} style={{ fontSize: '11px', fontWeight: 600, color: '#166534', background: '#DCFCE7', padding: '4px 10px', borderRadius: '6px', fontFamily: 'monospace' }}>
+                  {scope}
+                </span>
+              ))}
+            </div>
+          </div>
+        </section>
+
         {/* CTA banner */}
         <section style={{ padding: '40px 0 80px' }}>
           <div style={{
