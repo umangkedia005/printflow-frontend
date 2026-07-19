@@ -4,6 +4,8 @@ import HomePage from './pages/HomePage'
 import SuccessPage from './pages/SuccessPage'
 import AuthPage from './pages/AuthPage'
 import DashboardPage from './pages/DashboardPage'
+import PrivacyPage from './pages/PrivacyPage'
+import TermsPage from './pages/TermsPage'
 import ProtectedRoute from './components/ProtectedRoute'
 import './App.css'
 
@@ -14,6 +16,8 @@ function App() {
         <Routes>
           <Route path="/auth" element={<AuthPage />} />
           <Route path="/" element={<HomePage />} />
+          <Route path="/privacy" element={<PrivacyPage />} />
+          <Route path="/terms" element={<TermsPage />} />
           <Route
             path="/success"
             element={
