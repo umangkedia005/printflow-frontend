@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import StoreConnectForm from '../components/StoreConnectForm'
 import { useAuth } from '../contexts/AuthContext'
+import { fetchPlans } from '../utils/api'
 
 const STATS = [
   { value: '10K+', label: 'Stores connected', desc: 'Active Shopify stores synced' },
@@ -159,11 +160,7 @@ const TESTIMONIALS = [
   { quote: 'Excellent poster frame quality. The solid wood feel and archival inks get regular praise from our art buyers.', name: 'Kavya S.', role: 'Creative Director, Palette & Frame' },
 ]
 
-const PRICING = [
-  { name: 'Free Starter', price: '₹0', period: '/forever', tag: 'Great for beginners', features: ['1 connected store', 'Full access to mockups', 'Manual order fulfillment', 'Standard email support'] },
-  { name: 'Growth Pro', price: '₹1,999', period: '/mo', tag: 'Most Popular', features: ['3 connected stores', 'Automatic order syncing', 'Premium custom mockups', 'Up to 20% discount on base prices', '24/7 priority chat support'] },
-  { name: 'Enterprise', price: '₹5,499', period: '/mo', tag: 'For scaling brands', features: ['Unlimited stores', 'Dedicated account manager', 'Custom white-label packaging inserts', 'Custom product sourcing APIs', 'Bulk order discounts'] },
-]
+// Pricing plans are fetched from the backend (/plans) — see fetchPlans() in utils/api.js.
 
 const CUSTOMIZER_PRODUCTS = [
   {
@@ -247,6 +244,11 @@ const HomePage = () => {
   // Intro Splash Loader states
   const [showSplash, setShowSplash] = useState(true)
   const [splashFade, setSplashFade] = useState(false)
+
+  const [plans, setPlans] = useState([])
+  useEffect(() => {
+    fetchPlans().then(setPlans).catch(() => setPlans([]))
+  }, [])
 
   // Track the active image index (0 or 1) for each product ID
   const [imageIndices, setImageIndices] = useState({
@@ -1092,27 +1094,37 @@ const HomePage = () => {
           </div>
 
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '24px' }} className="pf-product-grid">
-            {PRICING.map((p, i) => (
-              <div key={i} style={{
+            {plans.length === 0 && (
+              <div style={{ gridColumn: '1 / -1', textAlign: 'center', padding: '32px', color: '#71717A', fontSize: '14px' }}>
+                Loading plans...
+              </div>
+            )}
+            {plans.map((p) => (
+              <div key={p.id} style={{
                 background: '#FFFFFF',
-                border: p.name.includes('Growth') ? '2px solid #39B54A' : '1px solid #E4E4E7',
+                border: p.recommended ? '2px solid #39B54A' : '1px solid #E4E4E7',
                 borderRadius: '20px', padding: '32px', position: 'relative',
-                boxShadow: p.name.includes('Growth') ? '0 10px 30px rgba(57,181,74,0.08)' : 'none',
+                boxShadow: p.recommended ? '0 10px 30px rgba(57,181,74,0.08)' : 'none',
               }}>
-                {p.name.includes('Growth') && (
+                {p.recommended && (
                   <div style={{
                     position: 'absolute', top: '-12px', left: '50%', transform: 'translateX(-50%)',
                     background: '#39B54A', color: 'white', fontSize: '11px', fontWeight: 700,
                     letterSpacing: '0.05em', padding: '3px 12px', borderRadius: '100px', whiteSpace: 'nowrap',
                     textTransform: 'uppercase'
-                  }}>{p.tag}</div>
+                  }}>Most Popular</div>
                 )}
                 <div style={{ fontSize: '15px', fontWeight: 700, color: '#71717A', marginBottom: '10px' }}>{p.name}</div>
                 <div style={{ marginBottom: '20px' }}>
-                  <span style={{ fontFamily: "'Plus Jakarta Sans', sans-serif", fontSize: '36px', fontWeight: 800, color: '#172B15' }}>{p.price}</span>
-                  <span style={{ fontSize: '14px', color: '#71717A', fontWeight: 500 }}>{p.period}</span>
+                  <span style={{ fontFamily: "'Plus Jakarta Sans', sans-serif", fontSize: '36px', fontWeight: 800, color: '#172B15' }}>₹{p.monthlyPrice.toLocaleString('en-IN')}</span>
+                  <span style={{ fontSize: '14px', color: '#71717A', fontWeight: 500 }}>/mo</span>
                 </div>
-                
+
+                <div style={{ display: 'flex', gap: '6px', marginBottom: '16px', flexWrap: 'wrap' }}>
+                  <span style={{ fontSize: '11px', fontWeight: 500, color: '#3F3F46', background: '#F4F4F5', border: '1px solid #E4E4E7', borderRadius: '6px', padding: '3px 8px' }}>{p.stores}</span>
+                  <span style={{ fontSize: '11px', fontWeight: 500, color: '#3F3F46', background: '#F4F4F5', border: '1px solid #E4E4E7', borderRadius: '6px', padding: '3px 8px' }}>{p.orders}</span>
+                </div>
+
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '10px', marginBottom: '24px' }}>
                   {p.features.map((f, j) => (
                     <div key={j} style={{ display: 'flex', alignItems: 'flex-start', gap: '8px' }}>
@@ -1127,10 +1139,10 @@ const HomePage = () => {
                   style={{
                     display: 'block',
                     textAlign: 'center',
-                    background: p.name.includes('Growth') ? '#B9F95D' : '#FFFFFF',
+                    background: p.recommended ? '#B9F95D' : '#FFFFFF',
                     color: '#172B15',
                     border: '1px solid',
-                    borderColor: p.name.includes('Growth') ? '#B9F95D' : '#D4D4D8',
+                    borderColor: p.recommended ? '#B9F95D' : '#D4D4D8',
                     padding: '12px',
                     borderRadius: '10px',
                     fontSize: '13px',
@@ -1139,7 +1151,7 @@ const HomePage = () => {
                     transition: 'all 0.2s'
                   }}
                   onMouseOver={e => {
-                    if (p.name.includes('Growth')) {
+                    if (p.recommended) {
                       e.currentTarget.style.opacity = '0.9';
                     } else {
                       e.currentTarget.style.borderColor = '#172B15';
@@ -1147,7 +1159,7 @@ const HomePage = () => {
                     }
                   }}
                   onMouseOut={e => {
-                    if (p.name.includes('Growth')) {
+                    if (p.recommended) {
                       e.currentTarget.style.opacity = '1';
                     } else {
                       e.currentTarget.style.borderColor = '#D4D4D8';

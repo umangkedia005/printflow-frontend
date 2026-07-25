@@ -2,7 +2,7 @@ import React, { useState, useEffect, useCallback } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useAuth } from '../contexts/AuthContext'
 import { openRazorpaySubscription } from '../utils/razorpay'
-import { fetchOrders, fetchSubscription, fetchMyStore, updateSubscription } from '../utils/api'
+import { fetchOrders, fetchSubscription, fetchMyStore, updateSubscription, fetchPlans } from '../utils/api'
 
 // ── Data ─────────────────────────────────────────────────────────────────────
 
@@ -15,30 +15,10 @@ const MOCK_PRODUCTS = [
   { id: 'p6', shopifyId: '8234567895', name: 'Classic White Tee',   variants: ['S','M','L','XL'],       printFile: null,                      factorySku: 'GILDAN-64000-WHT', status: 'incomplete' },
 ]
 
-const PLANS = [
-  {
-    id: 'starter', name: 'Starter',
-    monthlyPrice: 999, annualPrice: 799,
-    stores: '1 store', orders: '500 orders/mo',
-    features: ['Email notifications', 'Manual fulfillment', 'Order tracking', 'Email support'],
-  },
-  {
-    id: 'growth', name: 'Growth',
-    monthlyPrice: 2499, annualPrice: 1999,
-    stores: '3 stores', orders: 'Unlimited orders',
-    features: ['Everything in Starter', 'Auto-fulfillment', '3 Shopify stores', 'Priority support'],
-    recommended: true,
-  },
-  {
-    id: 'agency', name: 'Agency',
-    monthlyPrice: 6999, annualPrice: 5599,
-    stores: 'Unlimited stores', orders: 'Unlimited orders',
-    features: ['Everything in Growth', 'White-label mode', 'Unlimited stores', 'Dedicated manager'],
-  },
-]
-
-const PLAN_LIMITS  = { free: 50, starter: 500, growth: Infinity, agency: Infinity }
-const PLAN_LABELS  = { free: 'Free', starter: 'Starter', growth: 'Growth', agency: 'Agency' }
+// Plans are fetched from the backend (/plans) — see fetchPlans() in utils/api.js.
+// 'free' is kept as a fallback label/limit for any store still on the old default.
+const FALLBACK_PLAN_LABELS = { free: 'Free' }
+const FALLBACK_PLAN_LIMIT  = 50
 const ORDERS_USED  = 42 // mock — replace with real API value
 
 const STATUS = {
@@ -292,7 +272,7 @@ const NAV_ITEMS = [
 
 // ── Upgrade Modal ─────────────────────────────────────────────────────────────
 
-function UpgradeModal({ currentPlan, shopDomain, onClose, onSuccess }) {
+function UpgradeModal({ currentPlan, shopDomain, plans, onClose, onSuccess }) {
   const [cycle, setCycle] = useState('monthly')
   const [loadingPlan, setLoadingPlan] = useState(null)
   const [error, setError] = useState('')
@@ -363,7 +343,12 @@ function UpgradeModal({ currentPlan, shopDomain, onClose, onSuccess }) {
 
         {/* Plan cards */}
         <div style={{ padding: '28px 32px', display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '16px' }}>
-          {PLANS.map(plan => {
+          {plans.length === 0 && (
+            <div style={{ gridColumn: '1 / -1', textAlign: 'center', padding: '32px', color: '#999', fontSize: '13px' }}>
+              Loading plans...
+            </div>
+          )}
+          {plans.map(plan => {
             const price = cycle === 'annual' ? plan.annualPrice : plan.monthlyPrice
             const isLoading = loadingPlan === plan.id
             const isCurrent = currentPlan === plan.id
@@ -598,7 +583,15 @@ export default function DashboardPage() {
   const [ordersError, setOrdersError]       = useState(null)
 
   const [shopDomain, setShopDomain] = useState(localStorage.getItem('pf_shop') || '')
-  const planLimit  = PLAN_LIMITS[currentPlan]
+  const [plans, setPlans] = useState([])
+
+  useEffect(() => {
+    fetchPlans().then(setPlans).catch(() => setPlans([]))
+  }, [])
+
+  const planLabels = { ...FALLBACK_PLAN_LABELS, ...Object.fromEntries(plans.map(p => [p.id, p.name])) }
+  const currentPlanInfo = plans.find(p => p.id === currentPlan)
+  const planLimit  = currentPlanInfo ? currentPlanInfo.ordersLimit : FALLBACK_PLAN_LIMIT
   const ordersUsed = orders.length
   const usagePct   = planLimit === Infinity ? 0 : Math.round((ordersUsed / planLimit) * 100)
   const isNearLimit  = currentPlan === 'free' && usagePct >= 80
@@ -1035,7 +1028,7 @@ export default function DashboardPage() {
   }
 
   const BillingView = () => {
-    const planInfo = PLANS.find(p => p.id === currentPlan)
+    const planInfo = plans.find(p => p.id === currentPlan)
     const isPaid = currentPlan !== 'free'
 
     return (
@@ -1052,7 +1045,7 @@ export default function DashboardPage() {
               <svg width="12" height="12" viewBox="0 0 12 12" fill="none"><path d="M2 6l3 3 5-5" stroke="#22C55E" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"/></svg>
             </div>
             <div>
-              <div style={{ fontSize: '13px', fontWeight: 600, color: '#166534' }}>You're now on {PLAN_LABELS[upgradeSuccess]} — welcome!</div>
+              <div style={{ fontSize: '13px', fontWeight: 600, color: '#166534' }}>You're now on {planLabels[upgradeSuccess]} — welcome!</div>
               <div style={{ fontSize: '12px', color: '#4ADE80' }}>Your new limits are active immediately.</div>
             </div>
           </div>
@@ -1064,7 +1057,7 @@ export default function DashboardPage() {
             <div style={{ display: 'flex', alignItems: 'center', gap: '14px' }}>
               <div style={{ width: '44px', height: '44px', background: '#0A0A0A', borderRadius: '12px', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '18px', color: 'white', flexShrink: 0 }}>✦</div>
               <div>
-                <div style={{ fontSize: '16px', fontWeight: 700, color: '#0A0A0A', marginBottom: '3px' }}>{PLAN_LABELS[currentPlan]} Plan</div>
+                <div style={{ fontSize: '16px', fontWeight: 700, color: '#0A0A0A', marginBottom: '3px' }}>{planLabels[currentPlan]} Plan</div>
                 <div style={{ fontSize: '13px', color: '#999' }}>
                   {currentPlan === 'free' ? '1 store · 50 orders/month · Free forever' : `${planInfo?.stores} · ${planInfo?.orders}`}
                 </div>
@@ -1306,7 +1299,7 @@ export default function DashboardPage() {
               >
                 <span style={{ display: 'flex', alignItems: 'center', gap: '12px' }}><Icon />{label}</span>
                 {id === 'billing' && currentPlan !== 'free' && (
-                  <span style={{ fontSize: '9px', fontWeight: 700, background: '#172B15', color: '#B9F95D', padding: '2px 6px', borderRadius: '4px', letterSpacing: '0.04em' }}>{PLAN_LABELS[currentPlan].toUpperCase()}</span>
+                  <span style={{ fontSize: '9px', fontWeight: 700, background: '#172B15', color: '#B9F95D', padding: '2px 6px', borderRadius: '4px', letterSpacing: '0.04em' }}>{planLabels[currentPlan].toUpperCase()}</span>
                 )}
                 {id === 'billing' && currentPlan === 'free' && isNearLimit && (
                   <span style={{ width: '7px', height: '7px', borderRadius: '50%', background: '#F97316', flexShrink: 0 }} />
@@ -1914,6 +1907,7 @@ export default function DashboardPage() {
         <UpgradeModal
           currentPlan={currentPlan}
           shopDomain={shopDomain}
+          plans={plans}
           onClose={() => setShowUpgrade(false)}
           onSuccess={handleUpgradeSuccess}
         />

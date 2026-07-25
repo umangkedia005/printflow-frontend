@@ -49,6 +49,26 @@ export async function updateSubscription(shop, plan) {
   return res.json()
 }
 
+export async function fetchPlans() {
+  const res = await fetch(`${BASE_URL}/plans`)
+  const data = await res.json()
+  if (!Array.isArray(data)) return []
+  return data
+    .slice()
+    .sort((a, b) => (a.sort_order ?? 0) - (b.sort_order ?? 0))
+    .map(p => ({
+      id: p.plan_id,
+      name: p.name,
+      monthlyPrice: Number(p.monthly_price),
+      annualPrice: Number(p.annual_price),
+      stores: p.stores_limit === -1 ? 'Unlimited stores' : `${p.stores_limit} store${p.stores_limit === 1 ? '' : 's'}`,
+      orders: p.orders_limit === -1 ? 'Unlimited orders' : `Up to ${p.orders_limit} orders/mo`,
+      ordersLimit: p.orders_limit === -1 ? Infinity : Number(p.orders_limit),
+      features: p.features || [],
+      recommended: !!p.recommended,
+    }))
+}
+
 export async function fetchMyStore(email) {
   const res = await fetch(`${BASE_URL}/my-store?email=${encodeURIComponent(email)}`)
   if (!res.ok) return null
