@@ -1,4 +1,4 @@
-const RAZORPAY_KEY = import.meta.env.VITE_RAZORPAY_KEY_ID
+import { createRazorpayOrder, verifyRazorpayPayment } from './api'
 
 function loadRazorpayScript() {
   return new Promise(resolve => {
@@ -11,34 +11,48 @@ function loadRazorpayScript() {
   })
 }
 
-// In production: call your backend first to create a Razorpay subscription,
-// get back a subscription_id, then pass it here.
-// For now, mock mode simulates success when no key is configured.
-export async function openRazorpaySubscription({ planName, amount, billingCycle, email, onSuccess, onDismiss }) {
-  if (!RAZORPAY_KEY) {
-    // Mock mode — simulate payment processing delay then success
-    await new Promise(r => setTimeout(r, 1800))
-    onSuccess({ mock: true, plan: planName })
-    return
-  }
-
+// Creates a Razorpay order on the backend, opens checkout, then verifies the
+// payment signature server-side before calling onSuccess. The plan is only
+// ever activated after verification succeeds.
+export async function openRazorpaySubscription({ shop, plan, planName, amount, billingCycle, email, onSuccess, onDismiss, onError }) {
   const loaded = await loadRazorpayScript()
   if (!loaded) {
     alert('Payment gateway failed to load. Please refresh and try again.')
     return
   }
 
+  let order
+  try {
+    order = await createRazorpayOrder(shop, plan, amount)
+  } catch (err) {
+    onError?.(err.message)
+    return
+  }
+
   const options = {
-    key: RAZORPAY_KEY,
-    // In production: subscription_id from your backend replaces amount
-    amount: amount * 100,
-    currency: 'INR',
-    name: 'No Limit Studio',
+    key: order.key_id,
+    order_id: order.order_id,
+    amount: order.amount,
+    currency: order.currency,
+    name: 'No Limits Studio',
     description: `${planName} — ${billingCycle === 'annual' ? 'Annual' : 'Monthly'}`,
     image: '/images/logo_new.jpg',
     prefill: { email },
     theme: { color: '#0A0A0A' },
-    handler: response => onSuccess(response),
+    handler: async response => {
+      try {
+        await verifyRazorpayPayment({
+          shop,
+          plan,
+          razorpay_order_id: response.razorpay_order_id,
+          razorpay_payment_id: response.razorpay_payment_id,
+          razorpay_signature: response.razorpay_signature,
+        })
+        onSuccess(response)
+      } catch (err) {
+        onError?.(err.message)
+      }
+    },
     modal: { ondismiss: () => onDismiss?.() },
   }
 

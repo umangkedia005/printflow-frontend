@@ -2,7 +2,7 @@ import React, { useState, useEffect, useCallback } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useAuth } from '../contexts/AuthContext'
 import { openRazorpaySubscription } from '../utils/razorpay'
-import { fetchOrders, fetchSubscription, updateSubscription, fetchMyStore } from '../utils/api'
+import { fetchOrders, fetchSubscription, fetchMyStore } from '../utils/api'
 
 // ── Data ─────────────────────────────────────────────────────────────────────
 
@@ -292,20 +292,25 @@ const NAV_ITEMS = [
 
 // ── Upgrade Modal ─────────────────────────────────────────────────────────────
 
-function UpgradeModal({ currentPlan, onClose, onSuccess }) {
+function UpgradeModal({ currentPlan, shopDomain, onClose, onSuccess }) {
   const [cycle, setCycle] = useState('monthly')
   const [loadingPlan, setLoadingPlan] = useState(null)
+  const [error, setError] = useState('')
   const { currentUser } = useAuth()
 
   async function handleSubscribe(plan) {
     setLoadingPlan(plan.id)
+    setError('')
     await openRazorpaySubscription({
-      planName: `No Limit Studio ${plan.name}`,
+      shop: shopDomain,
+      plan: plan.id,
+      planName: `No Limits Studio ${plan.name}`,
       amount: cycle === 'annual' ? plan.annualPrice * 12 : plan.monthlyPrice,
       billingCycle: cycle,
       email: currentUser?.email,
       onSuccess: () => { setLoadingPlan(null); onSuccess(plan.id) },
       onDismiss: () => setLoadingPlan(null),
+      onError: (msg) => { setLoadingPlan(null); setError(msg || 'Payment verification failed. Please contact support if you were charged.') },
     })
   }
 
@@ -323,6 +328,11 @@ function UpgradeModal({ currentPlan, onClose, onSuccess }) {
               Choose your plan
             </h2>
             <p style={{ fontSize: '13px', color: '#999' }}>Upgrade anytime. Cancel anytime. Billed in INR.</p>
+            {error && (
+              <p style={{ fontSize: '12px', color: '#C53030', marginTop: '8px', display: 'flex', alignItems: 'center', gap: '5px' }}>
+                <span>⚠</span> {error}
+              </p>
+            )}
           </div>
           <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
             {/* Billing cycle toggle */}
@@ -615,10 +625,9 @@ export default function DashboardPage() {
   }, [loadOrders])
 
   function handleUpgradeSuccess(planId) {
+    // Plan was already verified and updated server-side in verify_razorpay_payment.
     setCurrentPlan(planId)
     localStorage.setItem('pf_plan', planId)
-    const shop = localStorage.getItem('pf_shop')
-    if (shop) updateSubscription(shop, planId)
     setShowUpgrade(false)
     setUpgradeSuccess(planId)
     setActiveNav('billing')
@@ -1897,6 +1906,7 @@ export default function DashboardPage() {
       {showUpgrade && (
         <UpgradeModal
           currentPlan={currentPlan}
+          shopDomain={shopDomain}
           onClose={() => setShowUpgrade(false)}
           onSuccess={handleUpgradeSuccess}
         />
