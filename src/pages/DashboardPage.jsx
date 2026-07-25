@@ -2,7 +2,7 @@ import React, { useState, useEffect, useCallback } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useAuth } from '../contexts/AuthContext'
 import { openRazorpaySubscription } from '../utils/razorpay'
-import { fetchOrders, fetchSubscription, fetchMyStore } from '../utils/api'
+import { fetchOrders, fetchSubscription, fetchMyStore, updateSubscription } from '../utils/api'
 
 // ── Data ─────────────────────────────────────────────────────────────────────
 
@@ -634,6 +634,13 @@ export default function DashboardPage() {
     setTimeout(() => setUpgradeSuccess(null), 4000)
   }
 
+  async function handleCancelSubscription() {
+    if (!window.confirm('Cancel your subscription and move to the Free plan?')) return
+    setCurrentPlan('free')
+    localStorage.setItem('pf_plan', 'free')
+    if (shopDomain) await updateSubscription(shopDomain, 'free')
+  }
+
   const greeting = () => {
     const h = new Date().getHours()
     if (h < 12) return 'Good morning'
@@ -1090,7 +1097,7 @@ export default function DashboardPage() {
                 <span style={{ color: '#BABAB6' }}>·</span>
                 <button style={{ background: 'none', border: 'none', color: '#3B1F6B', fontSize: '13px', fontWeight: 500, cursor: 'pointer', padding: 0, fontFamily: 'Inter, sans-serif' }}>Update card</button>
               </div>
-              <button onClick={() => { setCurrentPlan('free'); }} style={{ background: 'none', border: 'none', color: '#C8C8C4', fontSize: '12px', cursor: 'pointer', fontFamily: 'Inter, sans-serif', padding: 0 }} onMouseOver={e=>e.currentTarget.style.color='#C53030'} onMouseOut={e=>e.currentTarget.style.color='#C8C8C4'}>Cancel subscription</button>
+              <button onClick={handleCancelSubscription} style={{ background: 'none', border: 'none', color: '#C8C8C4', fontSize: '12px', cursor: 'pointer', fontFamily: 'Inter, sans-serif', padding: 0 }} onMouseOver={e=>e.currentTarget.style.color='#C53030'} onMouseOut={e=>e.currentTarget.style.color='#C8C8C4'}>Cancel subscription</button>
             </div>
           )}
         </SectionCard>
