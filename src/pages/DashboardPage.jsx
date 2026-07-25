@@ -2,7 +2,7 @@ import React, { useState, useEffect, useCallback } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useAuth } from '../contexts/AuthContext'
 import { openRazorpaySubscription, openWalletTopup } from '../utils/razorpay'
-import { fetchOrders, fetchSubscription, fetchMyStore, updateSubscription, fetchPlans, fetchWallet } from '../utils/api'
+import { fetchOrders, fetchSubscription, fetchMyStore, updateSubscription, fetchPlans, fetchWallet, fulfillOrder } from '../utils/api'
 
 // ── Data ─────────────────────────────────────────────────────────────────────
 
@@ -536,6 +536,8 @@ export default function DashboardPage() {
   const [activeNav, setActiveNav]           = useState('dashboard')
   const [statusFilter, setStatusFilter]     = useState('all')
   const [selectedOrder, setSelectedOrder]   = useState(null)
+  const [fulfillLoading, setFulfillLoading] = useState(false)
+  const [fulfillError, setFulfillError]     = useState('')
   const [notifs, setNotifs]                 = useState({ orderReceived: true, orderShipped: true, orderDelivered: false })
   const [autoFulfill, setAutoFulfill]       = useState(false)
   const [currentPlan, setCurrentPlan]       = useState(() => localStorage.getItem('pf_plan') || 'free')
@@ -709,6 +711,28 @@ export default function DashboardPage() {
       setOrdersLoading(false)
     }
   }, [shopDomain])
+
+  async function handleFulfillOrder(order) {
+    setFulfillLoading(true)
+    setFulfillError('')
+    try {
+      const result = await fulfillOrder(shopDomain, order.shopifyId)
+      setSelectedOrder(o => o ? { ...o, status: 'printing' } : o)
+      setOrders(prev => prev.map(o => o.shopifyId === order.shopifyId ? { ...o, status: 'printing' } : o))
+      setWalletBalance(result.balance)
+      loadWallet()
+    } catch (err) {
+      if (err.status === 402) {
+        setFulfillError(`Insufficient wallet balance. You need ₹${err.details.required?.toLocaleString('en-IN')} but only have ₹${err.details.balance?.toLocaleString('en-IN')}. Top up your wallet to continue.`)
+      } else if (err.details?.products) {
+        setFulfillError(`Missing fulfillment cost for: ${err.details.products.join(', ')}. Set this up in Products first.`)
+      } else {
+        setFulfillError(err.message)
+      }
+    } finally {
+      setFulfillLoading(false)
+    }
+  }
 
   useEffect(() => {
     document.body.style.background = '#FAFAF8'
@@ -1026,7 +1050,7 @@ export default function DashboardPage() {
                     <td style={{ padding: '14px 20px', fontSize: '12px', color: '#C8C8C4' }}>{order.date}</td>
                     <td style={{ padding: '14px 20px', fontSize: '13px', fontWeight: 600, color: '#0A0A0A' }}>{order.amount}</td>
                     <td style={{ padding: '14px 20px' }}>
-                      <button onClick={() => setSelectedOrder(order)} style={{ background: 'transparent', border: '1px solid #E8E8E4', borderRadius: '7px', padding: '6px 14px', fontSize: '11px', fontWeight: 600, color: '#52525B', cursor: 'pointer', fontFamily: 'Inter, sans-serif', transition: 'all 0.2s' }} onMouseOver={e=>{e.currentTarget.style.borderColor='#39B54A';e.currentTarget.style.color='#39B54A';e.currentTarget.style.background='rgba(57,181,74,0.04)'}} onMouseOut={e=>{e.currentTarget.style.borderColor='#E8E8E4';e.currentTarget.style.color='#52525B';e.currentTarget.style.background='transparent'}}>View →</button>
+                      <button onClick={() => { setSelectedOrder(order); setFulfillError('') }} style={{ background: 'transparent', border: '1px solid #E8E8E4', borderRadius: '7px', padding: '6px 14px', fontSize: '11px', fontWeight: 600, color: '#52525B', cursor: 'pointer', fontFamily: 'Inter, sans-serif', transition: 'all 0.2s' }} onMouseOver={e=>{e.currentTarget.style.borderColor='#39B54A';e.currentTarget.style.color='#39B54A';e.currentTarget.style.background='rgba(57,181,74,0.04)'}} onMouseOut={e=>{e.currentTarget.style.borderColor='#E8E8E4';e.currentTarget.style.color='#52525B';e.currentTarget.style.background='transparent'}}>View →</button>
                     </td>
                   </tr>
                 ))}
@@ -2049,7 +2073,28 @@ export default function DashboardPage() {
                 </InfoSection>
               )}
               <div style={{ paddingTop: '4px', borderTop: '1px solid #E8E8E4', marginTop: '8px' }}>
-                {selectedOrder.status === 'queued' && <button className="pf-btn" style={{ width: '100%', padding: '13px', marginBottom: '10px', marginTop: '16px' }} onMouseOver={e=>e.currentTarget.style.opacity='0.82'} onMouseOut={e=>e.currentTarget.style.opacity='1'}>Send to Print Factory →</button>}
+                {fulfillError && (
+                  <div style={{ background: '#FFF5F5', border: '1px solid #FED7D7', borderRadius: '8px', padding: '10px 14px', marginTop: '16px', fontSize: '12px', color: '#C53030', lineHeight: 1.5 }}>
+                    ⚠ {fulfillError}
+                    {fulfillError.includes('wallet balance') && (
+                      <button onClick={() => { setSelectedOrder(null); setActiveNav('wallet'); setShowTopup(true) }} style={{ display: 'block', marginTop: '6px', background: 'none', border: 'none', color: '#C53030', fontWeight: 700, fontSize: '12px', cursor: 'pointer', padding: 0, textDecoration: 'underline' }}>
+                        Top up wallet →
+                      </button>
+                    )}
+                  </div>
+                )}
+                {selectedOrder.status === 'queued' && (
+                  <button
+                    className="pf-btn"
+                    disabled={fulfillLoading}
+                    onClick={() => handleFulfillOrder(selectedOrder)}
+                    style={{ width: '100%', padding: '13px', marginBottom: '10px', marginTop: '16px', opacity: fulfillLoading ? 0.6 : 1, cursor: fulfillLoading ? 'not-allowed' : 'pointer' }}
+                    onMouseOver={e=>{ if (!fulfillLoading) e.currentTarget.style.opacity='0.82' }}
+                    onMouseOut={e=>{ if (!fulfillLoading) e.currentTarget.style.opacity='1' }}
+                  >
+                    {fulfillLoading ? 'Sending...' : 'Send to Print Factory →'}
+                  </button>
+                )}
                 {selectedOrder.status === 'printing' && <button style={{ width: '100%', padding: '13px', background: '#1D4ED8', color: 'white', border: 'none', borderRadius: '10px', fontSize: '13px', fontWeight: 600, cursor: 'pointer', fontFamily: 'Inter, sans-serif', marginBottom: '10px', marginTop: '16px', transition: 'opacity 0.15s' }} onMouseOver={e=>e.currentTarget.style.opacity='0.82'} onMouseOut={e=>e.currentTarget.style.opacity='1'}>Mark as Shipped</button>}
                 <a href={`https://${shopDomain}/admin/orders/${selectedOrder.shopifyId}`} target="_blank" rel="noopener noreferrer" className="pf-btn-outline" style={{ display: 'flex', padding: '12px', marginTop: selectedOrder.status === 'queued' || selectedOrder.status === 'printing' ? '0' : '16px' }}>View in Shopify Admin ↗</a>
               </div>

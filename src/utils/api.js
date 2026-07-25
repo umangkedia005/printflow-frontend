@@ -135,6 +135,22 @@ export async function verifyWalletTopup({ shop, amount, razorpay_order_id, razor
   return data
 }
 
+export async function fulfillOrder(shop, orderId) {
+  const res = await fetch(`${BASE_URL}/orders/fulfill`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ shop, order_id: orderId }),
+  })
+  const data = await res.json()
+  if (!res.ok) {
+    const err = new Error(data.error || 'Failed to send order to print factory')
+    err.status = res.status
+    err.details = data
+    throw err
+  }
+  return data
+}
+
 function formatOrder(o) {
   const raw = o.raw || {}
   const customer = raw.customer || {}
