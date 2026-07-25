@@ -106,6 +106,35 @@ export async function verifyRazorpayPayment({ shop, plan, razorpay_order_id, raz
   return data
 }
 
+export async function fetchWallet(shop) {
+  const res = await fetch(`${BASE_URL}/wallet?shop=${encodeURIComponent(shop)}`)
+  const data = await res.json()
+  if (!res.ok) throw new Error(data.error || 'Failed to fetch wallet')
+  return data
+}
+
+export async function createWalletTopupOrder(shop, amount) {
+  const res = await fetch(`${BASE_URL}/wallet/create-order`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ shop, amount }),
+  })
+  const data = await res.json()
+  if (!res.ok) throw new Error(data.error || 'Failed to create top-up order')
+  return data
+}
+
+export async function verifyWalletTopup({ shop, amount, razorpay_order_id, razorpay_payment_id, razorpay_signature }) {
+  const res = await fetch(`${BASE_URL}/wallet/verify-payment`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ shop, amount, razorpay_order_id, razorpay_payment_id, razorpay_signature }),
+  })
+  const data = await res.json()
+  if (!res.ok) throw new Error(data.error || 'Top-up verification failed')
+  return data
+}
+
 function formatOrder(o) {
   const raw = o.raw || {}
   const customer = raw.customer || {}

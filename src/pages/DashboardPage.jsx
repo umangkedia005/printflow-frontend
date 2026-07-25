@@ -1,8 +1,8 @@
 import React, { useState, useEffect, useCallback } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useAuth } from '../contexts/AuthContext'
-import { openRazorpaySubscription } from '../utils/razorpay'
-import { fetchOrders, fetchSubscription, fetchMyStore, updateSubscription, fetchPlans } from '../utils/api'
+import { openRazorpaySubscription, openWalletTopup } from '../utils/razorpay'
+import { fetchOrders, fetchSubscription, fetchMyStore, updateSubscription, fetchPlans, fetchWallet } from '../utils/api'
 
 // ── Data ─────────────────────────────────────────────────────────────────────
 
@@ -88,6 +88,7 @@ const IconOrders   = () => <svg width="15" height="15" viewBox="0 0 16 16" fill=
 const IconProducts = () => <svg width="15" height="15" viewBox="0 0 16 16" fill="none"><path d="M8 1.5L14 4.5V11.5L8 14.5L2 11.5V4.5L8 1.5Z" stroke="currentColor" strokeWidth="1.5" strokeLinejoin="round"/><path d="M8 1.5V14.5M2 4.5L8 7.5L14 4.5" stroke="currentColor" strokeWidth="1.5"/></svg>
 const IconSettings = () => <svg width="15" height="15" viewBox="0 0 16 16" fill="none"><circle cx="8" cy="8" r="2.5" stroke="currentColor" strokeWidth="1.5"/><path d="M8 1.5V3M8 13v1.5M1.5 8H3M13 8h1.5M3.4 3.4l1.06 1.06M11.54 11.54l1.06 1.06M3.4 12.6l1.06-1.06M11.54 4.46l1.06-1.06" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/></svg>
 const IconBilling  = () => <svg width="15" height="15" viewBox="0 0 16 16" fill="none"><rect x="1" y="3.5" width="14" height="9" rx="1.5" stroke="currentColor" strokeWidth="1.5"/><path d="M1 6.5h14" stroke="currentColor" strokeWidth="1.5"/><path d="M4 10h2" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/></svg>
+const IconWallet   = () => <svg width="15" height="15" viewBox="0 0 16 16" fill="none"><path d="M2 4.5A1.5 1.5 0 013.5 3h9A1.5 1.5 0 0114 4.5v7A1.5 1.5 0 0112.5 13h-9A1.5 1.5 0 012 11.5v-7Z" stroke="currentColor" strokeWidth="1.5"/><path d="M10.5 8a1 1 0 102 0 1 1 0 00-2 0Z" fill="currentColor"/><path d="M2 6.5h12" stroke="currentColor" strokeWidth="1.5"/></svg>
 const IconHelp     = () => <svg width="15" height="15" viewBox="0 0 16 16" fill="none"><circle cx="8" cy="8" r="6.5" stroke="currentColor" strokeWidth="1.5"/><path d="M8 10.5v-.5M8 8a1.5 1.5 0 10-1.5-1.5" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/></svg>
 
 // ── Stat icons ────────────────────────────────────────────────────────────────
@@ -266,11 +267,89 @@ const NAV_ITEMS = [
   { id: 'orders',        label: 'Orders',        Icon: IconOrders },
   { id: 'products',      label: 'Products',      Icon: IconProducts },
   { id: 'billing',       label: 'Billing',       Icon: IconBilling },
+  { id: 'wallet',        label: 'Wallet',        Icon: IconWallet },
   { id: 'settings',      label: 'Settings',      Icon: IconSettings },
   { id: 'help',          label: 'Help Center',   Icon: IconHelp },
 ]
 
 // ── Upgrade Modal ─────────────────────────────────────────────────────────────
+
+// ── Wallet Top-up Modal ───────────────────────────────────────────────────────
+
+const TOPUP_PRESETS = [500, 1000, 2500, 5000]
+
+function TopupModal({ shopDomain, onClose, onSuccess }) {
+  const [amount, setAmount] = useState('')
+  const [loading, setLoading] = useState(false)
+  const [error, setError] = useState('')
+  const { currentUser } = useAuth()
+
+  async function handleTopup() {
+    const numAmount = Number(amount)
+    if (!numAmount || numAmount <= 0) {
+      setError('Enter a valid amount')
+      return
+    }
+    setLoading(true)
+    setError('')
+    await openWalletTopup({
+      shop: shopDomain,
+      amount: numAmount,
+      email: currentUser?.email,
+      onSuccess: (newBalance) => { setLoading(false); onSuccess(newBalance) },
+      onDismiss: () => setLoading(false),
+      onError: (msg) => { setLoading(false); setError(msg || 'Payment verification failed. Please contact support if you were charged.') },
+    })
+  }
+
+  return (
+    <div
+      onClick={e => { if (e.target === e.currentTarget) onClose() }}
+      style={{ position: 'fixed', inset: 0, zIndex: 300, background: 'rgba(0,0,0,0.45)', backdropFilter: 'blur(6px)', WebkitBackdropFilter: 'blur(6px)', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '24px' }}
+    >
+      <div style={{ background: '#FFFFFF', borderRadius: '20px', width: '100%', maxWidth: '420px', overflow: 'hidden', boxShadow: '0 24px 80px rgba(0,0,0,0.2)', animation: 'pf-fade-up 0.25s ease' }}>
+        <div style={{ padding: '24px 28px', borderBottom: '1px solid #E8E8E4', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+          <h2 style={{ fontFamily: "'Plus Jakarta Sans', sans-serif", fontSize: '18px', fontWeight: 800, color: '#0A0A0A' }}>Add money to wallet</h2>
+          <button onClick={onClose} style={{ width: '30px', height: '30px', background: '#F4F4F0', border: 'none', borderRadius: '8px', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '14px', color: '#888', cursor: 'pointer' }}>✕</button>
+        </div>
+
+        <div style={{ padding: '24px 28px' }}>
+          {error && (
+            <div style={{ background: '#FFF5F5', border: '1px solid #FED7D7', borderRadius: '8px', padding: '10px 14px', marginBottom: '16px', fontSize: '13px', color: '#C53030' }}>
+              ⚠ {error}
+            </div>
+          )}
+
+          <label style={{ display: 'block', fontSize: '12px', fontWeight: 600, color: '#555', marginBottom: '8px' }}>Amount (₹)</label>
+          <input
+            type="number"
+            value={amount}
+            onChange={e => setAmount(e.target.value)}
+            placeholder="Enter amount"
+            style={{ width: '100%', padding: '13px 14px', boxSizing: 'border-box', border: '1.5px solid #E8E8E4', borderRadius: '10px', fontSize: '15px', fontWeight: 600, marginBottom: '14px', outline: 'none' }}
+          />
+
+          <div style={{ display: 'flex', gap: '8px', marginBottom: '24px', flexWrap: 'wrap' }}>
+            {TOPUP_PRESETS.map(p => (
+              <button key={p} onClick={() => setAmount(String(p))} style={{ padding: '7px 14px', borderRadius: '8px', border: '1px solid #E8E8E4', background: amount === String(p) ? '#0A0A0A' : '#FFFFFF', color: amount === String(p) ? '#FFFFFF' : '#555', fontSize: '12px', fontWeight: 600, cursor: 'pointer' }}>
+                ₹{p.toLocaleString('en-IN')}
+              </button>
+            ))}
+          </div>
+
+          <button
+            onClick={handleTopup}
+            disabled={loading}
+            className="pf-btn"
+            style={{ width: '100%', padding: '13px', fontSize: '14px' }}
+          >
+            {loading ? 'Processing...' : `Add ₹${amount || '0'} →`}
+          </button>
+        </div>
+      </div>
+    </div>
+  )
+}
 
 function UpgradeModal({ currentPlan, shopDomain, plans, onClose, onSuccess }) {
   const [cycle, setCycle] = useState('monthly')
@@ -584,10 +663,30 @@ export default function DashboardPage() {
 
   const [shopDomain, setShopDomain] = useState(localStorage.getItem('pf_shop') || '')
   const [plans, setPlans] = useState([])
+  const [walletBalance, setWalletBalance] = useState(0)
+  const [walletTransactions, setWalletTransactions] = useState([])
+  const [walletLoading, setWalletLoading] = useState(true)
+  const [showTopup, setShowTopup] = useState(false)
 
   useEffect(() => {
     fetchPlans().then(setPlans).catch(() => setPlans([]))
   }, [])
+
+  const loadWallet = useCallback(async () => {
+    if (!shopDomain) return
+    setWalletLoading(true)
+    try {
+      const data = await fetchWallet(shopDomain)
+      setWalletBalance(data.balance || 0)
+      setWalletTransactions(data.transactions || [])
+    } catch {
+      // leave wallet at last-known state on error
+    } finally {
+      setWalletLoading(false)
+    }
+  }, [shopDomain])
+
+  useEffect(() => { loadWallet() }, [loadWallet])
 
   const planLabels = { ...FALLBACK_PLAN_LABELS, ...Object.fromEntries(plans.map(p => [p.id, p.name])) }
   const currentPlanInfo = plans.find(p => p.id === currentPlan)
@@ -1174,6 +1273,62 @@ export default function DashboardPage() {
     )
   }
 
+  const WalletView = () => (
+    <>
+      <div style={{ marginBottom: '28px' }}>
+        <h1 style={{ fontFamily: "'Plus Jakarta Sans', sans-serif", fontSize: '26px', fontWeight: 800, color: '#0A0A0A', letterSpacing: '-0.5px', marginBottom: '4px' }}>Wallet</h1>
+        <p style={{ fontSize: '13px', color: '#BABAB6' }}>Fund your wallet to cover printing and shipping when you fulfill orders.</p>
+      </div>
+
+      <SectionCard title="Balance">
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '16px' }}>
+          <div>
+            <div style={{ fontSize: '32px', fontWeight: 800, color: '#0A0A0A', fontFamily: "'Plus Jakarta Sans', sans-serif" }}>
+              {walletLoading ? '—' : `₹${walletBalance.toLocaleString('en-IN')}`}
+            </div>
+            <div style={{ fontSize: '12px', color: '#999', marginTop: '4px' }}>Available for order fulfillment</div>
+          </div>
+          <button onClick={() => setShowTopup(true)} className="pf-btn" style={{ padding: '11px 22px', fontSize: '13px', flexShrink: 0 }}>
+            + Add Money
+          </button>
+        </div>
+      </SectionCard>
+
+      <SectionCard title="Transaction History">
+        {walletTransactions.length === 0 ? (
+          <div style={{ textAlign: 'center', padding: '32px 0' }}>
+            <div style={{ fontSize: '24px', marginBottom: '10px' }}>💳</div>
+            <div style={{ fontSize: '14px', fontWeight: 500, color: '#0A0A0A', marginBottom: '4px' }}>No transactions yet</div>
+            <div style={{ fontSize: '13px', color: '#BABAB6' }}>Top up your wallet to see activity here.</div>
+          </div>
+        ) : (
+          walletTransactions.map((tx, i) => (
+            <div key={tx.transaction_id || i} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '12px 0', borderBottom: i < walletTransactions.length - 1 ? '1px solid #F4F4F0' : 'none' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                <div style={{
+                  width: '32px', height: '32px', borderRadius: '8px', flexShrink: 0,
+                  background: tx.type === 'topup' ? '#F0FDF4' : '#FFF7ED',
+                  display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '14px',
+                }}>{tx.type === 'topup' ? '↓' : '↑'}</div>
+                <div>
+                  <div style={{ fontSize: '13px', fontWeight: 600, color: '#0A0A0A' }}>
+                    {tx.type === 'topup' ? 'Wallet top-up' : `Order fulfillment${tx.order_id ? ` — ${tx.order_id}` : ''}`}
+                  </div>
+                  <div style={{ fontSize: '11px', color: '#BABAB6' }}>
+                    {tx.created_at ? new Date(tx.created_at).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' }) : '—'}
+                  </div>
+                </div>
+              </div>
+              <div style={{ fontSize: '13px', fontWeight: 700, color: tx.type === 'topup' ? '#166534' : '#C2410C' }}>
+                {tx.type === 'topup' ? '+' : '−'}₹{Number(tx.amount).toLocaleString('en-IN')}
+              </div>
+            </div>
+          ))
+        )}
+      </SectionCard>
+    </>
+  )
+
   const SettingsView = () => (
     <>
       <div style={{ marginBottom: '28px' }}>
@@ -1373,6 +1528,7 @@ export default function DashboardPage() {
           )}
           {activeNav === 'products' && <div style={{ position: 'relative', zIndex: 1 }}><ProductsView /></div>}
           {activeNav === 'billing'  && <div style={{ position: 'relative', zIndex: 1 }}><BillingView /></div>}
+          {activeNav === 'wallet'   && <div style={{ position: 'relative', zIndex: 1 }}><WalletView /></div>}
           {activeNav === 'settings' && <div style={{ position: 'relative', zIndex: 1 }}><SettingsView /></div>}
           
           {/* Notifications Panel View (With custom sender) */}
@@ -1910,6 +2066,19 @@ export default function DashboardPage() {
           plans={plans}
           onClose={() => setShowUpgrade(false)}
           onSuccess={handleUpgradeSuccess}
+        />
+      )}
+
+      {/* Wallet top-up modal */}
+      {showTopup && (
+        <TopupModal
+          shopDomain={shopDomain}
+          onClose={() => setShowTopup(false)}
+          onSuccess={(newBalance) => {
+            setWalletBalance(newBalance)
+            setShowTopup(false)
+            loadWallet()
+          }}
         />
       )}
 
