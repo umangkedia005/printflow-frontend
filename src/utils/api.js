@@ -135,6 +135,30 @@ export async function verifyWalletTopup({ shop, amount, razorpay_order_id, razor
   return data
 }
 
+export async function fetchProductMappings(shop) {
+  const res = await fetch(`${BASE_URL}/product-mappings?shop=${encodeURIComponent(shop)}`)
+  const data = await res.json()
+  if (!res.ok) throw new Error(data.error || 'Failed to fetch products')
+  return Array.isArray(data) ? data : []
+}
+
+export async function updateProductMapping({ shop, shopifyProductId, factorySku, fulfillmentCost, printFileUrl }) {
+  const res = await fetch(`${BASE_URL}/product-mappings`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      shop,
+      shopify_product_id: shopifyProductId,
+      factory_sku: factorySku,
+      fulfillment_cost: fulfillmentCost,
+      print_file_url: printFileUrl,
+    }),
+  })
+  const data = await res.json()
+  if (!res.ok) throw new Error(data.error || 'Failed to update product')
+  return data
+}
+
 export async function fulfillOrder(shop, orderId) {
   const res = await fetch(`${BASE_URL}/orders/fulfill`, {
     method: 'POST',

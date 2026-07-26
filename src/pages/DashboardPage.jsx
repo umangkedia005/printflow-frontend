@@ -2,18 +2,9 @@ import React, { useState, useEffect, useCallback } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useAuth } from '../contexts/AuthContext'
 import { openRazorpaySubscription, openWalletTopup } from '../utils/razorpay'
-import { fetchOrders, fetchSubscription, fetchMyStore, updateSubscription, fetchPlans, fetchWallet, fulfillOrder } from '../utils/api'
+import { fetchOrders, fetchSubscription, fetchMyStore, updateSubscription, fetchPlans, fetchWallet, fulfillOrder, fetchProductMappings, updateProductMapping } from '../utils/api'
 
 // ── Data ─────────────────────────────────────────────────────────────────────
-
-const MOCK_PRODUCTS = [
-  { id: 'p1', shopifyId: '8234567890', name: 'Classic Black Tee',   variants: ['S','M','L','XL','XXL'], printFile: 'black-tee-design-v2.png', factorySku: 'GILDAN-64000-BLK', status: 'ready' },
-  { id: 'p2', shopifyId: '8234567891', name: 'Pet T-Shirt',         variants: ['XS','S','M','L','XL'],  printFile: 'pet-tee-paws.png',        factorySku: 'PETX-TEE-STD',     status: 'ready' },
-  { id: 'p3', shopifyId: '8234567892', name: 'Premium Hoodie',      variants: ['S','M','L','XL'],       printFile: null,                      factorySku: null,               status: 'incomplete' },
-  { id: 'p4', shopifyId: '8234567893', name: 'Kids T-Shirt',        variants: ['2-4Y','5-7Y','8-10Y'],  printFile: 'kids-tee-fun.png',        factorySku: 'GILDAN-KIDS-64B',  status: 'ready' },
-  { id: 'p5', shopifyId: '8234567894', name: 'A3 Poster & Frame',   variants: ['A3','A4'],               printFile: 'poster-final.png',        factorySku: 'PRINTFUL-POSTER-A3', status: 'ready' },
-  { id: 'p6', shopifyId: '8234567895', name: 'Classic White Tee',   variants: ['S','M','L','XL'],       printFile: null,                      factorySku: 'GILDAN-64000-WHT', status: 'incomplete' },
-]
 
 // Plans are fetched from the backend (/plans) — see fetchPlans() in utils/api.js.
 // 'free' is kept as a fallback label/limit for any store still on the old default.
@@ -351,6 +342,98 @@ function TopupModal({ shopDomain, onClose, onSuccess }) {
   )
 }
 
+function ProductEditModal({ shopDomain, product, onClose, onSuccess }) {
+  const [factorySku, setFactorySku] = useState(product.factorySku || '')
+  const [fulfillmentCost, setFulfillmentCost] = useState(product.fulfillmentCost ?? '')
+  const [printFileUrl, setPrintFileUrl] = useState(product.printFileUrl || '')
+  const [loading, setLoading] = useState(false)
+  const [error, setError] = useState('')
+
+  async function handleSave() {
+    if (!factorySku || !fulfillmentCost) {
+      setError('Factory SKU and fulfillment cost are required')
+      return
+    }
+    setLoading(true)
+    setError('')
+    try {
+      await updateProductMapping({
+        shop: shopDomain,
+        shopifyProductId: product.id,
+        factorySku,
+        fulfillmentCost: Number(fulfillmentCost),
+        printFileUrl: printFileUrl || null,
+      })
+      onSuccess()
+    } catch (err) {
+      setError(err.message || 'Failed to save product')
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  return (
+    <div
+      onClick={e => { if (e.target === e.currentTarget) onClose() }}
+      style={{ position: 'fixed', inset: 0, zIndex: 300, background: 'rgba(0,0,0,0.45)', backdropFilter: 'blur(6px)', WebkitBackdropFilter: 'blur(6px)', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '24px' }}
+    >
+      <div style={{ background: '#FFFFFF', borderRadius: '20px', width: '100%', maxWidth: '440px', overflow: 'hidden', boxShadow: '0 24px 80px rgba(0,0,0,0.2)', animation: 'pf-fade-up 0.25s ease' }}>
+        <div style={{ padding: '24px 28px', borderBottom: '1px solid #E8E8E4', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+          <div>
+            <h2 style={{ fontFamily: "'Plus Jakarta Sans', sans-serif", fontSize: '18px', fontWeight: 800, color: '#0A0A0A' }}>{product.name}</h2>
+            <p style={{ fontSize: '12px', color: '#999', marginTop: '3px' }}>Set the print file and fulfillment cost for this product.</p>
+          </div>
+          <button onClick={onClose} style={{ width: '30px', height: '30px', background: '#F4F4F0', border: 'none', borderRadius: '8px', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '14px', color: '#888', cursor: 'pointer', flexShrink: 0, marginLeft: '12px' }}>✕</button>
+        </div>
+
+        <div style={{ padding: '24px 28px' }}>
+          {error && (
+            <div style={{ background: '#FFF5F5', border: '1px solid #FED7D7', borderRadius: '8px', padding: '10px 14px', marginBottom: '16px', fontSize: '13px', color: '#C53030' }}>
+              ⚠ {error}
+            </div>
+          )}
+
+          <label style={{ display: 'block', fontSize: '12px', fontWeight: 600, color: '#555', marginBottom: '8px' }}>Factory SKU</label>
+          <input
+            type="text"
+            value={factorySku}
+            onChange={e => setFactorySku(e.target.value)}
+            placeholder="e.g. GILDAN-64000-BLK"
+            style={{ width: '100%', padding: '12px 14px', boxSizing: 'border-box', border: '1.5px solid #E8E8E4', borderRadius: '10px', fontSize: '13px', marginBottom: '14px', outline: 'none', fontFamily: 'monospace' }}
+          />
+
+          <label style={{ display: 'block', fontSize: '12px', fontWeight: 600, color: '#555', marginBottom: '8px' }}>Fulfillment Cost (₹)</label>
+          <input
+            type="number"
+            value={fulfillmentCost}
+            onChange={e => setFulfillmentCost(e.target.value)}
+            placeholder="Cost to print & ship one unit"
+            style={{ width: '100%', padding: '12px 14px', boxSizing: 'border-box', border: '1.5px solid #E8E8E4', borderRadius: '10px', fontSize: '13px', marginBottom: '14px', outline: 'none' }}
+          />
+
+          <label style={{ display: 'block', fontSize: '12px', fontWeight: 600, color: '#555', marginBottom: '8px' }}>Print File URL</label>
+          <input
+            type="text"
+            value={printFileUrl}
+            onChange={e => setPrintFileUrl(e.target.value)}
+            placeholder="https://... (optional)"
+            style={{ width: '100%', padding: '12px 14px', boxSizing: 'border-box', border: '1.5px solid #E8E8E4', borderRadius: '10px', fontSize: '13px', marginBottom: '24px', outline: 'none' }}
+          />
+
+          <button
+            onClick={handleSave}
+            disabled={loading}
+            className="pf-btn"
+            style={{ width: '100%', padding: '13px', fontSize: '14px', opacity: loading ? 0.6 : 1, cursor: loading ? 'not-allowed' : 'pointer' }}
+          >
+            {loading ? 'Saving...' : 'Save →'}
+          </button>
+        </div>
+      </div>
+    </div>
+  )
+}
+
 function UpgradeModal({ currentPlan, shopDomain, plans, onClose, onSuccess }) {
   const [cycle, setCycle] = useState('monthly')
   const [loadingPlan, setLoadingPlan] = useState(null)
@@ -669,10 +752,30 @@ export default function DashboardPage() {
   const [walletTransactions, setWalletTransactions] = useState([])
   const [walletLoading, setWalletLoading] = useState(true)
   const [showTopup, setShowTopup] = useState(false)
+  const [products, setProducts] = useState([])
+  const [productsLoading, setProductsLoading] = useState(true)
+  const [productsError, setProductsError] = useState('')
+  const [editingProduct, setEditingProduct] = useState(null)
 
   useEffect(() => {
     fetchPlans().then(setPlans).catch(() => setPlans([]))
   }, [])
+
+  const loadProducts = useCallback(async () => {
+    if (!shopDomain) return
+    setProductsLoading(true)
+    setProductsError('')
+    try {
+      const data = await fetchProductMappings(shopDomain)
+      setProducts(data)
+    } catch (err) {
+      setProductsError(err.message || 'Failed to load products')
+    } finally {
+      setProductsLoading(false)
+    }
+  }, [shopDomain])
+
+  useEffect(() => { loadProducts() }, [loadProducts])
 
   const loadWallet = useCallback(async () => {
     if (!shopDomain) return
@@ -1079,8 +1182,8 @@ export default function DashboardPage() {
   }
 
   const ProductsView = () => {
-    const ready   = MOCK_PRODUCTS.filter(p => p.status === 'ready').length
-    const missing = MOCK_PRODUCTS.filter(p => p.status === 'incomplete').length
+    const ready   = products.filter(p => p.status === 'ready').length
+    const missing = products.filter(p => p.status === 'incomplete').length
     return (
       <>
         <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', marginBottom: '28px' }}>
@@ -1088,33 +1191,57 @@ export default function DashboardPage() {
             <h1 style={{ fontFamily: "'Plus Jakarta Sans', sans-serif", fontSize: '26px', fontWeight: 800, color: '#0A0A0A', letterSpacing: '-0.5px', marginBottom: '4px' }}>Products</h1>
             <p style={{ fontSize: '13px', color: '#BABAB6' }}>Map each Shopify product to a print file and factory SKU.</p>
           </div>
-          <button className="pf-btn" style={{ padding: '9px 18px', fontSize: '13px', flexShrink: 0 }}>↻ Sync from Shopify</button>
+          <button
+            className="pf-btn"
+            disabled={productsLoading}
+            onClick={loadProducts}
+            style={{ padding: '9px 18px', fontSize: '13px', flexShrink: 0, opacity: productsLoading ? 0.6 : 1, cursor: productsLoading ? 'not-allowed' : 'pointer' }}
+          >
+            {productsLoading ? 'Syncing...' : '↻ Sync from Shopify'}
+          </button>
         </div>
+
+        {productsError && (
+          <div style={{ background: '#FFF5F5', border: '1px solid #FED7D7', borderRadius: '8px', padding: '10px 14px', marginBottom: '20px', fontSize: '13px', color: '#C53030' }}>
+            ⚠ {productsError}
+          </div>
+        )}
+
         <div style={{ display: 'flex', gap: '12px', marginBottom: '24px' }}>
-          {[{ label: 'Total products', value: MOCK_PRODUCTS.length, color: '#0A0A0A' }, { label: 'Ready to print', value: ready, color: '#166534' }, { label: 'Needs setup', value: missing, color: '#C2410C' }].map(s => (
+          {[{ label: 'Total products', value: products.length, color: '#0A0A0A' }, { label: 'Ready to print', value: ready, color: '#166534' }, { label: 'Needs setup', value: missing, color: '#C2410C' }].map(s => (
             <div key={s.label} style={{ background: '#FFFFFF', border: '1px solid #E8E8E4', borderRadius: '10px', padding: '14px 18px', display: 'flex', alignItems: 'center', gap: '10px' }}>
               <span style={{ fontSize: '20px', fontWeight: 800, color: s.color, fontFamily: "'Plus Jakarta Sans', sans-serif" }}>{s.value}</span>
               <span style={{ fontSize: '12px', color: '#999' }}>{s.label}</span>
             </div>
           ))}
         </div>
+
+        {productsLoading && products.length === 0 ? (
+          <div style={{ textAlign: 'center', padding: '48px', color: '#999', fontSize: '13px' }}>Loading products from Shopify...</div>
+        ) : products.length === 0 ? (
+          <div style={{ textAlign: 'center', padding: '48px', color: '#999', fontSize: '13px' }}>No products found in this store yet.</div>
+        ) : (
         <div style={{ background: '#FFFFFF', border: '1px solid #E8E8E4', borderRadius: '16px', overflow: 'hidden' }}>
           <table style={{ width: '100%', borderCollapse: 'collapse' }}>
             <thead><tr>{['Product','Variants','Print File','Factory SKU','Status',''].map(h=><th key={h} style={{ padding: '10px 20px', textAlign: 'left', fontSize: '10px', fontWeight: 600, color: '#C8C8C4', textTransform: 'uppercase', letterSpacing: '0.08em', borderBottom: '1px solid #E8E8E4', background: '#FCFCFB' }}>{h}</th>)}</tr></thead>
             <tbody>
-              {MOCK_PRODUCTS.map((p, i) => (
-                <tr key={p.id} style={{ borderBottom: i < MOCK_PRODUCTS.length-1 ? '1px solid #F4F4F0' : 'none', transition: 'background 0.1s' }} onMouseOver={e=>e.currentTarget.style.background='#FAFAF8'} onMouseOut={e=>e.currentTarget.style.background='transparent'}>
+              {products.map((p, i) => (
+                <tr key={p.id} style={{ borderBottom: i < products.length-1 ? '1px solid #F4F4F0' : 'none', transition: 'background 0.1s' }} onMouseOver={e=>e.currentTarget.style.background='#FAFAF8'} onMouseOut={e=>e.currentTarget.style.background='transparent'}>
                   <td style={{ padding: '14px 20px' }}>
                     <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-                      <div style={{
-                        width: '38px', height: '38px', borderRadius: '9px', flexShrink: 0,
-                        background: PRODUCT_GRADIENTS[i % PRODUCT_GRADIENTS.length],
-                        display: 'flex', alignItems: 'center', justifyContent: 'center',
-                        fontSize: '17px', boxShadow: '0 2px 6px rgba(0,0,0,0.08)',
-                      }}>{productEmoji(p.name)}</div>
+                      {p.image ? (
+                        <img src={p.image} alt={p.name} style={{ width: '38px', height: '38px', borderRadius: '9px', flexShrink: 0, objectFit: 'cover', boxShadow: '0 2px 6px rgba(0,0,0,0.08)' }} />
+                      ) : (
+                        <div style={{
+                          width: '38px', height: '38px', borderRadius: '9px', flexShrink: 0,
+                          background: PRODUCT_GRADIENTS[i % PRODUCT_GRADIENTS.length],
+                          display: 'flex', alignItems: 'center', justifyContent: 'center',
+                          fontSize: '17px', boxShadow: '0 2px 6px rgba(0,0,0,0.08)',
+                        }}>{productEmoji(p.name)}</div>
+                      )}
                       <div>
                         <div style={{ fontSize: '13px', fontWeight: 600, color: '#0A0A0A' }}>{p.name}</div>
-                        <div style={{ fontSize: '10px', color: '#C8C8C4', marginTop: '2px', fontFamily: 'monospace' }}>#{p.shopifyId}</div>
+                        <div style={{ fontSize: '10px', color: '#C8C8C4', marginTop: '2px', fontFamily: 'monospace' }}>#{p.id}</div>
                       </div>
                     </div>
                   </td>
@@ -1122,16 +1249,16 @@ export default function DashboardPage() {
                     <div style={{ display: 'flex', gap: '4px', flexWrap: 'wrap' }}>{p.variants.map(v=><span key={v} style={{ fontSize: '10px', fontWeight: 500, color: '#555', background: '#F4F4F0', border: '1px solid #E8E8E4', borderRadius: '4px', padding: '2px 6px' }}>{v}</span>)}</div>
                   </td>
                   <td style={{ padding: '14px 20px' }}>
-                    {p.printFile ? (
+                    {p.printFileUrl ? (
                       <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
                         <div style={{ width: '28px', height: '28px', background: '#F0FDF4', border: '1px solid #BBF7D0', borderRadius: '6px', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '12px' }}>🖼</div>
-                        <span style={{ fontSize: '11px', color: '#166534', fontWeight: 500, fontFamily: 'monospace' }}>{p.printFile}</span>
+                        <span style={{ fontSize: '11px', color: '#166534', fontWeight: 500, fontFamily: 'monospace', maxWidth: '140px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{p.printFileUrl}</span>
                       </div>
-                    ) : <button className="pf-btn" style={{ padding: '5px 12px', fontSize: '11px', borderRadius: '7px' }}>↑ Upload</button>}
+                    ) : <button onClick={() => setEditingProduct(p)} className="pf-btn" style={{ padding: '5px 12px', fontSize: '11px', borderRadius: '7px' }}>↑ Upload</button>}
                   </td>
                   <td style={{ padding: '14px 20px' }}>
                     {p.factorySku ? <span style={{ fontSize: '11px', color: '#555', fontFamily: 'monospace', background: '#F4F4F0', padding: '3px 8px', borderRadius: '5px' }}>{p.factorySku}</span>
-                      : <button style={{ background: 'transparent', border: '1px solid #E8E8E4', borderRadius: '7px', padding: '5px 12px', fontSize: '11px', color: '#888', cursor: 'pointer', fontFamily: 'Inter, sans-serif' }}>+ Map SKU</button>}
+                      : <button onClick={() => setEditingProduct(p)} style={{ background: 'transparent', border: '1px solid #E8E8E4', borderRadius: '7px', padding: '5px 12px', fontSize: '11px', color: '#888', cursor: 'pointer', fontFamily: 'Inter, sans-serif' }}>+ Map SKU</button>}
                   </td>
                   <td style={{ padding: '14px 20px' }}>
                     {p.status === 'ready'
@@ -1139,13 +1266,14 @@ export default function DashboardPage() {
                       : <span style={{ display: 'inline-flex', alignItems: 'center', gap: '5px', background: '#FFF7ED', color: '#C2410C', padding: '3px 10px', borderRadius: '100px', fontSize: '11px', fontWeight: 600 }}><span style={{ width: '5px', height: '5px', borderRadius: '50%', background: '#F97316' }}/>Needs setup</span>}
                   </td>
                   <td style={{ padding: '14px 20px' }}>
-                    <button style={{ background: 'transparent', border: '1px solid #E8E8E4', borderRadius: '7px', padding: '6px 14px', fontSize: '11px', fontWeight: 500, color: '#666', cursor: 'pointer', fontFamily: 'Inter, sans-serif', transition: 'border-color 0.12s, color 0.12s' }} onMouseOver={e=>{e.currentTarget.style.borderColor='#0A0A0A';e.currentTarget.style.color='#0A0A0A'}} onMouseOut={e=>{e.currentTarget.style.borderColor='#E8E8E4';e.currentTarget.style.color='#666'}}>Edit →</button>
+                    <button onClick={() => setEditingProduct(p)} style={{ background: 'transparent', border: '1px solid #E8E8E4', borderRadius: '7px', padding: '6px 14px', fontSize: '11px', fontWeight: 500, color: '#666', cursor: 'pointer', fontFamily: 'Inter, sans-serif', transition: 'border-color 0.12s, color 0.12s' }} onMouseOver={e=>{e.currentTarget.style.borderColor='#0A0A0A';e.currentTarget.style.color='#0A0A0A'}} onMouseOut={e=>{e.currentTarget.style.borderColor='#E8E8E4';e.currentTarget.style.color='#666'}}>Edit →</button>
                   </td>
                 </tr>
               ))}
             </tbody>
           </table>
         </div>
+        )}
       </>
     )
   }
@@ -2124,6 +2252,16 @@ export default function DashboardPage() {
             setShowTopup(false)
             loadWallet()
           }}
+        />
+      )}
+
+      {/* Product edit modal */}
+      {editingProduct && (
+        <ProductEditModal
+          shopDomain={shopDomain}
+          product={editingProduct}
+          onClose={() => setEditingProduct(null)}
+          onSuccess={() => { setEditingProduct(null); loadProducts() }}
         />
       )}
 
