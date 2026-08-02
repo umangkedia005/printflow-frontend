@@ -197,7 +197,7 @@ function formatOrder(o) {
     qty:       Number(item.quantity) || 1,
     size:      item.variant_title || '—',
     color:     '—',
-    printFile: null,
+    printFile: item.print_file_url || null,
   }))
 
   return {
