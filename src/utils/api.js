@@ -69,11 +69,11 @@ export async function fetchPlans() {
     }))
 }
 
-export async function fetchMyStore(email) {
-  const res = await fetch(`${BASE_URL}/my-store?email=${encodeURIComponent(email)}`)
-  if (!res.ok) return null
+export async function fetchMyStores(email) {
+  const res = await fetch(`${BASE_URL}/my-stores?email=${encodeURIComponent(email)}`)
+  if (!res.ok) return []
   const data = await res.json()
-  return data.shop_domain || null
+  return Array.isArray(data) ? data : []
 }
 
 export async function linkStore(shop, email) {

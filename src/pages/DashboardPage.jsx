@@ -2,7 +2,7 @@ import React, { useState, useEffect, useCallback } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useAuth } from '../contexts/AuthContext'
 import { openRazorpaySubscription, openWalletTopup } from '../utils/razorpay'
-import { fetchOrders, fetchSubscription, fetchMyStore, updateSubscription, fetchPlans, fetchWallet, fulfillOrder, fetchProductMappings, updateProductMapping } from '../utils/api'
+import { fetchOrders, fetchSubscription, fetchMyStores, updateSubscription, fetchPlans, fetchWallet, fulfillOrder, fetchProductMappings, updateProductMapping } from '../utils/api'
 
 // ── Data ─────────────────────────────────────────────────────────────────────
 
@@ -719,14 +719,27 @@ export default function DashboardPage() {
     fetchLiveTrends()
   }, [activeNav])
 
+  const [myStores, setMyStores] = useState([])
+
+  function activateStore(shop) {
+    localStorage.setItem('pf_shop', shop)
+    setShopDomain(shop)
+    fetchSubscription(shop).then(plan => { setCurrentPlan(plan); localStorage.setItem('pf_plan', plan) })
+  }
+
+  function handleSwitchStore(shop) {
+    activateStore(shop)
+  }
+
   useEffect(() => {
     async function resolveShop() {
       if (!currentUser?.email) return
-      const shop = await fetchMyStore(currentUser.email)
-      if (shop) {
-        localStorage.setItem('pf_shop', shop)
-        setShopDomain(shop)
-        fetchSubscription(shop).then(plan => { setCurrentPlan(plan); localStorage.setItem('pf_plan', plan) })
+      const list = await fetchMyStores(currentUser.email)
+      setMyStores(list)
+      if (list.length > 0) {
+        const saved = localStorage.getItem('pf_shop')
+        const match = list.find(s => s.shop_domain === saved) || list[0]
+        activateStore(match.shop_domain)
       } else {
         localStorage.removeItem('pf_shop')
         localStorage.removeItem('pf_plan')
@@ -1636,7 +1649,19 @@ export default function DashboardPage() {
               <div style={{ width: '6px', height: '6px', borderRadius: '50%', background: shopDomain ? '#39B54A' : '#BABAB6', flexShrink: 0, boxShadow: shopDomain ? '0 0 6px #39B54A' : 'none' }}/>
               <span style={{ fontSize: '10px', fontWeight: 750, color: shopDomain ? '#39B54A' : '#999', letterSpacing: '0.04em' }}>{shopDomain ? 'CONNECTED' : 'NOT CONNECTED'}</span>
             </div>
-            <div style={{ fontSize: '12px', fontWeight: 600, color: '#172B15', wordBreak: 'break-all', lineHeight: 1.4 }}>{shopDomain || 'No store linked yet'}</div>
+            {myStores.length > 1 ? (
+              <select
+                value={shopDomain}
+                onChange={e => handleSwitchStore(e.target.value)}
+                style={{ width: '100%', fontSize: '12px', fontWeight: 600, color: '#172B15', border: '1px solid rgba(23,43,21,0.1)', borderRadius: '6px', padding: '5px 6px', background: '#FAFAF8', cursor: 'pointer', fontFamily: 'Inter, sans-serif' }}
+              >
+                {myStores.map(s => (
+                  <option key={s.shop_domain} value={s.shop_domain}>{s.shop_domain}</option>
+                ))}
+              </select>
+            ) : (
+              <div style={{ fontSize: '12px', fontWeight: 600, color: '#172B15', wordBreak: 'break-all', lineHeight: 1.4 }}>{shopDomain || 'No store linked yet'}</div>
+            )}
           </div>
           <button onClick={logout} style={{ width: '100%', padding: '9px', background: 'transparent', border: '1px solid rgba(23,43,21,0.12)', borderRadius: '8px', fontSize: '12px', fontWeight: 600, color: '#7A7A70', cursor: 'pointer', fontFamily: 'Inter, sans-serif', transition: 'all 0.2s' }} onMouseOver={e=>{e.currentTarget.style.borderColor='#EF4444';e.currentTarget.style.color='#EF4444';e.currentTarget.style.background='rgba(239,68,68,0.04)'}} onMouseOut={e=>{e.currentTarget.style.borderColor='rgba(23,43,21,0.12)';e.currentTarget.style.color='#7A7A70';e.currentTarget.style.background='transparent'}}>Sign out</button>
         </div>
