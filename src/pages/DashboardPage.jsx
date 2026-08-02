@@ -823,6 +823,8 @@ export default function DashboardPage() {
     } catch (err) {
       if (err.status === 402) {
         setFulfillError(`Insufficient wallet balance. You need ₹${err.details.required?.toLocaleString('en-IN')} but only have ₹${err.details.balance?.toLocaleString('en-IN')}. Top up your wallet to continue.`)
+      } else if (err.status === 403) {
+        setFulfillError(err.message)
       } else if (err.details?.products) {
         setFulfillError(`Missing fulfillment cost for: ${err.details.products.join(', ')}. Set this up in Products first.`)
       } else {
@@ -2241,6 +2243,11 @@ export default function DashboardPage() {
                     {fulfillError.includes('wallet balance') && (
                       <button onClick={() => { setSelectedOrder(null); setActiveNav('wallet'); setShowTopup(true) }} style={{ display: 'block', marginTop: '6px', background: 'none', border: 'none', color: '#C53030', fontWeight: 700, fontSize: '12px', cursor: 'pointer', padding: 0, textDecoration: 'underline' }}>
                         Top up wallet →
+                      </button>
+                    )}
+                    {(fulfillError.includes('paid plan') || fulfillError.includes('order limit')) && (
+                      <button onClick={() => { setSelectedOrder(null); setShowUpgrade(true) }} style={{ display: 'block', marginTop: '6px', background: 'none', border: 'none', color: '#C53030', fontWeight: 700, fontSize: '12px', cursor: 'pointer', padding: 0, textDecoration: 'underline' }}>
+                        Upgrade plan →
                       </button>
                     )}
                   </div>
