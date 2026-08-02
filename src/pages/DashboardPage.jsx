@@ -2193,7 +2193,18 @@ export default function DashboardPage() {
                       ) : (
                         <>
                           <span style={{ fontSize: '11px', color: '#C2410C', fontWeight: 500 }}>⚠ No print file</span>
-                          <button className="pf-btn" style={{ padding: '5px 12px', fontSize: '11px', borderRadius: '6px' }}>↑ Upload</button>
+                          <button
+                            className="pf-btn"
+                            style={{ padding: '5px 12px', fontSize: '11px', borderRadius: '6px' }}
+                            onClick={() => {
+                              const matchedProduct = products.find(p => p.id === item.productId)
+                              setSelectedOrder(null)
+                              setActiveNav('products')
+                              if (matchedProduct) setEditingProduct(matchedProduct)
+                            }}
+                          >
+                            ↑ Upload
+                          </button>
                         </>
                       )}
                     </div>

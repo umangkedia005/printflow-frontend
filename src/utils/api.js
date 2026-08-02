@@ -192,6 +192,7 @@ function formatOrder(o) {
   ].filter(Boolean).join(', ')
 
   const items = (o.items || []).map(item => ({
+    productId: item.product_id,
     sku:       item.sku || item.name,
     name:      item.name,
     qty:       Number(item.quantity) || 1,
