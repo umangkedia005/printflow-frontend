@@ -10,7 +10,6 @@ import { fetchOrders, fetchSubscription, fetchMyStore, updateSubscription, fetch
 // 'free' is kept as a fallback label/limit for any store still on the old default.
 const FALLBACK_PLAN_LABELS = { free: 'Free' }
 const FALLBACK_PLAN_LIMIT  = 50
-const ORDERS_USED  = 42 // mock — replace with real API value
 
 const STATUS = {
   queued:    { label: 'Queued',    bg: '#FFF7ED', color: '#C2410C', dot: '#F97316' },
@@ -879,21 +878,36 @@ export default function DashboardPage() {
   // ── Views ──────────────────────────────────────────────────────────────────
 
   const DashboardOverview = () => {
-    // Generate sales coordinates or metrics
-    const salesData = [
-      { day: 'Mon', sales: 4200 },
-      { day: 'Tue', sales: 6800 },
-      { day: 'Wed', sales: 5100 },
-      { day: 'Thu', sales: 9400 },
-      { day: 'Fri', sales: 8300 },
-      { day: 'Sat', sales: 12500 },
-      { day: 'Sun', sales: 11000 }
-    ]
-    const topProducts = [
-      { name: 'Cream Streetwear Hoodie', sold: 48, percentage: 80 },
-      { name: 'White Custom Graphic Tee', sold: 36, percentage: 60 },
-      { name: 'Frenchie Custom Pet Shirt', sold: 18, percentage: 30 }
-    ]
+    // Real revenue for each of the last 7 calendar days, from actual orders
+    const salesData = (() => {
+      const days = []
+      for (let i = 6; i >= 0; i--) {
+        const d = new Date()
+        d.setDate(d.getDate() - i)
+        days.push({ key: d.toDateString(), day: d.toLocaleDateString('en-IN', { weekday: 'short' }), sales: 0 })
+      }
+      orders.forEach(o => {
+        if (!o.rawDate) return
+        const key = new Date(o.rawDate).toDateString()
+        const bucket = days.find(d => d.key === key)
+        if (bucket) bucket.sales += o.amountValue || 0
+      })
+      return days
+    })()
+    const maxSales = Math.max(...salesData.map(d => d.sales), 1)
+
+    // Real best sellers, aggregated from actual order line items
+    const topProducts = (() => {
+      const totals = {}
+      orders.forEach(o => {
+        o.items.forEach(item => {
+          totals[item.name] = (totals[item.name] || 0) + (item.qty || 0)
+        })
+      })
+      const sorted = Object.entries(totals).sort((a, b) => b[1] - a[1]).slice(0, 3)
+      const max = sorted[0]?.[1] || 1
+      return sorted.map(([name, sold]) => ({ name, sold, percentage: Math.round((sold / max) * 100) }))
+    })()
 
     return (
       <>
@@ -926,13 +940,13 @@ export default function DashboardPage() {
             <h3 style={{ fontFamily: "'Fraunces', sans-serif", fontSize: '15px', fontWeight: 800, color: '#172B15', marginBottom: '16px' }}>Weekly Sales Revenue</h3>
             <div style={{ width: '100%', height: '180px', display: 'flex', alignItems: 'flex-end', justifyContent: 'space-between', padding: '0 10px', background: '#FAFAF9', borderRadius: '16px', border: '1px dashed rgba(23,43,21,0.05)', position: 'relative' }}>
               {salesData.map((d, i) => {
-                const height = `${(d.sales / 14000) * 100}%`
+                const height = `${(d.sales / maxSales) * 100}%`
                 return (
                   <div key={i} style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '10px', height: '100%', justifyContent: 'flex-end', paddingBottom: '12px' }}>
                     <div style={{ width: '28px', height: height, background: 'linear-gradient(180deg, #B9F95D 0%, #39B54A 100%)', borderRadius: '6px', position: 'relative', minHeight: '10px', cursor: 'pointer', transition: 'all 0.2s' }}
                       onMouseOver={e => e.currentTarget.style.filter = 'brightness(1.05)'}
                       onMouseOut={e => e.currentTarget.style.filter = 'none'}
-                      title={`₹${d.sales}`}
+                      title={`₹${d.sales.toFixed(0)}`}
                     />
                     <span style={{ fontSize: '11px', fontWeight: 600, color: '#71717A' }}>{d.day}</span>
                   </div>
@@ -944,19 +958,23 @@ export default function DashboardPage() {
           {/* Top Products */}
           <div style={{ background: '#FFFFFF', border: '1px solid rgba(23,43,21,0.06)', borderRadius: '24px', padding: '24px', boxShadow: '0 8px 30px rgba(23,43,21,0.015)' }}>
             <h3 style={{ fontFamily: "'Fraunces', sans-serif", fontSize: '15px', fontWeight: 800, color: '#172B15', marginBottom: '16px' }}>Best Sellers</h3>
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '18px' }}>
-              {topProducts.map((p, i) => (
-                <div key={i}>
-                  <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '12.5px', fontWeight: 700, color: '#172B15', marginBottom: '6px' }}>
-                    <span style={{ display: '-webkit-box', WebkitLineClamp: 1, WebkitBoxOrient: 'vertical', overflow: 'hidden', maxWidth: '170px' }}>{p.name}</span>
-                    <span style={{ color: '#39B54A' }}>{p.sold} sold</span>
+            {topProducts.length === 0 ? (
+              <div style={{ fontSize: '12px', color: '#BABAB6', padding: '12px 0' }}>No orders yet — best sellers will show up here once orders come in.</div>
+            ) : (
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '18px' }}>
+                {topProducts.map((p, i) => (
+                  <div key={i}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '12.5px', fontWeight: 700, color: '#172B15', marginBottom: '6px' }}>
+                      <span style={{ display: '-webkit-box', WebkitLineClamp: 1, WebkitBoxOrient: 'vertical', overflow: 'hidden', maxWidth: '170px' }}>{p.name}</span>
+                      <span style={{ color: '#39B54A' }}>{p.sold} sold</span>
+                    </div>
+                    <div style={{ width: '100%', height: '6px', background: '#FAFAF9', borderRadius: '10px', overflow: 'hidden', border: '1px solid rgba(23,43,21,0.04)' }}>
+                      <div style={{ width: `${p.percentage}%`, height: '100%', background: '#39B54A', borderRadius: '10px' }} />
+                    </div>
                   </div>
-                  <div style={{ width: '100%', height: '6px', background: '#FAFAF9', borderRadius: '10px', overflow: 'hidden', border: '1px solid rgba(23,43,21,0.04)' }}>
-                    <div style={{ width: `${p.percentage}%`, height: '100%', background: '#39B54A', borderRadius: '10px' }} />
-                  </div>
-                </div>
-              ))}
-            </div>
+                ))}
+              </div>
+            )}
           </div>
 
         </div>
@@ -1346,7 +1364,7 @@ export default function DashboardPage() {
           <div style={{ marginBottom: '16px' }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', marginBottom: '8px' }}>
               <span style={{ fontSize: '13px', fontWeight: 500, color: '#0A0A0A' }}>
-                {ORDERS_USED} of {planLimit === Infinity ? '∞' : planLimit} orders used
+                {ordersUsed} of {planLimit === Infinity ? '∞' : planLimit} orders used
               </span>
               {planLimit !== Infinity && (
                 <span style={{ fontSize: '12px', color: usagePct >= 100 ? '#C53030' : usagePct >= 80 ? '#C2410C' : '#999', fontWeight: 600 }}>
@@ -1613,10 +1631,10 @@ export default function DashboardPage() {
         <div style={{ padding: '12px 14px 16px', borderTop: '1px solid rgba(23,43,21,0.06)' }}>
           <div style={{ background: '#FFFFFF', border: '1px solid rgba(23,43,21,0.06)', borderRadius: '12px', padding: '11px 13px', marginBottom: '10px', boxShadow: '0 4px 12px rgba(23,43,21,0.015)' }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: '6px', marginBottom: '5px' }}>
-              <div style={{ width: '6px', height: '6px', borderRadius: '50%', background: '#39B54A', flexShrink: 0, boxShadow: '0 0 6px #39B54A' }}/>
-              <span style={{ fontSize: '10px', fontWeight: 750, color: '#39B54A', letterSpacing: '0.04em' }}>CONNECTED</span>
+              <div style={{ width: '6px', height: '6px', borderRadius: '50%', background: shopDomain ? '#39B54A' : '#BABAB6', flexShrink: 0, boxShadow: shopDomain ? '0 0 6px #39B54A' : 'none' }}/>
+              <span style={{ fontSize: '10px', fontWeight: 750, color: shopDomain ? '#39B54A' : '#999', letterSpacing: '0.04em' }}>{shopDomain ? 'CONNECTED' : 'NOT CONNECTED'}</span>
             </div>
-            <div style={{ fontSize: '12px', fontWeight: 600, color: '#172B15', wordBreak: 'break-all', lineHeight: 1.4 }}>{shopDomain}</div>
+            <div style={{ fontSize: '12px', fontWeight: 600, color: '#172B15', wordBreak: 'break-all', lineHeight: 1.4 }}>{shopDomain || 'No store linked yet'}</div>
           </div>
           <button onClick={logout} style={{ width: '100%', padding: '9px', background: 'transparent', border: '1px solid rgba(23,43,21,0.12)', borderRadius: '8px', fontSize: '12px', fontWeight: 600, color: '#7A7A70', cursor: 'pointer', fontFamily: 'Inter, sans-serif', transition: 'all 0.2s' }} onMouseOver={e=>{e.currentTarget.style.borderColor='#EF4444';e.currentTarget.style.color='#EF4444';e.currentTarget.style.background='rgba(239,68,68,0.04)'}} onMouseOut={e=>{e.currentTarget.style.borderColor='rgba(23,43,21,0.12)';e.currentTarget.style.color='#7A7A70';e.currentTarget.style.background='transparent'}}>Sign out</button>
         </div>

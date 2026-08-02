@@ -212,7 +212,9 @@ function formatOrder(o) {
     items,
     status:    mapStatus(o.status),
     date:      formatDate(o.created_at),
+    rawDate:   o.created_at,
     amount:    `${o.currency || 'INR'} ${parseFloat(o.total_price || 0).toFixed(2)}`,
+    amountValue: parseFloat(o.total_price || 0),
     tracking:  raw.fulfillments?.[0]?.tracking_number || null,
     carrier:   raw.fulfillments?.[0]?.tracking_company || null,
   }
