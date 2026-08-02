@@ -1325,7 +1325,7 @@ export default function DashboardPage() {
               <div>
                 <div style={{ fontSize: '16px', fontWeight: 700, color: '#0A0A0A', marginBottom: '3px' }}>{planLabels[currentPlan]} Plan</div>
                 <div style={{ fontSize: '13px', color: '#999' }}>
-                  {currentPlan === 'free' ? '1 store · 50 orders/month · Free forever' : `${planInfo?.stores} · ${planInfo?.orders}`}
+                  {currentPlan === 'free' ? '1 store · Free forever' : `${planInfo?.stores} · ${planInfo?.orders}`}
                 </div>
               </div>
             </div>
