@@ -10,7 +10,7 @@ export default function AuthPage() {
   const [loading, setLoading]   = useState(false)
   const [showPass, setShowPass] = useState(false)
 
-  const { currentUser, login, signup, loginWithGoogle, loginWithApple } = useAuth()
+  const { currentUser, login, signup, loginWithGoogle } = useAuth()
   const navigate = useNavigate()
 
   useEffect(() => {
@@ -30,14 +30,13 @@ export default function AuthPage() {
     }
   }
 
-  async function handleSocialLogin(provider) {
+  async function handleGoogleLogin() {
     setError('')
     setLoading(true)
     try {
-      if (provider === 'google') await loginWithGoogle()
-      if (provider === 'apple')  await loginWithApple()
+      await loginWithGoogle()
     } catch (err) {
-      setError(`${provider} sign-in failed. ${err.message}`)
+      setError(`Google sign-in failed. ${err.message}`)
       setLoading(false)
     }
   }
@@ -96,7 +95,7 @@ export default function AuthPage() {
 
           {/* Google button */}
           <button
-            onClick={() => handleSocialLogin('google')}
+            onClick={handleGoogleLogin}
             disabled={loading}
             style={{
               width: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '10px',
@@ -104,7 +103,7 @@ export default function AuthPage() {
               background: '#FFFFFF', border: '1.5px solid rgba(23,43,21,0.12)', borderRadius: '10px',
               fontSize: '14px', fontWeight: 600, color: '#172B15',
               cursor: 'pointer', fontFamily: 'Inter, sans-serif',
-              marginBottom: '12px',
+              marginBottom: '24px',
               transition: 'all 0.2s',
             }}
             onMouseOver={e => { e.currentTarget.style.borderColor = '#172B15'; e.currentTarget.style.boxShadow = '0 2px 10px rgba(0,0,0,0.04)' }}
@@ -117,28 +116,6 @@ export default function AuthPage() {
               <path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" fill="#EA4335"/>
             </svg>
             Continue with Google
-          </button>
-
-          {/* Apple button */}
-          <button
-            onClick={() => handleSocialLogin('apple')}
-            disabled={loading}
-            style={{
-              width: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '10px',
-              padding: '13px',
-              background: '#172B15', border: '1.5px solid #172B15', borderRadius: '10px',
-              fontSize: '14px', fontWeight: 600, color: '#ffffff',
-              cursor: 'pointer', fontFamily: 'Inter, sans-serif',
-              marginBottom: '24px',
-              transition: 'opacity 0.15s',
-            }}
-            onMouseOver={e => e.currentTarget.style.opacity = '0.9'}
-            onMouseOut={e => e.currentTarget.style.opacity = '1'}
-          >
-            <svg width="15" height="15" viewBox="0 0 24 24" fill="white">
-              <path d="M12.152 6.896c-.948 0-2.415-1.078-3.96-1.04-2.04.027-3.91 1.183-4.961 3.014-2.117 3.675-.546 9.103 1.519 12.09 1.013 1.454 2.208 3.09 3.792 3.039 1.52-.065 2.09-.987 3.935-.987 1.831 0 2.35.987 3.96.948 1.637-.026 2.676-1.48 3.676-2.948 1.156-1.688 1.636-3.325 1.662-3.415-.039-.013-3.182-1.221-3.22-4.857-.026-3.04 2.48-4.494 2.597-4.559-1.429-2.09-3.623-2.324-4.39-2.376-2-.156-3.675 1.09-4.61 1.09zM15.53 3.83c.843-1.012 1.4-2.427 1.245-3.83-1.207.052-2.662.805-3.532 1.818-.78.896-1.454 2.338-1.273 3.714 1.338.104 2.715-.688 3.559-1.701z"/>
-            </svg>
-            Continue with Apple
           </button>
 
           {/* Divider */}
