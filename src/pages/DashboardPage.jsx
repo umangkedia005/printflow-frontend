@@ -343,26 +343,18 @@ function TopupModal({ shopDomain, onClose, onSuccess }) {
 }
 
 function ProductEditModal({ shopDomain, product, onClose, onSuccess }) {
-  const [factorySku, setFactorySku] = useState(product.factorySku || '')
-  const [fulfillmentCost, setFulfillmentCost] = useState(product.fulfillmentCost ?? '')
   const [printFileUrl, setPrintFileUrl] = useState(product.printFileUrl || product.image || '')
   const isSuggestedFromShopify = !product.printFileUrl && !!product.image
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
 
   async function handleSave() {
-    if (!factorySku || !fulfillmentCost) {
-      setError('Factory SKU and fulfillment cost are required')
-      return
-    }
     setLoading(true)
     setError('')
     try {
       await updateProductMapping({
         shop: shopDomain,
         shopifyProductId: product.id,
-        factorySku,
-        fulfillmentCost: Number(fulfillmentCost),
         printFileUrl: printFileUrl || null,
       })
       onSuccess()
@@ -382,7 +374,7 @@ function ProductEditModal({ shopDomain, product, onClose, onSuccess }) {
         <div style={{ padding: '24px 28px', borderBottom: '1px solid #E8E8E4', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
           <div>
             <h2 style={{ fontFamily: "'Plus Jakarta Sans', sans-serif", fontSize: '18px', fontWeight: 800, color: '#0A0A0A' }}>{product.name}</h2>
-            <p style={{ fontSize: '12px', color: '#999', marginTop: '3px' }}>Set the print file and fulfillment cost for this product.</p>
+            <p style={{ fontSize: '12px', color: '#999', marginTop: '3px' }}>Set the print file for this product.</p>
           </div>
           <button onClick={onClose} style={{ width: '30px', height: '30px', background: '#F4F4F0', border: 'none', borderRadius: '8px', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '14px', color: '#888', cursor: 'pointer', flexShrink: 0, marginLeft: '12px' }}>✕</button>
         </div>
@@ -394,23 +386,19 @@ function ProductEditModal({ shopDomain, product, onClose, onSuccess }) {
             </div>
           )}
 
-          <label style={{ display: 'block', fontSize: '12px', fontWeight: 600, color: '#555', marginBottom: '8px' }}>Factory SKU</label>
-          <input
-            type="text"
-            value={factorySku}
-            onChange={e => setFactorySku(e.target.value)}
-            placeholder="e.g. GILDAN-64000-BLK"
-            style={{ width: '100%', padding: '12px 14px', boxSizing: 'border-box', border: '1.5px solid #E8E8E4', borderRadius: '10px', fontSize: '13px', marginBottom: '14px', outline: 'none', fontFamily: 'monospace' }}
-          />
-
-          <label style={{ display: 'block', fontSize: '12px', fontWeight: 600, color: '#555', marginBottom: '8px' }}>Fulfillment Cost (₹)</label>
-          <input
-            type="number"
-            value={fulfillmentCost}
-            onChange={e => setFulfillmentCost(e.target.value)}
-            placeholder="Cost to print & ship one unit"
-            style={{ width: '100%', padding: '12px 14px', boxSizing: 'border-box', border: '1.5px solid #E8E8E4', borderRadius: '10px', fontSize: '13px', marginBottom: '14px', outline: 'none' }}
-          />
+          <div style={{ display: 'flex', gap: '10px', marginBottom: '18px' }}>
+            <div style={{ flex: 1, background: '#FAFAF8', border: '1px solid #E8E8E4', borderRadius: '10px', padding: '10px 12px' }}>
+              <div style={{ fontSize: '10px', fontWeight: 600, color: '#999', textTransform: 'uppercase', letterSpacing: '0.04em', marginBottom: '4px' }}>Factory SKU</div>
+              <div style={{ fontSize: '12px', color: product.factorySku ? '#0A0A0A' : '#BABAB6', fontFamily: 'monospace' }}>{product.factorySku || 'Not set by team yet'}</div>
+            </div>
+            <div style={{ flex: 1, background: '#FAFAF8', border: '1px solid #E8E8E4', borderRadius: '10px', padding: '10px 12px' }}>
+              <div style={{ fontSize: '10px', fontWeight: 600, color: '#999', textTransform: 'uppercase', letterSpacing: '0.04em', marginBottom: '4px' }}>Fulfillment Cost</div>
+              <div style={{ fontSize: '12px', color: product.fulfillmentCost != null ? '#0A0A0A' : '#BABAB6' }}>{product.fulfillmentCost != null ? `₹${product.fulfillmentCost}` : 'Not set by team yet'}</div>
+            </div>
+          </div>
+          <p style={{ fontSize: '11px', color: '#999', marginTop: '-10px', marginBottom: '18px', lineHeight: 1.4 }}>
+            Factory SKU and fulfillment cost are set by the No Limits Studio team, not merchants.
+          </p>
 
           <label style={{ display: 'block', fontSize: '12px', fontWeight: 600, color: '#555', marginBottom: '8px' }}>Print File URL</label>
           <input
@@ -1264,7 +1252,7 @@ export default function DashboardPage() {
                   </td>
                   <td style={{ padding: '14px 20px' }}>
                     {p.factorySku ? <span style={{ fontSize: '11px', color: '#555', fontFamily: 'monospace', background: '#F4F4F0', padding: '3px 8px', borderRadius: '5px' }}>{p.factorySku}</span>
-                      : <button onClick={() => setEditingProduct(p)} style={{ background: 'transparent', border: '1px solid #E8E8E4', borderRadius: '7px', padding: '5px 12px', fontSize: '11px', color: '#888', cursor: 'pointer', fontFamily: 'Inter, sans-serif' }}>+ Map SKU</button>}
+                      : <span style={{ fontSize: '11px', color: '#BABAB6' }}>Pending setup</span>}
                   </td>
                   <td style={{ padding: '14px 20px' }}>
                     {p.status === 'ready'
