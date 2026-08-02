@@ -617,7 +617,7 @@ export default function DashboardPage() {
   const [fulfillError, setFulfillError]     = useState('')
   const [notifs, setNotifs]                 = useState({ orderReceived: true, orderShipped: true, orderDelivered: false })
   const [autoFulfill, setAutoFulfill]       = useState(false)
-  const [currentPlan, setCurrentPlan]       = useState(() => localStorage.getItem('pf_plan') || 'free')
+  const [currentPlan, setCurrentPlan]       = useState('free')
   const [blogOffset, setBlogOffset]         = useState(0)
   const [activeArticle, setActiveArticle]   = useState(null)
 
@@ -722,14 +722,17 @@ export default function DashboardPage() {
 
   useEffect(() => {
     async function resolveShop() {
-      let shop = localStorage.getItem('pf_shop')
-      if (!shop && currentUser?.email) {
-        shop = await fetchMyStore(currentUser.email)
-        if (shop) localStorage.setItem('pf_shop', shop)
-      }
+      if (!currentUser?.email) return
+      const shop = await fetchMyStore(currentUser.email)
       if (shop) {
+        localStorage.setItem('pf_shop', shop)
         setShopDomain(shop)
         fetchSubscription(shop).then(plan => { setCurrentPlan(plan); localStorage.setItem('pf_plan', plan) })
+      } else {
+        localStorage.removeItem('pf_shop')
+        localStorage.removeItem('pf_plan')
+        setShopDomain('')
+        setCurrentPlan('free')
       }
     }
     resolveShop()
@@ -740,7 +743,7 @@ export default function DashboardPage() {
   const [ordersLoading, setOrdersLoading]   = useState(true)
   const [ordersError, setOrdersError]       = useState(null)
 
-  const [shopDomain, setShopDomain] = useState(localStorage.getItem('pf_shop') || '')
+  const [shopDomain, setShopDomain] = useState('')
   const [plans, setPlans] = useState([])
   const [walletBalance, setWalletBalance] = useState(0)
   const [walletTransactions, setWalletTransactions] = useState([])

@@ -39,6 +39,8 @@ export function AuthProvider({ children }) {
   }
 
   function logout() {
+    localStorage.removeItem('pf_shop');
+    localStorage.removeItem('pf_plan');
     return signOut(auth);
   }
 
