@@ -300,7 +300,7 @@ function TopupModal({ shopDomain, onClose, onSuccess }) {
     >
       <div style={{ background: '#FFFFFF', borderRadius: '20px', width: '100%', maxWidth: '420px', overflow: 'hidden', boxShadow: '0 24px 80px rgba(0,0,0,0.2)', animation: 'pf-fade-up 0.25s ease' }}>
         <div style={{ padding: '24px 28px', borderBottom: '1px solid #E8E8E4', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-          <h2 style={{ fontFamily: "'Plus Jakarta Sans', sans-serif", fontSize: '18px', fontWeight: 800, color: '#0A0A0A' }}>Add money to wallet</h2>
+          <h2 style={{ fontFamily: "'Fraunces', sans-serif", fontSize: '18px', fontWeight: 800, color: '#0A0A0A' }}>Add money to wallet</h2>
           <button onClick={onClose} style={{ width: '30px', height: '30px', background: '#F4F4F0', border: 'none', borderRadius: '8px', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '14px', color: '#888', cursor: 'pointer' }}>✕</button>
         </div>
 
@@ -373,7 +373,7 @@ function ProductEditModal({ shopDomain, product, onClose, onSuccess }) {
       <div style={{ background: '#FFFFFF', borderRadius: '20px', width: '100%', maxWidth: '440px', overflow: 'hidden', boxShadow: '0 24px 80px rgba(0,0,0,0.2)', animation: 'pf-fade-up 0.25s ease' }}>
         <div style={{ padding: '24px 28px', borderBottom: '1px solid #E8E8E4', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
           <div>
-            <h2 style={{ fontFamily: "'Plus Jakarta Sans', sans-serif", fontSize: '18px', fontWeight: 800, color: '#0A0A0A' }}>{product.name}</h2>
+            <h2 style={{ fontFamily: "'Fraunces', sans-serif", fontSize: '18px', fontWeight: 800, color: '#0A0A0A' }}>{product.name}</h2>
             <p style={{ fontSize: '12px', color: '#999', marginTop: '3px' }}>Set the print file for this product.</p>
           </div>
           <button onClick={onClose} style={{ width: '30px', height: '30px', background: '#F4F4F0', border: 'none', borderRadius: '8px', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '14px', color: '#888', cursor: 'pointer', flexShrink: 0, marginLeft: '12px' }}>✕</button>
@@ -460,7 +460,7 @@ function UpgradeModal({ currentPlan, shopDomain, plans, onClose, onSuccess }) {
         {/* Modal header */}
         <div style={{ padding: '24px 32px', borderBottom: '1px solid #E8E8E4', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
           <div>
-            <h2 style={{ fontFamily: "'Plus Jakarta Sans', sans-serif", fontSize: '20px', fontWeight: 800, color: '#0A0A0A', letterSpacing: '-0.3px', marginBottom: '3px' }}>
+            <h2 style={{ fontFamily: "'Fraunces', sans-serif", fontSize: '20px', fontWeight: 800, color: '#0A0A0A', letterSpacing: '-0.3px', marginBottom: '3px' }}>
               Choose your plan
             </h2>
             <p style={{ fontSize: '13px', color: '#999' }}>Upgrade anytime. Cancel anytime. Billed in INR.</p>
@@ -527,7 +527,7 @@ function UpgradeModal({ currentPlan, shopDomain, plans, onClose, onSuccess }) {
                 <div style={{ marginBottom: '16px' }}>
                   <div style={{ fontSize: '14px', fontWeight: 700, color: '#0A0A0A', marginBottom: '12px' }}>{plan.name}</div>
                   <div style={{ display: 'flex', alignItems: 'flex-end', gap: '4px', marginBottom: '4px' }}>
-                    <span style={{ fontFamily: "'Plus Jakarta Sans', sans-serif", fontSize: '32px', fontWeight: 800, color: '#0A0A0A', lineHeight: 1 }}>
+                    <span style={{ fontFamily: "'Fraunces', sans-serif", fontSize: '32px', fontWeight: 800, color: '#0A0A0A', lineHeight: 1 }}>
                       ₹{price.toLocaleString('en-IN')}
                     </span>
                     <span style={{ fontSize: '13px', color: '#999', marginBottom: '4px' }}>/mo</span>
@@ -909,7 +909,7 @@ export default function DashboardPage() {
               <div style={{ width: '42px', height: '42px', borderRadius: '12px', background: s.bgGrad, color: '#FFFFFF', display: 'flex', alignItems: 'center', justifyContent: 'center', marginBottom: '16px', boxShadow: s.iconShadow }}>
                 <s.Icon />
               </div>
-              <div style={{ fontSize: '26px', fontWeight: 800, color: s.color, fontFamily: "'Plus Jakarta Sans', sans-serif", lineHeight: 1, marginBottom: '5px' }}>{s.value}</div>
+              <div style={{ fontSize: '26px', fontWeight: 800, color: s.color, fontFamily: "'Fraunces', sans-serif", lineHeight: 1, marginBottom: '5px' }}>{s.value}</div>
               <div style={{ fontSize: '11px', color: '#BABAB6', fontWeight: 500 }}>{s.label}</div>
             </div>
           ))}
@@ -920,7 +920,7 @@ export default function DashboardPage() {
           
           {/* Sales chart */}
           <div style={{ background: '#FFFFFF', border: '1px solid rgba(23,43,21,0.06)', borderRadius: '24px', padding: '24px', boxShadow: '0 8px 30px rgba(23,43,21,0.015)' }}>
-            <h3 style={{ fontFamily: "'Plus Jakarta Sans', sans-serif", fontSize: '15px', fontWeight: 800, color: '#172B15', marginBottom: '16px' }}>Weekly Sales Revenue</h3>
+            <h3 style={{ fontFamily: "'Fraunces', sans-serif", fontSize: '15px', fontWeight: 800, color: '#172B15', marginBottom: '16px' }}>Weekly Sales Revenue</h3>
             <div style={{ width: '100%', height: '180px', display: 'flex', alignItems: 'flex-end', justifyContent: 'space-between', padding: '0 10px', background: '#FAFAF9', borderRadius: '16px', border: '1px dashed rgba(23,43,21,0.05)', position: 'relative' }}>
               {salesData.map((d, i) => {
                 const height = `${(d.sales / 14000) * 100}%`
@@ -940,7 +940,7 @@ export default function DashboardPage() {
 
           {/* Top Products */}
           <div style={{ background: '#FFFFFF', border: '1px solid rgba(23,43,21,0.06)', borderRadius: '24px', padding: '24px', boxShadow: '0 8px 30px rgba(23,43,21,0.015)' }}>
-            <h3 style={{ fontFamily: "'Plus Jakarta Sans', sans-serif", fontSize: '15px', fontWeight: 800, color: '#172B15', marginBottom: '16px' }}>Best Sellers</h3>
+            <h3 style={{ fontFamily: "'Fraunces', sans-serif", fontSize: '15px', fontWeight: 800, color: '#172B15', marginBottom: '16px' }}>Best Sellers</h3>
             <div style={{ display: 'flex', flexDirection: 'column', gap: '18px' }}>
               {topProducts.map((p, i) => (
                 <div key={i}>
@@ -961,7 +961,7 @@ export default function DashboardPage() {
         {/* Start something great today (Blog & Tutorials Carousel) */}
         <div style={{ marginTop: '40px', position: 'relative', zIndex: 1 }}>
           <div style={{ display: 'flex', alignItems: 'center', justify: 'space-between', marginBottom: '20px' }}>
-            <h2 style={{ fontFamily: "'Plus Jakarta Sans', sans-serif", fontSize: '20px', fontWeight: 800, color: '#172B15', letterSpacing: '-0.3px' }}>
+            <h2 style={{ fontFamily: "'Fraunces', sans-serif", fontSize: '20px', fontWeight: 800, color: '#172B15', letterSpacing: '-0.3px' }}>
               Start something great today
             </h2>
             <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
@@ -1182,7 +1182,7 @@ export default function DashboardPage() {
       <>
         <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', marginBottom: '28px' }}>
           <div>
-            <h1 style={{ fontFamily: "'Plus Jakarta Sans', sans-serif", fontSize: '26px', fontWeight: 800, color: '#0A0A0A', letterSpacing: '-0.5px', marginBottom: '4px' }}>Products</h1>
+            <h1 style={{ fontFamily: "'Fraunces', sans-serif", fontSize: '26px', fontWeight: 800, color: '#0A0A0A', letterSpacing: '-0.5px', marginBottom: '4px' }}>Products</h1>
             <p style={{ fontSize: '13px', color: '#BABAB6' }}>Map each Shopify product to a print file and factory SKU.</p>
           </div>
           <button
@@ -1204,7 +1204,7 @@ export default function DashboardPage() {
         <div style={{ display: 'flex', gap: '12px', marginBottom: '24px' }}>
           {[{ label: 'Total products', value: products.length, color: '#0A0A0A' }, { label: 'Ready to print', value: ready, color: '#166534' }, { label: 'Needs setup', value: missing, color: '#C2410C' }].map(s => (
             <div key={s.label} style={{ background: '#FFFFFF', border: '1px solid #E8E8E4', borderRadius: '10px', padding: '14px 18px', display: 'flex', alignItems: 'center', gap: '10px' }}>
-              <span style={{ fontSize: '20px', fontWeight: 800, color: s.color, fontFamily: "'Plus Jakarta Sans', sans-serif" }}>{s.value}</span>
+              <span style={{ fontSize: '20px', fontWeight: 800, color: s.color, fontFamily: "'Fraunces', sans-serif" }}>{s.value}</span>
               <span style={{ fontSize: '12px', color: '#999' }}>{s.label}</span>
             </div>
           ))}
@@ -1217,7 +1217,7 @@ export default function DashboardPage() {
         ) : (
         <div style={{ background: '#FFFFFF', border: '1px solid #E8E8E4', borderRadius: '16px', overflow: 'hidden' }}>
           <table style={{ width: '100%', borderCollapse: 'collapse' }}>
-            <thead><tr>{['Product','Variants','Print File','Factory SKU','Status',''].map(h=><th key={h} style={{ padding: '10px 20px', textAlign: 'left', fontSize: '10px', fontWeight: 600, color: '#C8C8C4', textTransform: 'uppercase', letterSpacing: '0.08em', borderBottom: '1px solid #E8E8E4', background: '#FCFCFB' }}>{h}</th>)}</tr></thead>
+            <thead><tr>{['Product','Variants','Print File','Factory SKU','Status'].map(h=><th key={h} style={{ padding: '10px 20px', textAlign: 'left', fontSize: '10px', fontWeight: 600, color: '#C8C8C4', textTransform: 'uppercase', letterSpacing: '0.08em', borderBottom: '1px solid #E8E8E4', background: '#FCFCFB' }}>{h}</th>)}</tr></thead>
             <tbody>
               {products.map((p, i) => (
                 <tr key={p.id} style={{ borderBottom: i < products.length-1 ? '1px solid #F4F4F0' : 'none', transition: 'background 0.1s' }} onMouseOver={e=>e.currentTarget.style.background='#FAFAF8'} onMouseOut={e=>e.currentTarget.style.background='transparent'}>
@@ -1244,9 +1244,10 @@ export default function DashboardPage() {
                   </td>
                   <td style={{ padding: '14px 20px' }}>
                     {p.printFileUrl ? (
-                      <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-                        <div style={{ width: '28px', height: '28px', background: '#F0FDF4', border: '1px solid #BBF7D0', borderRadius: '6px', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '12px' }}>🖼</div>
-                        <span style={{ fontSize: '11px', color: '#166534', fontWeight: 500, fontFamily: 'monospace', maxWidth: '140px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{p.printFileUrl}</span>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                        <div style={{ width: '28px', height: '28px', background: '#F0FDF4', border: '1px solid #BBF7D0', borderRadius: '6px', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '12px', flexShrink: 0 }}>🖼</div>
+                        <span style={{ fontSize: '11px', color: '#166534', fontWeight: 500, fontFamily: 'monospace', maxWidth: '120px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{p.printFileUrl}</span>
+                        <button onClick={() => setEditingProduct(p)} style={{ background: 'none', border: 'none', color: '#666', fontSize: '11px', fontWeight: 500, cursor: 'pointer', padding: 0, fontFamily: 'Inter, sans-serif', textDecoration: 'underline', flexShrink: 0 }}>Change</button>
                       </div>
                     ) : <button onClick={() => setEditingProduct(p)} className="pf-btn" style={{ padding: '5px 12px', fontSize: '11px', borderRadius: '7px' }}>↑ Upload</button>}
                   </td>
@@ -1258,9 +1259,6 @@ export default function DashboardPage() {
                     {p.status === 'ready'
                       ? <span style={{ display: 'inline-flex', alignItems: 'center', gap: '5px', background: '#F0FDF4', color: '#166534', padding: '3px 10px', borderRadius: '100px', fontSize: '11px', fontWeight: 600 }}><span style={{ width: '5px', height: '5px', borderRadius: '50%', background: '#22C55E' }}/>Ready</span>
                       : <span style={{ display: 'inline-flex', alignItems: 'center', gap: '5px', background: '#FFF7ED', color: '#C2410C', padding: '3px 10px', borderRadius: '100px', fontSize: '11px', fontWeight: 600 }}><span style={{ width: '5px', height: '5px', borderRadius: '50%', background: '#F97316' }}/>Needs setup</span>}
-                  </td>
-                  <td style={{ padding: '14px 20px' }}>
-                    <button onClick={() => setEditingProduct(p)} style={{ background: 'transparent', border: '1px solid #E8E8E4', borderRadius: '7px', padding: '6px 14px', fontSize: '11px', fontWeight: 500, color: '#666', cursor: 'pointer', fontFamily: 'Inter, sans-serif', transition: 'border-color 0.12s, color 0.12s' }} onMouseOver={e=>{e.currentTarget.style.borderColor='#0A0A0A';e.currentTarget.style.color='#0A0A0A'}} onMouseOut={e=>{e.currentTarget.style.borderColor='#E8E8E4';e.currentTarget.style.color='#666'}}>Edit →</button>
                   </td>
                 </tr>
               ))}
@@ -1279,7 +1277,7 @@ export default function DashboardPage() {
     return (
       <>
         <div style={{ marginBottom: '28px' }}>
-          <h1 style={{ fontFamily: "'Plus Jakarta Sans', sans-serif", fontSize: '26px', fontWeight: 800, color: '#0A0A0A', letterSpacing: '-0.5px', marginBottom: '4px' }}>Billing</h1>
+          <h1 style={{ fontFamily: "'Fraunces', sans-serif", fontSize: '26px', fontWeight: 800, color: '#0A0A0A', letterSpacing: '-0.5px', marginBottom: '4px' }}>Billing</h1>
           <p style={{ fontSize: '13px', color: '#BABAB6' }}>Manage your subscription and payment details.</p>
         </div>
 
@@ -1316,7 +1314,7 @@ export default function DashboardPage() {
             {isPaid && (
               <div style={{ textAlign: 'right', display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: '8px' }}>
                 <div>
-                  <div style={{ fontSize: '18px', fontWeight: 800, color: '#0A0A0A', fontFamily: "'Plus Jakarta Sans', sans-serif" }}>
+                  <div style={{ fontSize: '18px', fontWeight: 800, color: '#0A0A0A', fontFamily: "'Fraunces', sans-serif" }}>
                     ₹{planInfo?.monthlyPrice.toLocaleString('en-IN')}<span style={{ fontSize: '12px', fontWeight: 400, color: '#999' }}>/mo</span>
                   </div>
                   <div style={{ fontSize: '11px', color: '#BABAB6', marginTop: '2px' }}>Next charge: 1 Jul 2026</div>
@@ -1422,14 +1420,14 @@ export default function DashboardPage() {
   const WalletView = () => (
     <>
       <div style={{ marginBottom: '28px' }}>
-        <h1 style={{ fontFamily: "'Plus Jakarta Sans', sans-serif", fontSize: '26px', fontWeight: 800, color: '#0A0A0A', letterSpacing: '-0.5px', marginBottom: '4px' }}>Wallet</h1>
+        <h1 style={{ fontFamily: "'Fraunces', sans-serif", fontSize: '26px', fontWeight: 800, color: '#0A0A0A', letterSpacing: '-0.5px', marginBottom: '4px' }}>Wallet</h1>
         <p style={{ fontSize: '13px', color: '#BABAB6' }}>Fund your wallet to cover printing and shipping when you fulfill orders.</p>
       </div>
 
       <SectionCard title="Balance">
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '16px' }}>
           <div>
-            <div style={{ fontSize: '32px', fontWeight: 800, color: '#0A0A0A', fontFamily: "'Plus Jakarta Sans', sans-serif" }}>
+            <div style={{ fontSize: '32px', fontWeight: 800, color: '#0A0A0A', fontFamily: "'Fraunces', sans-serif" }}>
               {walletLoading ? '—' : `₹${walletBalance.toLocaleString('en-IN')}`}
             </div>
             <div style={{ fontSize: '12px', color: '#999', marginTop: '4px' }}>Available for order fulfillment</div>
@@ -1478,7 +1476,7 @@ export default function DashboardPage() {
   const SettingsView = () => (
     <>
       <div style={{ marginBottom: '28px' }}>
-        <h1 style={{ fontFamily: "'Plus Jakarta Sans', sans-serif", fontSize: '26px', fontWeight: 800, color: '#0A0A0A', letterSpacing: '-0.5px', marginBottom: '4px' }}>Settings</h1>
+        <h1 style={{ fontFamily: "'Fraunces', sans-serif", fontSize: '26px', fontWeight: 800, color: '#0A0A0A', letterSpacing: '-0.5px', marginBottom: '4px' }}>Settings</h1>
         <p style={{ fontSize: '13px', color: '#BABAB6' }}>Manage your store, notifications, and fulfillment.</p>
       </div>
       <SectionCard title="Connected Store">
@@ -1554,7 +1552,7 @@ export default function DashboardPage() {
               alt="No Limit Studio" 
               style={{ width: '28px', height: '28px', borderRadius: '50%', objectFit: 'cover' }} 
             />
-            <span style={{ fontFamily: "'Plus Jakarta Sans', sans-serif", fontWeight: 800, fontSize: '15px', color: '#172B15', letterSpacing: '-0.3px' }}>
+            <span style={{ fontFamily: "'Fraunces', sans-serif", fontWeight: 800, fontSize: '15px', color: '#172B15', letterSpacing: '-0.3px' }}>
               No Limit Studio
             </span>
           </div>
@@ -1657,7 +1655,7 @@ export default function DashboardPage() {
           {activeNav === 'dashboard' && (
             <>
               <div style={{ marginBottom: '28px', position: 'relative', zIndex: 1 }}>
-                <h1 style={{ fontFamily: "'Plus Jakarta Sans', sans-serif", fontSize: '26px', fontWeight: 800, color: '#172B15', letterSpacing: '-0.5px', marginBottom: '4px' }}>Dashboard Overview</h1>
+                <h1 style={{ fontFamily: "'Fraunces', sans-serif", fontSize: '26px', fontWeight: 800, color: '#172B15', letterSpacing: '-0.5px', marginBottom: '4px' }}>Dashboard Overview</h1>
                 <p style={{ fontSize: '13px', color: '#889B8E', fontWeight: 500 }}>Welcome back! Here is your weekly store performance and insights.</p>
               </div>
               <DashboardOverview />
@@ -1666,7 +1664,7 @@ export default function DashboardPage() {
           {activeNav === 'orders' && (
             <>
               <div style={{ marginBottom: '28px', position: 'relative', zIndex: 1 }}>
-                <h1 style={{ fontFamily: "'Plus Jakarta Sans', sans-serif", fontSize: '26px', fontWeight: 800, color: '#172B15', letterSpacing: '-0.5px', marginBottom: '4px' }}>Order Management</h1>
+                <h1 style={{ fontFamily: "'Fraunces', sans-serif", fontSize: '26px', fontWeight: 800, color: '#172B15', letterSpacing: '-0.5px', marginBottom: '4px' }}>Order Management</h1>
                 <p style={{ fontSize: '13px', color: '#889B8E', fontWeight: 500 }}>Fulfillment status and print orders synced directly from <span style={{ color: '#172B15', fontWeight: 600 }}>{shopDomain}</span>.</p>
               </div>
               <OrdersManagement />
@@ -1681,14 +1679,14 @@ export default function DashboardPage() {
           {activeNav === 'notifications' && (
             <div style={{ position: 'relative', zIndex: 1 }}>
               <div style={{ marginBottom: '28px' }}>
-                <h1 style={{ fontFamily: "'Plus Jakarta Sans', sans-serif", fontSize: '26px', fontWeight: 800, color: '#172B15', letterSpacing: '-0.5px', marginBottom: '4px' }}>Notifications</h1>
+                <h1 style={{ fontFamily: "'Fraunces', sans-serif", fontSize: '26px', fontWeight: 800, color: '#172B15', letterSpacing: '-0.5px', marginBottom: '4px' }}>Notifications</h1>
                 <p style={{ fontSize: '13px', color: '#889B8E', fontWeight: 500 }}>Broadcast center to test live system alerts and manage customer updates.</p>
               </div>
 
               <div style={{ display: 'grid', gridTemplateColumns: '1.2fr 1.8fr', gap: '28px', alignItems: 'start' }}>
                 {/* Left panel: Trigger custom message console */}
                 <div style={{ background: '#FFFFFF', border: '1px solid rgba(23,43,21,0.06)', borderRadius: '20px', padding: '24px', boxShadow: '0 8px 30px rgba(23,43,21,0.015)' }}>
-                  <h3 style={{ fontFamily: "'Plus Jakarta Sans', sans-serif", fontSize: '16px', fontWeight: 800, color: '#172B15', marginBottom: '16px' }}>Send Test System Alert</h3>
+                  <h3 style={{ fontFamily: "'Fraunces', sans-serif", fontSize: '16px', fontWeight: 800, color: '#172B15', marginBottom: '16px' }}>Send Test System Alert</h3>
                   
                   <div style={{ marginBottom: '14px' }}>
                     <label style={{ fontSize: '11px', fontWeight: 700, color: '#889B8E', textTransform: 'uppercase', display: 'block', marginBottom: '6px' }}>Alert Title</label>
@@ -1776,7 +1774,7 @@ export default function DashboardPage() {
               {/* Header Toggle Row */}
               <div style={{ marginBottom: '28px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                 <div>
-                  <h1 style={{ fontFamily: "'Plus Jakarta Sans', sans-serif", fontSize: '26px', fontWeight: 800, color: '#172B15', letterSpacing: '-0.5px', marginBottom: '4px' }}>
+                  <h1 style={{ fontFamily: "'Fraunces', sans-serif", fontSize: '26px', fontWeight: 800, color: '#172B15', letterSpacing: '-0.5px', marginBottom: '4px' }}>
                     {trendTab === 'social' ? "What's trending" : 'Market trends'}
                   </h1>
                   <p style={{ fontSize: '13px', color: '#889B8E', fontWeight: 500 }}>
@@ -1806,7 +1804,7 @@ export default function DashboardPage() {
                   {/* Social Buzz Inspiration Banner */}
                   <div style={{ display: 'grid', gridTemplateColumns: '2fr 1fr', background: '#FFFFFF', border: '1px solid rgba(23,43,21,0.06)', borderRadius: '24px', padding: '32px', marginBottom: '28px', alignItems: 'center', boxShadow: '0 8px 30px rgba(23,43,21,0.01)' }}>
                     <div>
-                      <h2 style={{ fontFamily: "'Plus Jakarta Sans', sans-serif", fontSize: '22px', fontWeight: 800, color: '#172B15', marginBottom: '10px', letterSpacing: '-0.3px' }}>
+                      <h2 style={{ fontFamily: "'Fraunces', sans-serif", fontSize: '22px', fontWeight: 800, color: '#172B15', marginBottom: '10px', letterSpacing: '-0.3px' }}>
                         Turn social media buzz into inspiration
                       </h2>
                       <p style={{ fontSize: '13.5px', color: '#71717A', lineHeight: 1.6, marginBottom: '0px', maxWidth: '460px' }}>
@@ -1958,7 +1956,7 @@ export default function DashboardPage() {
 
                   {/* Trend search analysis container */}
                   <div style={{ background: '#FFFFFF', border: '1px solid rgba(23,43,21,0.06)', borderRadius: '24px', padding: '24px', marginBottom: '28px', boxShadow: '0 8px 30px rgba(23,43,21,0.015)' }}>
-                    <h3 style={{ fontFamily: "'Plus Jakarta Sans', sans-serif", fontSize: '16px', fontWeight: 800, color: '#172B15', marginBottom: '6px' }}>
+                    <h3 style={{ fontFamily: "'Fraunces', sans-serif", fontSize: '16px', fontWeight: 800, color: '#172B15', marginBottom: '6px' }}>
                       {searchQuery ? `Google Search Volume: "${searchQuery}"` : 'Interactive Google Trends Graph'}
                     </h3>
                     <p style={{ fontSize: '12px', color: '#71717A', marginBottom: '24px' }}>
@@ -2009,10 +2007,10 @@ export default function DashboardPage() {
                       <div style={{
                         width: '32px', height: '32px', borderRadius: '50%',
                         background: '#000000', display: 'flex', alignItems: 'center', justifyContent: 'center',
-                        color: '#FFFFFF', fontWeight: 'bold', fontSize: '15px', fontFamily: "'Plus Jakarta Sans', sans-serif"
+                        color: '#FFFFFF', fontWeight: 'bold', fontSize: '15px', fontFamily: "'Fraunces', sans-serif"
                       }}>M</div>
                       <div>
-                        <h3 style={{ fontFamily: "'Plus Jakarta Sans', sans-serif", fontSize: '18px', fontWeight: 800, color: '#172B15', margin: 0 }}>
+                        <h3 style={{ fontFamily: "'Fraunces', sans-serif", fontSize: '18px', fontWeight: 800, color: '#172B15', margin: 0 }}>
                           Trending on Medium
                         </h3>
                         <p style={{ fontSize: '12px', color: '#71717A', margin: 0 }}>
@@ -2075,14 +2073,14 @@ export default function DashboardPage() {
           {activeNav === 'help' && (
             <div style={{ position: 'relative', zIndex: 1 }}>
               <div style={{ marginBottom: '28px' }}>
-                <h1 style={{ fontFamily: "'Plus Jakarta Sans', sans-serif", fontSize: '26px', fontWeight: 800, color: '#172B15', letterSpacing: '-0.5px', marginBottom: '4px' }}>Help Center</h1>
+                <h1 style={{ fontFamily: "'Fraunces', sans-serif", fontSize: '26px', fontWeight: 800, color: '#172B15', letterSpacing: '-0.5px', marginBottom: '4px' }}>Help Center</h1>
                 <p style={{ fontSize: '13px', color: '#889B8E', fontWeight: 500 }}>Access guides, browse frequently asked questions, or chat with our operations team.</p>
               </div>
 
               <div style={{ display: 'grid', gridTemplateColumns: '1.8fr 1.2fr', gap: '28px', alignItems: 'start' }}>
                 {/* FAQs */}
                 <div style={{ background: '#FFFFFF', border: '1px solid rgba(23,43,21,0.06)', borderRadius: '24px', padding: '24px', boxShadow: '0 8px 30px rgba(23,43,21,0.015)' }}>
-                  <h3 style={{ fontFamily: "'Plus Jakarta Sans', sans-serif", fontSize: '16px', fontWeight: 800, color: '#172B15', marginBottom: '18px' }}>Frequently Asked Questions</h3>
+                  <h3 style={{ fontFamily: "'Fraunces', sans-serif", fontSize: '16px', fontWeight: 800, color: '#172B15', marginBottom: '18px' }}>Frequently Asked Questions</h3>
                   
                   {[
                     { q: 'How does No Limit Studio connect with Shopify?', a: 'When you paste your shopify domain, we request read/write access to sync your catalog inventory and download order payloads automatically.' },
@@ -2098,7 +2096,7 @@ export default function DashboardPage() {
 
                 {/* Contact Card */}
                 <div style={{ background: '#111A13', border: '1px solid rgba(255,255,255,0.06)', borderRadius: '24px', padding: '24px', color: '#FFFFFF', boxShadow: '0 8px 30px rgba(9,26,14,0.1)' }}>
-                  <h3 style={{ fontFamily: "'Plus Jakarta Sans', sans-serif", fontSize: '16px', fontWeight: 800, color: '#B9F95D', marginBottom: '8px' }}>Open Support Ticket</h3>
+                  <h3 style={{ fontFamily: "'Fraunces', sans-serif", fontSize: '16px', fontWeight: 800, color: '#B9F95D', marginBottom: '8px' }}>Open Support Ticket</h3>
                   <p style={{ fontSize: '12.5px', color: '#A1A8A3', lineHeight: 1.5, marginBottom: '20px' }}>Our printing operations and catalog engineers are available 24/7 to solve setup bugs.</p>
                   
                   <button 
@@ -2122,7 +2120,7 @@ export default function DashboardPage() {
           <div style={{ position: 'absolute', top: 0, right: 0, bottom: 0, width: '500px', background: '#FFFFFF', borderLeft: '1px solid #E8E8E4', overflowY: 'auto', animation: 'pf-slide-in 0.22s cubic-bezier(0.22,1,0.36,1)' }}>
             <div style={{ position: 'sticky', top: 0, background: '#FFFFFF', zIndex: 10, padding: '18px 24px', borderBottom: '1px solid #E8E8E4', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
               <div>
-                <div style={{ fontFamily: "'Plus Jakarta Sans', sans-serif", fontSize: '16px', fontWeight: 700, color: '#0A0A0A', marginBottom: '2px' }}>Order {selectedOrder.id}</div>
+                <div style={{ fontFamily: "'Fraunces', sans-serif", fontSize: '16px', fontWeight: 700, color: '#0A0A0A', marginBottom: '2px' }}>Order {selectedOrder.id}</div>
                 <div style={{ fontSize: '12px', color: '#BABAB6' }}>{selectedOrder.date}</div>
               </div>
               <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
@@ -2308,7 +2306,7 @@ export default function DashboardPage() {
               <span style={{ fontSize: '11px', fontWeight: 750, color: '#39B54A', textTransform: 'uppercase', letterSpacing: '0.06em' }}>
                 {activeArticle.category}
               </span>
-              <h1 style={{ fontFamily: "'Plus Jakarta Sans', sans-serif", fontSize: '20px', fontWeight: 900, color: '#172B15', letterSpacing: '-0.4px', marginTop: '6px', marginBottom: '8px', lineHeight: 1.3 }}>
+              <h1 style={{ fontFamily: "'Fraunces', sans-serif", fontSize: '20px', fontWeight: 900, color: '#172B15', letterSpacing: '-0.4px', marginTop: '6px', marginBottom: '8px', lineHeight: 1.3 }}>
                 {activeArticle.title}
               </h1>
               <div style={{ fontSize: '12px', color: '#A1A1AA', fontWeight: 500, marginBottom: '24px' }}>
@@ -2324,7 +2322,7 @@ export default function DashboardPage() {
 
               {/* Academy call-to-action */}
               <div style={{ background: 'rgba(185,249,93,0.1)', border: '1px solid rgba(57,181,74,0.2)', borderRadius: '16px', padding: '20px', marginTop: '36px', textAlign: 'center' }}>
-                <h4 style={{ fontFamily: "'Plus Jakarta Sans', sans-serif", fontWeight: 800, fontSize: '14px', color: '#172B15', marginBottom: '4px' }}>
+                <h4 style={{ fontFamily: "'Fraunces', sans-serif", fontWeight: 800, fontSize: '14px', color: '#172B15', marginBottom: '4px' }}>
                   🎓 Grow Your E-Commerce Store
                 </h4>
                 <p style={{ fontSize: '12px', color: '#71717A', lineHeight: 1.5, margin: '0 0 14px' }}>
@@ -2393,7 +2391,7 @@ export default function DashboardPage() {
 
         /* Modal content styling */
         .pf-article-body h2 {
-          font-family: "'Plus Jakarta Sans', sans-serif" !important;
+          font-family: "'Fraunces', sans-serif" !important;
           font-size: 15px !important;
           font-weight: 800 !important;
           color: #172B15 !important;

@@ -46,7 +46,7 @@ const SuccessPage = () => {
               display: 'flex', alignItems: 'center', justifyContent: 'center',
               fontSize: '13px', color: '#172B15', fontWeight: 'bold'
             }}>✦</div>
-            <span style={{ fontFamily: "'Plus Jakarta Sans', sans-serif", fontWeight: 800, fontSize: '15px', color: '#172B15', letterSpacing: '-0.3px' }}>
+            <span style={{ fontFamily: "'Fraunces', sans-serif", fontWeight: 800, fontSize: '15px', color: '#172B15', letterSpacing: '-0.3px' }}>
               No Limit Studio
             </span>
           </div>
@@ -84,7 +84,7 @@ const SuccessPage = () => {
           </div>
 
           <h1 style={{
-            fontFamily: "'Plus Jakarta Sans', sans-serif",
+            fontFamily: "'Fraunces', sans-serif",
             fontSize: '26px', fontWeight: 800,
             color: '#0A0A0A', marginBottom: '10px',
             letterSpacing: '-0.3px',

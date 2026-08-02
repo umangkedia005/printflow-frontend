@@ -62,14 +62,14 @@ export default function AuthPage() {
               alt="No Limit Studio" 
               style={{ width: '32px', height: '32px', borderRadius: '50%', objectFit: 'cover' }} 
             />
-            <span style={{ fontFamily: "'Plus Jakarta Sans', sans-serif", fontWeight: 800, fontSize: '18px', color: '#172B15', letterSpacing: '-0.5px' }}>
+            <span style={{ fontFamily: "'Fraunces', sans-serif", fontWeight: 800, fontSize: '18px', color: '#172B15', letterSpacing: '-0.5px' }}>
               No Limit Studio
             </span>
           </div>
 
           {/* Heading */}
           <h1 style={{
-            fontFamily: "'Plus Jakarta Sans', sans-serif",
+            fontFamily: "'Fraunces', sans-serif",
             fontSize: '26px', fontWeight: 800,
             color: '#172B15', letterSpacing: '-0.4px',
             marginBottom: '6px',
@@ -249,7 +249,7 @@ export default function AuthPage() {
           </svg>
 
           <h2 style={{
-            fontFamily: "'Plus Jakarta Sans', sans-serif",
+            fontFamily: "'Fraunces', sans-serif",
             fontSize: '28px', fontWeight: 800,
             color: 'white', letterSpacing: '-0.5px',
             marginBottom: '12px', lineHeight: 1.2,
@@ -265,7 +265,7 @@ export default function AuthPage() {
           <div style={{ display: 'flex', gap: '32px', justifyContent: 'center' }}>
             {[['10K+', 'Stores'], ['2M+', 'Orders'], ['24h', 'Fulfillment']].map(([val, label]) => (
               <div key={label} style={{ textAlign: 'center' }}>
-                <div style={{ fontFamily: "'Plus Jakarta Sans', sans-serif", fontSize: '20px', fontWeight: 800, color: '#B9F95D', marginBottom: '2px' }}>{val}</div>
+                <div style={{ fontFamily: "'Fraunces', sans-serif", fontSize: '20px', fontWeight: 800, color: '#B9F95D', marginBottom: '2px' }}>{val}</div>
                 <div style={{ fontSize: '11px', color: '#A1A8A3', fontWeight: 550 }}>{label}</div>
               </div>
             ))}

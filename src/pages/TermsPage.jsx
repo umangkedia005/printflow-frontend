@@ -2,7 +2,7 @@ const TermsPage = () => {
   return (
     <div style={{ minHeight: '100vh', background: '#FAFAF8', fontFamily: 'Inter, sans-serif', color: '#0A0A0A' }}>
       <div style={{ maxWidth: '760px', margin: '0 auto', padding: '64px 24px 96px' }}>
-        <h1 style={{ fontFamily: "'Plus Jakarta Sans', sans-serif", fontSize: '32px', fontWeight: 800, marginBottom: '8px' }}>
+        <h1 style={{ fontFamily: "'Fraunces', sans-serif", fontSize: '32px', fontWeight: 800, marginBottom: '8px' }}>
           Terms of Service
         </h1>
         <p style={{ fontSize: '13px', color: '#889B8E', marginBottom: '40px' }}>Last updated: July 2026</p>

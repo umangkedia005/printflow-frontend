@@ -174,7 +174,7 @@ const CUSTOMIZER_PRODUCTS = [
     designOverlay: (
       <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', textAlign: 'center' }}>
         <span style={{ fontSize: '32px', filter: 'drop-shadow(0 2px 4px rgba(0,0,0,0.15))' }}>☀️</span>
-        <span style={{ fontFamily: "'Plus Jakarta Sans', sans-serif", fontWeight: 900, fontSize: '11px', textTransform: 'uppercase', color: '#172B15', lineHeight: 1.0 }}>Go With<br />The Flow</span>
+        <span style={{ fontFamily: "'Fraunces', sans-serif", fontWeight: 900, fontSize: '11px', textTransform: 'uppercase', color: '#172B15', lineHeight: 1.0 }}>Go With<br />The Flow</span>
       </div>
     ),
     designTop: '47%',
@@ -193,7 +193,7 @@ const CUSTOMIZER_PRODUCTS = [
     designOverlay: (
       <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', textAlign: 'center' }}>
         <span style={{ fontSize: '32px', filter: 'drop-shadow(0 2px 4px rgba(0,0,0,0.15))' }}>🧑‍🚀</span>
-        <span style={{ fontFamily: "'Plus Jakarta Sans', sans-serif", fontWeight: 900, fontSize: '10px', textTransform: 'uppercase', color: '#172B15', lineHeight: 1.0 }}>Space<br />Explorer</span>
+        <span style={{ fontFamily: "'Fraunces', sans-serif", fontWeight: 900, fontSize: '10px', textTransform: 'uppercase', color: '#172B15', lineHeight: 1.0 }}>Space<br />Explorer</span>
       </div>
     ),
     designTop: '42%',
@@ -212,7 +212,7 @@ const CUSTOMIZER_PRODUCTS = [
     designOverlay: (
       <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', textAlign: 'center' }}>
         <span style={{ fontSize: '32px', filter: 'drop-shadow(0 2px 4px rgba(0,0,0,0.15))' }}>🐾</span>
-        <span style={{ fontFamily: "'Plus Jakarta Sans', sans-serif", fontWeight: 900, fontSize: '11px', textTransform: 'uppercase', color: '#172B15', lineHeight: 1.0 }}>Bark<br />Squad</span>
+        <span style={{ fontFamily: "'Fraunces', sans-serif", fontWeight: 900, fontSize: '11px', textTransform: 'uppercase', color: '#172B15', lineHeight: 1.0 }}>Bark<br />Squad</span>
       </div>
     ),
     designTop: '50%',
@@ -230,7 +230,7 @@ function Logo() {
         alt="No Limit Studio" 
         style={{ width: '32px', height: '32px', borderRadius: '50%', objectFit: 'cover' }} 
       />
-      <span style={{ fontFamily: "'Plus Jakarta Sans', sans-serif", fontWeight: 800, fontSize: '18px', color: '#172B15', letterSpacing: '-0.5px' }}>
+      <span style={{ fontFamily: "'Fraunces', sans-serif", fontWeight: 800, fontSize: '18px', color: '#172B15', letterSpacing: '-0.5px' }}>
         No Limit Studio
       </span>
     </div>
@@ -353,7 +353,7 @@ const HomePage = () => {
 
             {/* Glowing Text */}
             <h2 style={{
-              fontFamily: "'Plus Jakarta Sans', sans-serif",
+              fontFamily: "'Fraunces', sans-serif",
               color: '#FFFFFF',
               fontSize: '24px',
               fontWeight: 800,
@@ -478,7 +478,7 @@ const HomePage = () => {
           
           {/* Main Headline */}
           <h1 style={{
-            fontFamily: "'Plus Jakarta Sans', sans-serif",
+            fontFamily: "'Fraunces', sans-serif",
             fontSize: 'clamp(44px, 6vw, 76px)',
             fontWeight: 800,
             lineHeight: 1.05,
@@ -574,7 +574,7 @@ const HomePage = () => {
               <div style={{ fontSize: '12px', fontWeight: 750, color: '#39B54A', letterSpacing: '0.12em', textTransform: 'uppercase', marginBottom: '14px' }}>
                 Fulfillment Automation
               </div>
-              <h3 style={{ fontFamily: "'Plus Jakarta Sans', sans-serif", fontSize: '32px', fontWeight: 800, color: '#172B15', letterSpacing: '-0.8px', lineHeight: 1.25, marginBottom: '18px' }}>
+              <h3 style={{ fontFamily: "'Fraunces', sans-serif", fontSize: '32px', fontWeight: 800, color: '#172B15', letterSpacing: '-0.8px', lineHeight: 1.25, marginBottom: '18px' }}>
                 Your store orders, fulfilled automatically
               </h3>
               <p style={{ fontSize: '15px', color: '#52525B', lineHeight: 1.6, marginBottom: '28px' }}>
@@ -734,7 +734,7 @@ const HomePage = () => {
           }} className="pf-product-grid">
             {STATS.map((s, i) => (
               <div key={i} style={{ background: '#FFFFFF', padding: '24px 32px', textAlign: 'left' }}>
-                <div style={{ fontFamily: "'Plus Jakarta Sans', sans-serif", fontWeight: 800, fontSize: '32px', color: '#39B54A', marginBottom: '4px' }}>
+                <div style={{ fontFamily: "'Fraunces', sans-serif", fontWeight: 800, fontSize: '32px', color: '#39B54A', marginBottom: '4px' }}>
                   {s.value}
                 </div>
                 <div style={{ fontSize: '14px', color: '#18181B', fontWeight: 700, marginBottom: '2px' }}>{s.label}</div>
@@ -750,7 +750,7 @@ const HomePage = () => {
             <div style={{ fontSize: '12px', fontWeight: 700, color: '#39B54A', letterSpacing: '0.1em', textTransform: 'uppercase', marginBottom: '8px' }}>
               Explore Our Premium Catalog
             </div>
-            <h2 style={{ fontFamily: "'Plus Jakarta Sans', sans-serif", fontSize: '38px', fontWeight: 800, color: '#172B15', letterSpacing: '-1px', marginBottom: '14px' }}>
+            <h2 style={{ fontFamily: "'Fraunces', sans-serif", fontSize: '38px', fontWeight: 800, color: '#172B15', letterSpacing: '-1px', marginBottom: '14px' }}>
               Designed to print, made to wear
             </h2>
             <p style={{ fontSize: '15px', color: '#52525B', maxWidth: '520px', margin: '0 auto' }}>
@@ -846,7 +846,7 @@ const HomePage = () => {
                   </div>
 
                   {/* Title and details */}
-                  <h3 style={{ fontFamily: "'Plus Jakarta Sans', sans-serif", fontSize: '18px', fontWeight: 800, color: '#172B15', marginBottom: '6px' }}>
+                  <h3 style={{ fontFamily: "'Fraunces', sans-serif", fontSize: '18px', fontWeight: 800, color: '#172B15', marginBottom: '6px' }}>
                     {p.name}
                   </h3>
                   <p style={{ fontSize: '13px', color: '#52525B', lineHeight: 1.5, marginBottom: '16px', flex: 1 }}>
@@ -899,7 +899,7 @@ const HomePage = () => {
             <div style={{ fontSize: '12.5px', fontWeight: 750, color: '#39B54A', letterSpacing: '0.12em', textTransform: 'uppercase', marginBottom: '8px' }}>
               Factory Production Lookbook
             </div>
-            <h2 style={{ fontFamily: "'Plus Jakarta Sans', sans-serif", fontSize: '36px', fontWeight: 800, color: '#172B15', letterSpacing: '-1px', marginBottom: '12px' }}>
+            <h2 style={{ fontFamily: "'Fraunces', sans-serif", fontSize: '36px', fontWeight: 800, color: '#172B15', letterSpacing: '-1px', marginBottom: '12px' }}>
               Real print quality on real bases
             </h2>
             <p style={{ fontSize: '14.5px', color: '#71717A', maxWidth: '560px', margin: '0 auto' }}>
@@ -987,7 +987,7 @@ const HomePage = () => {
               <div style={{ fontSize: '12px', fontWeight: 700, color: '#39B54A', letterSpacing: '0.1em', textTransform: 'uppercase', marginBottom: '8px' }}>
                 Simple 4-Step Process
               </div>
-              <h2 style={{ fontFamily: "'Plus Jakarta Sans', sans-serif", fontSize: '32px', fontWeight: 800, color: '#172B15', letterSpacing: '-0.5px' }}>
+              <h2 style={{ fontFamily: "'Fraunces', sans-serif", fontSize: '32px', fontWeight: 800, color: '#172B15', letterSpacing: '-0.5px' }}>
                 How No Limit Studio works
               </h2>
             </div>
@@ -997,7 +997,7 @@ const HomePage = () => {
                 <div key={i} style={{ position: 'relative' }}>
                   {/* Step numbering */}
                   <div style={{
-                    fontFamily: "'Plus Jakarta Sans', sans-serif",
+                    fontFamily: "'Fraunces', sans-serif",
                     fontSize: '48px',
                     fontWeight: 800,
                     color: '#E1F5FE',
@@ -1009,7 +1009,7 @@ const HomePage = () => {
                   }}>
                     {s.num}
                   </div>
-                  <h3 style={{ fontFamily: "'Plus Jakarta Sans', sans-serif", fontSize: '16px', fontWeight: 700, color: '#172B15', marginBottom: '8px' }}>
+                  <h3 style={{ fontFamily: "'Fraunces', sans-serif", fontSize: '16px', fontWeight: 700, color: '#172B15', marginBottom: '8px' }}>
                     {s.title}
                   </h3>
                   <p style={{ fontSize: '13px', color: '#52525B', lineHeight: 1.6 }}>
@@ -1042,7 +1042,7 @@ const HomePage = () => {
                   display: 'flex', alignItems: 'center', justifyContent: 'center',
                   fontSize: '24px', marginBottom: '24px',
                 }}>{f.icon}</div>
-                <h3 style={{ fontFamily: "'Plus Jakarta Sans', sans-serif", fontSize: '18px', fontWeight: 700, color: '#172B15', marginBottom: '10px' }}>
+                <h3 style={{ fontFamily: "'Fraunces', sans-serif", fontSize: '18px', fontWeight: 700, color: '#172B15', marginBottom: '10px' }}>
                   {f.title}
                 </h3>
                 <p style={{ fontSize: '14px', color: '#52525B', lineHeight: 1.6 }}>
@@ -1056,7 +1056,7 @@ const HomePage = () => {
         {/* Customer Testimonials */}
         <section style={{ padding: '40px 0 80px' }}>
           <div style={{ textAlign: 'center', marginBottom: '48px' }}>
-            <h2 style={{ fontFamily: "'Plus Jakarta Sans', sans-serif", fontSize: '32px', fontWeight: 800, color: '#172B15', letterSpacing: '-0.5px' }}>
+            <h2 style={{ fontFamily: "'Fraunces', sans-serif", fontSize: '32px', fontWeight: 800, color: '#172B15', letterSpacing: '-0.5px' }}>
               Trusted by 10,000+ store owners
             </h2>
           </div>
@@ -1087,7 +1087,7 @@ const HomePage = () => {
             <div style={{ fontSize: '12px', fontWeight: 700, color: '#39B54A', letterSpacing: '0.1em', textTransform: 'uppercase', marginBottom: '8px' }}>
               Flexible Printing Subscriptions
             </div>
-            <h2 style={{ fontFamily: "'Plus Jakarta Sans', sans-serif", fontSize: '32px', fontWeight: 800, color: '#172B15', letterSpacing: '-0.5px', marginBottom: '12px' }}>
+            <h2 style={{ fontFamily: "'Fraunces', sans-serif", fontSize: '32px', fontWeight: 800, color: '#172B15', letterSpacing: '-0.5px', marginBottom: '12px' }}>
               Simple, transparent pricing plans
             </h2>
             <p style={{ fontSize: '14px', color: '#52525B' }}>No hidden manufacturing setup fees. Scale as you sell.</p>
@@ -1116,7 +1116,7 @@ const HomePage = () => {
                 )}
                 <div style={{ fontSize: '15px', fontWeight: 700, color: '#71717A', marginBottom: '10px' }}>{p.name}</div>
                 <div style={{ marginBottom: '20px' }}>
-                  <span style={{ fontFamily: "'Plus Jakarta Sans', sans-serif", fontSize: '36px', fontWeight: 800, color: '#172B15' }}>₹{p.monthlyPrice.toLocaleString('en-IN')}</span>
+                  <span style={{ fontFamily: "'Fraunces', sans-serif", fontSize: '36px', fontWeight: 800, color: '#172B15' }}>₹{p.monthlyPrice.toLocaleString('en-IN')}</span>
                   <span style={{ fontSize: '14px', color: '#71717A', fontWeight: 500 }}>/mo</span>
                 </div>
 
@@ -1183,7 +1183,7 @@ const HomePage = () => {
             <div style={{ fontSize: '12px', fontWeight: 700, color: '#39B54A', letterSpacing: '0.1em', textTransform: 'uppercase', marginBottom: '12px' }}>
               About This App
             </div>
-            <h2 style={{ fontFamily: "'Plus Jakarta Sans', sans-serif", fontSize: '24px', fontWeight: 800, color: '#09090B', marginBottom: '16px' }}>
+            <h2 style={{ fontFamily: "'Fraunces', sans-serif", fontSize: '24px', fontWeight: 800, color: '#09090B', marginBottom: '16px' }}>
               What No Limit Studio does
             </h2>
             <p style={{ fontSize: '14px', color: '#3F3F46', lineHeight: 1.7, marginBottom: '16px' }}>
@@ -1220,7 +1220,7 @@ const HomePage = () => {
             <div style={{ position: 'absolute', bottom: '-120px', left: '-60px', width: '320px', height: '320px', background: 'radial-gradient(circle, rgba(185,249,93,0.1) 0%, transparent 70%)' }} />
             
             <h2 style={{
-              fontFamily: "'Plus Jakarta Sans', sans-serif", fontSize: 'clamp(28px, 4.5vw, 40px)', fontWeight: 800,
+              fontFamily: "'Fraunces', sans-serif", fontSize: 'clamp(28px, 4.5vw, 40px)', fontWeight: 800,
               color: 'white', letterSpacing: '-1px', marginBottom: '16px', position: 'relative',
               lineHeight: 1.15
             }}>
@@ -1262,7 +1262,7 @@ const HomePage = () => {
                   alt="No Limit Studio" 
                   style={{ width: '30px', height: '30px', borderRadius: '50%', objectFit: 'cover' }} 
                 />
-                <span style={{ fontFamily: "'Plus Jakarta Sans', sans-serif", fontWeight: 800, fontSize: '18px', color: 'white', letterSpacing: '-0.5px' }}>
+                <span style={{ fontFamily: "'Fraunces', sans-serif", fontWeight: 800, fontSize: '18px', color: 'white', letterSpacing: '-0.5px' }}>
                   No Limit Studio
                 </span>
               </div>
