@@ -345,7 +345,8 @@ function TopupModal({ shopDomain, onClose, onSuccess }) {
 function ProductEditModal({ shopDomain, product, onClose, onSuccess }) {
   const [factorySku, setFactorySku] = useState(product.factorySku || '')
   const [fulfillmentCost, setFulfillmentCost] = useState(product.fulfillmentCost ?? '')
-  const [printFileUrl, setPrintFileUrl] = useState(product.printFileUrl || '')
+  const [printFileUrl, setPrintFileUrl] = useState(product.printFileUrl || product.image || '')
+  const isSuggestedFromShopify = !product.printFileUrl && !!product.image
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
 
@@ -417,8 +418,13 @@ function ProductEditModal({ shopDomain, product, onClose, onSuccess }) {
             value={printFileUrl}
             onChange={e => setPrintFileUrl(e.target.value)}
             placeholder="https://... (optional)"
-            style={{ width: '100%', padding: '12px 14px', boxSizing: 'border-box', border: '1.5px solid #E8E8E4', borderRadius: '10px', fontSize: '13px', marginBottom: '24px', outline: 'none' }}
+            style={{ width: '100%', padding: '12px 14px', boxSizing: 'border-box', border: '1.5px solid #E8E8E4', borderRadius: '10px', fontSize: '13px', marginBottom: isSuggestedFromShopify ? '6px' : '24px', outline: 'none' }}
           />
+          {isSuggestedFromShopify && (
+            <p style={{ fontSize: '11px', color: '#C2410C', marginTop: 0, marginBottom: '24px', lineHeight: 1.4 }}>
+              ⚠ Pre-filled with this product's Shopify listing photo — confirm it's actually the print-ready design file, not just a marketing photo, before saving.
+            </p>
+          )}
 
           <button
             onClick={handleSave}
