@@ -194,7 +194,7 @@ function formatOrder(o) {
   const items = (o.items || []).map(item => ({
     sku:       item.sku || item.name,
     name:      item.name,
-    qty:       item.quantity || 1,
+    qty:       Number(item.quantity) || 1,
     size:      item.variant_title || '—',
     color:     '—',
     printFile: null,
