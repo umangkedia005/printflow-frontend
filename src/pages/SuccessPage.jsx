@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
 import { useSearchParams, useNavigate } from 'react-router-dom'
-import { auth } from '../firebase'
+import { useAuth } from '../contexts/AuthContext'
 import { linkStore } from '../utils/api'
 
 const STEPS = [
@@ -14,16 +14,22 @@ const SuccessPage = () => {
   const [searchParams] = useSearchParams()
   const [shopDomain, setShopDomain] = useState('')
   const navigate = useNavigate()
+  const { currentUser } = useAuth()
 
   useEffect(() => {
     const shop = searchParams.get('shop')
     if (shop) {
       setShopDomain(shop)
       localStorage.setItem('pf_shop', shop)
-      const email = auth.currentUser?.email
-      if (email) linkStore(shop, email)
     }
   }, [searchParams])
+
+  useEffect(() => {
+    const shop = searchParams.get('shop')
+    if (shop && currentUser?.email) {
+      linkStore(shop, currentUser.email)
+    }
+  }, [searchParams, currentUser])
 
   return (
     <div style={{ minHeight: '100vh', background: '#FAFAF8', fontFamily: 'Inter, sans-serif', color: '#0A0A0A' }}>
