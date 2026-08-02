@@ -199,6 +199,7 @@ function formatOrder(o) {
     size:      item.variant_title || '—',
     color:     '—',
     printFile: item.print_file_url || null,
+    image:     item.image_url || null,
   }))
 
   return {

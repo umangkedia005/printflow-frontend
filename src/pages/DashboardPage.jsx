@@ -2199,7 +2199,17 @@ export default function DashboardPage() {
                         </div>
                       ) : (
                         <>
-                          <span style={{ fontSize: '11px', color: '#C2410C', fontWeight: 500 }}>⚠ No print file</span>
+                          <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                            {item.image ? (
+                              <img src={item.image} alt="" style={{ width: '28px', height: '28px', borderRadius: '6px', objectFit: 'cover', flexShrink: 0 }} />
+                            ) : (
+                              <div style={{ width: '28px', height: '28px', background: '#FFF7ED', border: '1px solid #FED7AA', borderRadius: '6px', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '13px', flexShrink: 0 }}>🖼</div>
+                            )}
+                            <div>
+                              <div style={{ fontSize: '11px', color: '#C2410C', fontWeight: 500 }}>⚠ No print file</div>
+                              {item.image && <div style={{ fontSize: '9px', color: '#BABAB6', marginTop: '1px' }}>Showing Shopify listing photo</div>}
+                            </div>
+                          </div>
                           <button
                             className="pf-btn"
                             style={{ padding: '5px 12px', fontSize: '11px', borderRadius: '6px' }}
