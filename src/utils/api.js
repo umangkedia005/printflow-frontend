@@ -8,6 +8,17 @@ async function getToken() {
   return user.getIdToken()
 }
 
+export async function exchangeToken(shop, sessionToken) {
+  const res = await fetch(`${BASE_URL}/token-exchange`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ shop, session_token: sessionToken }),
+  })
+  const data = await res.json()
+  if (!res.ok) throw new Error(data.error || 'Token exchange failed')
+  return data
+}
+
 async function request(path, options = {}) {
   const token = await getToken()
   const res = await fetch(`${BASE_URL}${path}`, {
