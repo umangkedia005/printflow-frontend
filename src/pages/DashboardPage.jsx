@@ -1,8 +1,8 @@
 import React, { useState, useEffect, useCallback } from 'react'
-import { useNavigate } from 'react-router-dom'
+import { useNavigate, useSearchParams } from 'react-router-dom'
 import { useAuth } from '../contexts/AuthContext'
-import { openRazorpaySubscription, openWalletTopup } from '../utils/razorpay'
-import { fetchOrders, fetchSubscription, fetchMyStores, updateSubscription, fetchPlans, fetchWallet, fulfillOrder, fetchProductMappings, updateProductMapping } from '../utils/api'
+import { openWalletTopup } from '../utils/razorpay'
+import { fetchOrders, fetchSubscription, fetchMyStores, updateSubscription, fetchPlans, fetchWallet, fulfillOrder, fetchProductMappings, updateProductMapping, createShopifySubscription } from '../utils/api'
 
 // ── Data ─────────────────────────────────────────────────────────────────────
 
@@ -431,22 +431,17 @@ function UpgradeModal({ currentPlan, shopDomain, plans, onClose, onSuccess }) {
   const [cycle, setCycle] = useState('monthly')
   const [loadingPlan, setLoadingPlan] = useState(null)
   const [error, setError] = useState('')
-  const { currentUser } = useAuth()
 
   async function handleSubscribe(plan) {
     setLoadingPlan(plan.id)
     setError('')
-    await openRazorpaySubscription({
-      shop: shopDomain,
-      plan: plan.id,
-      planName: `No Limits Studio ${plan.name}`,
-      amount: cycle === 'annual' ? plan.annualPrice * 12 : plan.monthlyPrice,
-      billingCycle: cycle,
-      email: currentUser?.email,
-      onSuccess: () => { setLoadingPlan(null); onSuccess(plan.id) },
-      onDismiss: () => setLoadingPlan(null),
-      onError: (msg) => { setLoadingPlan(null); setError(msg || 'Payment verification failed. Please contact support if you were charged.') },
-    })
+    try {
+      const result = await createShopifySubscription(shopDomain, plan.id, cycle)
+      window.location.href = result.confirmation_url
+    } catch (err) {
+      setLoadingPlan(null)
+      setError(err.message || 'Failed to start subscription. Please try again.')
+    }
   }
 
   return (
@@ -608,6 +603,7 @@ function UpgradeModal({ currentPlan, shopDomain, plans, onClose, onSuccess }) {
 export default function DashboardPage() {
   const { currentUser, logout } = useAuth()
   const navigate = useNavigate()
+  const [searchParams, setSearchParams] = useSearchParams()
 
   const [activeNav, setActiveNav]           = useState('dashboard')
   const [statusFilter, setStatusFilter]     = useState('all')
@@ -855,7 +851,7 @@ export default function DashboardPage() {
   }, [loadOrders])
 
   function handleUpgradeSuccess(planId) {
-    // Plan was already verified and updated server-side in verify_razorpay_payment.
+    // Plan was already verified and activated server-side via Shopify's Billing API.
     setCurrentPlan(planId)
     localStorage.setItem('pf_plan', planId)
     setShowUpgrade(false)
@@ -863,6 +859,17 @@ export default function DashboardPage() {
     setActiveNav('billing')
     setTimeout(() => setUpgradeSuccess(null), 4000)
   }
+
+  // After returning from Shopify's subscription confirmation page (BillingConfirmPage
+  // redirects here with ?upgraded=<planId> once the plan is verified as active).
+  useEffect(() => {
+    const upgraded = searchParams.get('upgraded')
+    if (upgraded) {
+      handleUpgradeSuccess(upgraded)
+      searchParams.delete('upgraded')
+      setSearchParams(searchParams, { replace: true })
+    }
+  }, [searchParams])
 
   async function handleCancelSubscription() {
     if (!window.confirm('Cancel your subscription and move to the Free plan?')) return
