@@ -4,7 +4,6 @@ import HomePage from './pages/HomePage'
 import SuccessPage from './pages/SuccessPage'
 import AuthPage from './pages/AuthPage'
 import DashboardPage from './pages/DashboardPage'
-import BillingConfirmPage from './pages/BillingConfirmPage'
 import PrivacyPage from './pages/PrivacyPage'
 import TermsPage from './pages/TermsPage'
 import ProtectedRoute from './components/ProtectedRoute'
@@ -32,14 +31,6 @@ function App() {
             element={
               <ProtectedRoute>
                 <DashboardPage />
-              </ProtectedRoute>
-            }
-          />
-          <Route
-            path="/billing/confirm"
-            element={
-              <ProtectedRoute>
-                <BillingConfirmPage />
               </ProtectedRoute>
             }
           />
