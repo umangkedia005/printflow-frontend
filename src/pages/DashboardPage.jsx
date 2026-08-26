@@ -437,7 +437,14 @@ function UpgradeModal({ currentPlan, shopDomain, plans, onClose, onSuccess }) {
     setError('')
     try {
       const result = await createShopifySubscription(shopDomain, plan.id, cycle)
-      window.location.href = result.confirmation_url
+      // Shopify's charge confirmation page refuses to be framed, so opening it
+      // in place just bounces the iframe to an admin login. Embedded, App
+      // Bridge's window.open breaks out to the top window for us.
+      if (window.shopify) {
+        window.open(result.confirmation_url, '_top')
+      } else {
+        window.location.href = result.confirmation_url
+      }
     } catch (err) {
       setLoadingPlan(null)
       setError(err.message || 'Failed to start subscription. Please try again.')
