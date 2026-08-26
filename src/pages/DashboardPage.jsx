@@ -2,7 +2,7 @@ import React, { useState, useEffect, useCallback } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useAuth } from '../contexts/AuthContext'
 import { openRazorpaySubscription, openWalletTopup } from '../utils/razorpay'
-import { fetchOrders, fetchSubscription, fetchMyStores, updateSubscription, fetchPlans, fetchWallet, fulfillOrder, fetchProductMappings, updateProductMapping } from '../utils/api'
+import { fetchOrders, fetchSubscription, fetchMyStores, linkStore, updateSubscription, fetchPlans, fetchWallet, fulfillOrder, fetchProductMappings, updateProductMapping } from '../utils/api'
 
 // ── Data ─────────────────────────────────────────────────────────────────────
 
@@ -734,6 +734,20 @@ export default function DashboardPage() {
   useEffect(() => {
     async function resolveShop() {
       if (!currentUser?.email) return
+
+      // A store installed through the embedded Shopify flow is linked here,
+      // on the first load where an account is actually signed in. Left in
+      // place if it fails, so the next load retries.
+      const pending = localStorage.getItem('pf_pending_link')
+      if (pending) {
+        try {
+          await linkStore(pending, currentUser.email)
+          localStorage.removeItem('pf_pending_link')
+        } catch (err) {
+          console.error('Could not link store:', err)
+        }
+      }
+
       const list = await fetchMyStores(currentUser.email)
       setMyStores(list)
       if (list.length > 0) {

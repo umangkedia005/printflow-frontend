@@ -48,7 +48,14 @@ function EmbeddedTokenExchange() {
       if (window.shopify?.idToken) {
         window.shopify.idToken()
           .then(sessionToken => exchangeToken(shop, sessionToken))
-          .then(() => { window.location.href = '/dashboard' })
+          .then(() => {
+            // The shop is verified at this point, but it can only be linked to
+            // an account once one exists — the merchant may still have to sign
+            // up. Hand it to the dashboard, which links it when that happens.
+            localStorage.setItem('pf_shop', shop)
+            localStorage.setItem('pf_pending_link', shop)
+            window.location.href = '/dashboard'
+          })
           .catch(err => { if (!cancelled) setError(err.message || 'Could not connect your store.') })
       } else if (Date.now() < deadline) {
         setTimeout(waitForBridge, 100)

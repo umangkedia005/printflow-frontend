@@ -87,10 +87,11 @@ export async function fetchMyStores(email) {
   return Array.isArray(data) ? data : []
 }
 
+// Sent with the caller's Firebase ID token so the backend can verify the
+// account claiming this shop, rather than trusting an email in the body.
 export async function linkStore(shop, email) {
-  await fetch(`${BASE_URL}/link-store`, {
+  return request('/link-store', {
     method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ shop, email }),
   })
 }
