@@ -89,11 +89,18 @@ export async function fetchMyStores(email) {
 
 // Sent with the caller's Firebase ID token so the backend can verify the
 // account claiming this shop, rather than trusting an email in the body.
+// Tolerates an empty response body — the status is what matters here.
 export async function linkStore(shop, email) {
-  return request('/link-store', {
+  const token = await getToken()
+  const res = await fetch(`${BASE_URL}/link-store`, {
     method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      'Authorization': `Bearer ${token}`,
+    },
     body: JSON.stringify({ shop, email }),
   })
+  if (!res.ok) throw new Error(`Failed to link store (${res.status})`)
 }
 
 export async function createRazorpayOrder(shop, plan, amount) {
