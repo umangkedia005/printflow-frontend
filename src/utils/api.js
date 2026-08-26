@@ -103,25 +103,21 @@ export async function linkStore(shop, email) {
   if (!res.ok) throw new Error(`Failed to link store (${res.status})`)
 }
 
-export async function createRazorpayOrder(shop, plan, amount) {
-  const res = await fetch(`${BASE_URL}/billing/create-order`, {
+export async function createShopifySubscription(shop, plan, billingCycle) {
+  const res = await fetch(`${BASE_URL}/billing/shopify/create`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ shop, plan, amount }),
+    body: JSON.stringify({ shop, plan, billing_cycle: billingCycle }),
   })
   const data = await res.json()
-  if (!res.ok) throw new Error(data.error || 'Failed to create order')
+  if (!res.ok) throw new Error(data.error || 'Failed to start subscription')
   return data
 }
 
-export async function verifyRazorpayPayment({ shop, plan, razorpay_order_id, razorpay_payment_id, razorpay_signature }) {
-  const res = await fetch(`${BASE_URL}/billing/verify-payment`, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ shop, plan, razorpay_order_id, razorpay_payment_id, razorpay_signature }),
-  })
+export async function confirmShopifySubscription(shop, plan) {
+  const res = await fetch(`${BASE_URL}/billing/shopify/confirm?shop=${encodeURIComponent(shop)}&plan=${encodeURIComponent(plan)}`)
   const data = await res.json()
-  if (!res.ok) throw new Error(data.error || 'Payment verification failed')
+  if (!res.ok) throw new Error(data.error || 'Failed to confirm subscription')
   return data
 }
 

@@ -1,4 +1,4 @@
-import { createRazorpayOrder, verifyRazorpayPayment, createWalletTopupOrder, verifyWalletTopup } from './api'
+import { createWalletTopupOrder, verifyWalletTopup } from './api'
 
 function loadRazorpayScript() {
   return new Promise(resolve => {
@@ -11,58 +11,10 @@ function loadRazorpayScript() {
   })
 }
 
-// Creates a Razorpay order on the backend, opens checkout, then verifies the
-// payment signature server-side before calling onSuccess. The plan is only
-// ever activated after verification succeeds.
-export async function openRazorpaySubscription({ shop, plan, planName, amount, billingCycle, email, onSuccess, onDismiss, onError }) {
-  const loaded = await loadRazorpayScript()
-  if (!loaded) {
-    alert('Payment gateway failed to load. Please refresh and try again.')
-    return
-  }
-
-  let order
-  try {
-    order = await createRazorpayOrder(shop, plan, amount)
-  } catch (err) {
-    onError?.(err.message)
-    return
-  }
-
-  const options = {
-    key: order.key_id,
-    order_id: order.order_id,
-    amount: order.amount,
-    currency: order.currency,
-    name: 'No Limits Studio',
-    description: `${planName} — ${billingCycle === 'annual' ? 'Annual' : 'Monthly'}`,
-    image: '/images/logo_new.jpg',
-    prefill: { email },
-    theme: { color: '#0A0A0A' },
-    handler: async response => {
-      try {
-        await verifyRazorpayPayment({
-          shop,
-          plan,
-          razorpay_order_id: response.razorpay_order_id,
-          razorpay_payment_id: response.razorpay_payment_id,
-          razorpay_signature: response.razorpay_signature,
-        })
-        onSuccess(response)
-      } catch (err) {
-        onError?.(err.message)
-      }
-    },
-    modal: { ondismiss: () => onDismiss?.() },
-  }
-
-  const rzp = new window.Razorpay(options)
-  rzp.on('payment.failed', () => onDismiss?.())
-  rzp.open()
-}
-
-// Same secure create-order → checkout → server-verify pattern as subscriptions,
-// but credits the store's wallet balance instead of activating a plan.
+// Plan subscriptions now go through Shopify's Billing API (see
+// createShopifySubscription/confirmShopifySubscription in api.js) instead of
+// Razorpay. Razorpay is still used here for wallet top-ups, since those pay
+// for a real-world fulfillment service rather than app-usage billing.
 export async function openWalletTopup({ shop, amount, email, onSuccess, onDismiss, onError }) {
   const loaded = await loadRazorpayScript()
   if (!loaded) {
