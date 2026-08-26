@@ -820,6 +820,10 @@ export default function DashboardPage() {
   useEffect(() => { loadWallet() }, [loadWallet])
 
   const planLabels = { ...FALLBACK_PLAN_LABELS, ...Object.fromEntries(plans.map(p => [p.id, p.name])) }
+  // plans loads asynchronously, so a paid plan has no label on the first
+  // render. Fall back to the plan id rather than rendering undefined — or
+  // crashing on the callers that format it.
+  const planLabel = id => planLabels[id] || (id ? id.charAt(0).toUpperCase() + id.slice(1) : 'Free')
   const currentPlanInfo = plans.find(p => p.id === currentPlan)
   const planLimit  = currentPlanInfo ? currentPlanInfo.ordersLimit : FALLBACK_PLAN_LIMIT
   const ordersUsed = orders.length
@@ -1352,7 +1356,7 @@ export default function DashboardPage() {
               <svg width="12" height="12" viewBox="0 0 12 12" fill="none"><path d="M2 6l3 3 5-5" stroke="#22C55E" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"/></svg>
             </div>
             <div>
-              <div style={{ fontSize: '13px', fontWeight: 600, color: '#166534' }}>You're now on {planLabels[upgradeSuccess]} — welcome!</div>
+              <div style={{ fontSize: '13px', fontWeight: 600, color: '#166534' }}>You're now on {planLabel(upgradeSuccess)} — welcome!</div>
               <div style={{ fontSize: '12px', color: '#4ADE80' }}>Your new limits are active immediately.</div>
             </div>
           </div>
@@ -1364,7 +1368,7 @@ export default function DashboardPage() {
             <div style={{ display: 'flex', alignItems: 'center', gap: '14px' }}>
               <div style={{ width: '44px', height: '44px', background: '#0A0A0A', borderRadius: '12px', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '18px', color: 'white', flexShrink: 0 }}>✦</div>
               <div>
-                <div style={{ fontSize: '16px', fontWeight: 700, color: '#0A0A0A', marginBottom: '3px' }}>{planLabels[currentPlan]} Plan</div>
+                <div style={{ fontSize: '16px', fontWeight: 700, color: '#0A0A0A', marginBottom: '3px' }}>{planLabel(currentPlan)} Plan</div>
                 <div style={{ fontSize: '13px', color: '#999' }}>
                   {currentPlan === 'free' ? '1 store · Free forever' : `${planInfo?.stores} · ${planInfo?.orders}`}
                 </div>
@@ -1662,7 +1666,7 @@ export default function DashboardPage() {
               >
                 <span style={{ display: 'flex', alignItems: 'center', gap: '12px' }}><Icon />{label}</span>
                 {id === 'billing' && currentPlan !== 'free' && (
-                  <span style={{ fontSize: '9px', fontWeight: 700, background: '#172B15', color: '#B9F95D', padding: '2px 6px', borderRadius: '4px', letterSpacing: '0.04em' }}>{planLabels[currentPlan].toUpperCase()}</span>
+                  <span style={{ fontSize: '9px', fontWeight: 700, background: '#172B15', color: '#B9F95D', padding: '2px 6px', borderRadius: '4px', letterSpacing: '0.04em' }}>{planLabel(currentPlan).toUpperCase()}</span>
                 )}
                 {id === 'billing' && currentPlan === 'free' && isNearLimit && (
                   <span style={{ width: '7px', height: '7px', borderRadius: '50%', background: '#F97316', flexShrink: 0 }} />
