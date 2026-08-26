@@ -1,4 +1,4 @@
-import { useEffect } from 'react'
+import { useEffect, useState } from 'react'
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom'
 import { AuthProvider } from './contexts/AuthContext'
 import HomePage from './pages/HomePage'
@@ -12,24 +12,35 @@ import { exchangeToken } from './utils/api'
 import './App.css'
 
 // When Shopify loads this app embedded (from the merchant's Shopify admin),
-// it appends ?shop=...&host=...&embedded=1. In that case we use App Bridge
-// to get a session token and exchange it server-side for a Shopify-compliant
-// offline access token, replacing whatever token is currently stored for
-// this shop, then redirect into the normal standalone dashboard flow.
+// it appends ?shop=...&host=... In that case we use App Bridge to get a
+// session token and exchange it server-side for a Shopify-compliant offline
+// access token, replacing whatever token is currently stored for this shop,
+// then redirect into the normal standalone dashboard flow.
+//
+// Note: embedded=1 is not always present on the iframe URL, so running inside
+// a frame with shop+host is what identifies an embedded load. Gating on
+// embedded=1 makes Shopify bounce the frame back to the admin in a loop.
 function isEmbeddedLoad() {
   const params = new URLSearchParams(window.location.search)
   return !!(
     params.get('shop') &&
     params.get('host') &&
-    params.get('embedded') === '1' &&
     window.top !== window.self
   )
 }
 
+// App Bridge can fail to initialise (app not installed, client ID mismatch,
+// blocked frame). Give it a bounded window rather than polling forever, so a
+// failure surfaces as a message instead of an endless "Connecting..." screen.
+const BRIDGE_TIMEOUT_MS = 10000
+
 function EmbeddedTokenExchange() {
+  const [error, setError] = useState(null)
+
   useEffect(() => {
     const params = new URLSearchParams(window.location.search)
     const shop = params.get('shop')
+    const deadline = Date.now() + BRIDGE_TIMEOUT_MS
     let cancelled = false
 
     function waitForBridge() {
@@ -38,9 +49,11 @@ function EmbeddedTokenExchange() {
         window.shopify.idToken()
           .then(sessionToken => exchangeToken(shop, sessionToken))
           .then(() => { window.location.href = '/dashboard' })
-          .catch(() => { window.location.href = '/dashboard' })
-      } else {
+          .catch(err => { if (!cancelled) setError(err.message || 'Could not connect your store.') })
+      } else if (Date.now() < deadline) {
         setTimeout(waitForBridge, 100)
+      } else {
+        setError('Shopify App Bridge did not load. Try reopening the app from your Shopify admin.')
       }
     }
     waitForBridge()
@@ -49,8 +62,8 @@ function EmbeddedTokenExchange() {
   }, [])
 
   return (
-    <div style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', fontFamily: 'Inter, sans-serif', color: '#555' }}>
-      Connecting your store...
+    <div style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '24px', textAlign: 'center', fontFamily: 'Inter, sans-serif', color: error ? '#b42318' : '#555' }}>
+      {error || 'Connecting your store...'}
     </div>
   )
 }
