@@ -1560,7 +1560,7 @@ export default function DashboardPage() {
               </div>
             </div>
           </div>
-          <button onClick={() => navigate('/')} style={{ background: 'transparent', border: '1px solid #E8E8E4', borderRadius: '8px', padding: '7px 14px', fontSize: '12px', color: '#888', cursor: 'pointer', fontFamily: 'Inter, sans-serif', transition: 'border-color 0.15s, color 0.15s' }} onMouseOver={e=>{e.currentTarget.style.borderColor='#CCC';e.currentTarget.style.color='#555'}} onMouseOut={e=>{e.currentTarget.style.borderColor='#E8E8E4';e.currentTarget.style.color='#888'}}>+ Add Store</button>
+          <button onClick={() => { if (window.shopify) window.open(SHOPIFY_INSTALL_URL, '_top'); else window.location.href = SHOPIFY_INSTALL_URL }} style={{ background: 'transparent', border: '1px solid #E8E8E4', borderRadius: '8px', padding: '7px 14px', fontSize: '12px', color: '#888', cursor: 'pointer', fontFamily: 'Inter, sans-serif', transition: 'border-color 0.15s, color 0.15s' }} onMouseOver={e=>{e.currentTarget.style.borderColor='#CCC';e.currentTarget.style.color='#555'}} onMouseOut={e=>{e.currentTarget.style.borderColor='#E8E8E4';e.currentTarget.style.color='#888'}}>+ Add Store</button>
         </div>
       </SectionCard>
       <SectionCard title="Email Notifications">
