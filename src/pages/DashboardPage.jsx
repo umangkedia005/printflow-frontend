@@ -3,6 +3,7 @@ import { useNavigate, useSearchParams } from 'react-router-dom'
 import { useAuth } from '../contexts/AuthContext'
 import { openWalletTopup } from '../utils/razorpay'
 import { fetchOrders, fetchSubscription, fetchMyStores, linkStore, updateSubscription, fetchPlans, fetchWallet, fulfillOrder, fetchProductMappings, updateProductMapping, createShopifySubscription } from '../utils/api'
+import { SHOPIFY_INSTALL_URL } from '../utils/shopify'
 
 // ── Data ─────────────────────────────────────────────────────────────────────
 
@@ -1705,10 +1706,15 @@ export default function DashboardPage() {
           <span style={{ fontSize: '14px', color: '#172B15', fontWeight: 550 }}>{greeting()}, <strong style={{ fontWeight: 700 }}>{firstName}</strong></span>
           <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
             <span style={{ fontSize: '12px', color: '#71717A' }}>{new Date().toLocaleDateString('en-IN', { weekday: 'short', day: 'numeric', month: 'short', year: 'numeric' })}</span>
-            <button 
-              onClick={() => navigate('/')} 
-              style={{ 
-                background: '#B9F95D', color: '#172B15', border: 'none', borderRadius: '8px', 
+            <button
+              onClick={() => {
+                // Shopify owns installation. Embedded, the admin refuses to be
+                // framed, so this has to break out to the top window.
+                if (window.shopify) window.open(SHOPIFY_INSTALL_URL, '_top')
+                else window.location.href = SHOPIFY_INSTALL_URL
+              }}
+              style={{
+                background: '#B9F95D', color: '#172B15', border: 'none', borderRadius: '8px',
                 padding: '8px 16px', fontSize: '12px', fontWeight: 750, cursor: 'pointer', 
                 fontFamily: 'Inter, sans-serif', boxShadow: '0 2px 8px rgba(185,249,93,0.15)',
                 transition: 'all 0.2s' 

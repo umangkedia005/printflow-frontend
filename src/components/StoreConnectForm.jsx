@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { SHOPIFY_INSTALL_URL } from '../utils/shopify'
 
 const StoreConnectForm = () => {
   const [shopDomain, setShopDomain] = useState('')
@@ -29,8 +30,9 @@ const StoreConnectForm = () => {
     }
 
     setIsLoading(true)
-    const apiUrl = import.meta.env.VITE_API_URL || 'https://85q0wnxzx3.execute-api.ap-south-1.amazonaws.com/dev'
-    window.location.href = `${apiUrl}/auth?shop=${clean}`
+    // Shopify asks which store to install on, so the domain above is only used
+    // to catch typos before handing off.
+    window.location.href = SHOPIFY_INSTALL_URL
   }
 
   return (
