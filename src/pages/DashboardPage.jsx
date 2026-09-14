@@ -1317,7 +1317,7 @@ export default function DashboardPage() {
                         <span style={{ fontSize: '11px', color: '#166534', fontWeight: 500, fontFamily: 'monospace', maxWidth: '120px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{p.printFileUrl}</span>
                         <button onClick={() => setEditingProduct(p)} style={{ background: 'none', border: 'none', color: '#666', fontSize: '11px', fontWeight: 500, cursor: 'pointer', padding: 0, fontFamily: 'Inter, sans-serif', textDecoration: 'underline', flexShrink: 0 }}>Change</button>
                       </div>
-                    ) : <button onClick={() => setEditingProduct(p)} className="pf-btn" style={{ padding: '5px 12px', fontSize: '11px', borderRadius: '7px' }}>↑ Upload</button>}
+                    ) : <button onClick={() => setEditingProduct(p)} className="pf-btn" style={{ padding: '5px 12px', fontSize: '11px', borderRadius: '7px' }}>Set print file</button>}
                   </td>
                   <td style={{ padding: '14px 20px' }}>
                     {p.factorySku ? <span style={{ fontSize: '11px', color: '#555', fontFamily: 'monospace', background: '#F4F4F0', padding: '3px 8px', borderRadius: '5px' }}>{p.factorySku}</span>
@@ -2279,7 +2279,7 @@ export default function DashboardPage() {
                               if (matchedProduct) setEditingProduct(matchedProduct)
                             }}
                           >
-                            ↑ Upload
+                            Set print file
                           </button>
                         </>
                       )}
