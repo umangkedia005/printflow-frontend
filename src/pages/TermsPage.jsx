@@ -25,8 +25,10 @@ const TermsPage = () => {
         </Section>
 
         <Section title="4. Billing">
-          Paid plans are billed via Razorpay on a recurring basis. You may cancel your subscription at any time;
-          cancellation takes effect at the end of the current billing cycle.
+          Paid plans are billed through Shopify on a recurring basis and appear on your Shopify invoice. You may
+          cancel your subscription at any time; cancellation takes effect at the end of the current billing cycle.
+          Production and shipping costs for the orders we fulfill are paid separately from your wallet balance,
+          which you top up via Razorpay.
         </Section>
 
         <Section title="5. Fulfillment & Shipping">

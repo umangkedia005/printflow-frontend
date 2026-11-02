@@ -32,8 +32,9 @@ const PrivacyPage = () => {
 
         <Section title="4. Data Sharing">
           We do not sell your data. We share order and shipping information only with our fulfillment and
-          logistics partners as needed to print and deliver your customers' orders. We use Razorpay to process
-          subscription payments and Firebase (Google) for authentication.
+          logistics partners as needed to print and deliver your customers' orders. Subscription payments are
+          processed by Shopify. We use Razorpay to process wallet top-ups for fulfillment costs and Firebase
+          (Google) for authentication.
         </Section>
 
         <Section title="5. Data Retention">
