@@ -43,10 +43,10 @@ function readImageSize(url) {
 
 function Card({ n, title, children }) {
   return (
-    <div style={{ background: '#FFFFFF', border: '1px solid #E8E8E4', borderRadius: '16px', padding: '18px 20px' }}>
-      <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '14px' }}>
-        {n && <span style={{ width: '20px', height: '20px', borderRadius: '50%', background: '#0A0A0A', color: '#FFFFFF', fontSize: '11px', fontWeight: 700, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>{n}</span>}
-        <span style={{ fontSize: '14px', fontWeight: 700, color: '#0A0A0A' }}>{title}</span>
+    <div style={{ background: '#FFFFFF', border: '1px solid rgba(23,43,21,0.06)', borderRadius: '20px', boxShadow: '0 8px 30px rgba(23,43,21,0.015)', padding: '22px 24px' }}>
+      <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '16px' }}>
+        {n && <span style={{ width: '22px', height: '22px', borderRadius: '50%', background: '#172B15', color: '#B9F95D', fontSize: '11px', fontWeight: 800, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>{n}</span>}
+        <span style={{ fontFamily: "'Fraunces', sans-serif", fontSize: '17px', fontWeight: 800, color: '#172B15', letterSpacing: '-0.2px' }}>{title}</span>
       </div>
       {children}
     </div>
@@ -309,8 +309,8 @@ export default function DesignEditor({ blank, shopDomain, onClose, onSaved }) {
   const previewViews = views.filter(v => areas.some(a => viewOf(a) === v.id))
 
   const dpiTone = dpi === null ? null : dpi >= GOOD_DPI ? ['#F0FDF4', '#166534', 'Sharp print'] : dpi >= minDpi ? ['#FFF7ED', '#C2410C', 'Acceptable, may look soft up close'] : ['#FFF5F5', '#C53030', 'Too low to print']
-  const inputStyle = { width: '100%', padding: '10px 12px', boxSizing: 'border-box', border: '1.5px solid #E8E8E4', borderRadius: '10px', fontSize: '13px', outline: 'none', fontFamily: 'Inter, sans-serif' }
-  const chip = on => ({ padding: '6px 12px', borderRadius: '8px', border: on ? '1.5px solid #0A0A0A' : '1px solid #E8E8E4', background: on ? '#0A0A0A' : '#FFFFFF', color: on ? '#FFFFFF' : '#555', fontSize: '12px', fontWeight: 700, cursor: 'pointer', fontFamily: 'Inter, sans-serif' })
+  const inputStyle = { width: '100%', padding: '11px 14px', boxSizing: 'border-box', border: '1px solid rgba(23,43,21,0.1)', borderRadius: '12px', fontSize: '13px', outline: 'none', fontFamily: 'Inter, sans-serif', color: '#172B15', background: '#FFFFFF' }
+  const chip = on => ({ padding: '7px 14px', borderRadius: '10px', border: on ? '1px solid #172B15' : '1px solid rgba(23,43,21,0.1)', background: on ? '#172B15' : '#FFFFFF', color: on ? '#FFFFFF' : '#172B15', fontSize: '12px', fontWeight: 700, cursor: 'pointer', fontFamily: 'Inter, sans-serif' })
 
   // A page in the dashboard (not a pop-up): the product on the left, and the
   // steps plus a running print cost summary on the right, like an order form.
@@ -320,14 +320,14 @@ export default function DesignEditor({ blank, shopDomain, onClose, onSaved }) {
     <div ref={pageRef} style={{ scrollMarginTop: '16px' }}>
       <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: '16px', flexWrap: 'wrap', marginBottom: '22px' }}>
         <div>
-          <button onClick={onClose} style={{ background: 'none', border: 'none', padding: 0, color: '#888', fontSize: '13px', fontWeight: 600, cursor: 'pointer', fontFamily: 'Inter, sans-serif', marginBottom: '8px' }}>← Back to catalogue</button>
-          <h1 style={{ fontFamily: "'Fraunces', sans-serif", fontSize: '26px', fontWeight: 800, color: '#0A0A0A', letterSpacing: '-0.5px' }}>Design: {blank.name}</h1>
-          <p style={{ fontSize: '13px', color: '#999', marginTop: '4px' }}>{[blank.gsm && `${blank.gsm} GSM`, blank.fabric, blank.fit].filter(Boolean).join(' · ')}</p>
+          <button onClick={onClose} style={{ background: 'none', border: 'none', padding: 0, color: '#889B8E', fontSize: '13px', fontWeight: 600, cursor: 'pointer', fontFamily: 'Inter, sans-serif', marginBottom: '8px' }}>← Back to catalogue</button>
+          <h1 style={{ fontFamily: "'Fraunces', sans-serif", fontSize: '28px', fontWeight: 800, color: '#172B15', letterSpacing: '-0.5px' }}>Design: {blank.name}</h1>
+          <p style={{ fontSize: '13px', color: '#889B8E', fontWeight: 500, marginTop: '4px' }}>{[blank.gsm && `${blank.gsm} GSM`, blank.fabric, blank.fit].filter(Boolean).join(' · ')}</p>
         </div>
       </div>
 
       <div className="pf-design-grid">
-        <div className="pf-design-sticky" style={{ background: '#FFFFFF', border: '1px solid #E8E8E4', borderRadius: '16px', padding: '20px' }}>
+        <div className="pf-design-sticky" style={{ background: '#FFFFFF', border: '1px solid rgba(23,43,21,0.06)', borderRadius: '20px', boxShadow: '0 8px 30px rgba(23,43,21,0.015)', padding: '22px' }}>
             <div style={{ display: 'flex', justifyContent: 'center', gap: '6px', marginBottom: '14px', flexWrap: 'wrap' }}>
               {areas.map(a => (
                 <button key={a.id} onClick={() => switchTab(a.id)} style={chip(!previewing && a.id === area.id)}>
@@ -344,7 +344,7 @@ export default function DesignEditor({ blank, shopDomain, onClose, onSaved }) {
                     <GarmentMockup type={blank.mockup} color={previewHex} photoUrl={photoFor(v.id)}>
                       {areas.filter(a => viewOf(a) === v.id).map(a => renderArea(a, FULL_PHOTO, false))}
                     </GarmentMockup>
-                    <div style={{ textAlign: 'center', fontSize: '11px', color: '#999', marginTop: '6px', fontWeight: 600 }}>{v.label}</div>
+                    <div style={{ textAlign: 'center', fontSize: '11px', color: '#889B8E', marginTop: '6px', fontWeight: 600 }}>{v.label}</div>
                   </div>
                 ))}
               </div>
@@ -361,7 +361,7 @@ export default function DesignEditor({ blank, shopDomain, onClose, onSaved }) {
                     {renderArea(area, shownView, true)}
                   </GarmentMockup>
                 </div>
-                <div style={{ position: 'absolute', right: '10px', bottom: '10px', display: 'flex', gap: '4px', background: 'rgba(255,255,255,0.92)', border: '1px solid #E8E8E4', borderRadius: '10px', padding: '3px' }}>
+                <div style={{ position: 'absolute', right: '10px', bottom: '10px', display: 'flex', gap: '4px', background: 'rgba(255,255,255,0.92)', border: '1px solid rgba(23,43,21,0.08)', borderRadius: '10px', padding: '3px' }}>
                   {[['−', 'Zoom out', () => zoomBy(1 / 1.6)], ['+', 'Zoom in', () => zoomBy(1.6)], ['⤢', 'Fit', () => setView(null)]].map(([sym, title, fn]) => (
                     <button key={title} title={title} aria-label={title} onClick={fn} style={{ width: '28px', height: '28px', border: 'none', background: 'transparent', borderRadius: '7px', fontSize: '15px', color: '#333', cursor: 'pointer' }}>{sym}</button>
                   ))}
@@ -371,21 +371,21 @@ export default function DesignEditor({ blank, shopDomain, onClose, onSaved }) {
 
             <div style={{ display: 'flex', justifyContent: 'center', gap: '8px', marginTop: '14px', flexWrap: 'wrap' }}>
               {blank.colors.map(c => (
-                <button key={c.name} title={c.name} onClick={() => setPreviewColor(c.name)} style={{ width: '26px', height: '26px', borderRadius: '50%', background: c.hex, border: previewColor === c.name ? '2px solid #0A0A0A' : '1px solid #D8D8D4', outline: previewColor === c.name ? '2px solid #FFFFFF' : 'none', outlineOffset: '-4px', cursor: 'pointer' }} />
+                <button key={c.name} title={c.name} onClick={() => setPreviewColor(c.name)} style={{ width: '26px', height: '26px', borderRadius: '50%', background: c.hex, border: previewColor === c.name ? '2px solid #172B15' : '1px solid #D8D8D4', outline: previewColor === c.name ? '2px solid #FFFFFF' : 'none', outlineOffset: '-4px', cursor: 'pointer' }} />
               ))}
             </div>
-            <p style={{ textAlign: 'center', fontSize: '11px', color: '#BABAB6', marginTop: '8px' }}>
+            <p style={{ textAlign: 'center', fontSize: '11px', color: '#889B8E', marginTop: '8px' }}>
               Preview color: {previewColor}{previewing ? '' : ' · drag the artwork to move it · click the photo to zoom'}
             </p>
         </div>
 
         <div style={{ display: 'flex', flexDirection: 'column', gap: '14px', minWidth: 0 }}>
           <Card n={1} title="Product details">
-            <label style={{ display: 'block', fontSize: '12px', fontWeight: 600, color: '#555', marginBottom: '6px' }}>Product name</label>
+            <label style={{ display: 'block', fontSize: '11px', fontWeight: 700, color: '#889B8E', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: '7px' }}>Product name</label>
             <input value={title} onChange={e => setTitle(e.target.value)} maxLength={255} placeholder="Kunal & Divya anniversary polo" style={{ ...inputStyle, marginBottom: '12px' }} />
-            <label style={{ display: 'block', fontSize: '12px', fontWeight: 600, color: '#555', marginBottom: '6px' }}>Description (optional)</label>
+            <label style={{ display: 'block', fontSize: '11px', fontWeight: 700, color: '#889B8E', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: '7px' }}>Description (optional)</label>
             <textarea value={description} onChange={e => setDescription(e.target.value)} rows={3} placeholder="Shown on your store's product page" style={{ ...inputStyle, resize: 'vertical' }} />
-            <p style={{ fontSize: '11px', color: '#BABAB6', marginTop: '6px' }}>This is the name your customers see in your Shopify store.</p>
+            <p style={{ fontSize: '11px', color: '#889B8E', marginTop: '6px' }}>This is the name your customers see in your Shopify store.</p>
           </Card>
 
             {previewing ? (
@@ -393,9 +393,9 @@ export default function DesignEditor({ blank, shopDomain, onClose, onSaved }) {
                 {areas.map(a => {
                   const art = artworks[a.id], p = placements[a.id]
                   return (
-                    <div key={a.id} style={{ display: 'flex', justifyContent: 'space-between', gap: '8px', fontSize: '12px', padding: '6px 0', borderBottom: '1px solid #F4F4F0' }}>
-                      <span style={{ fontWeight: 600, color: art ? '#0A0A0A' : '#BABAB6' }}>{a.label}</span>
-                      <span style={{ color: '#999' }}>{art && p ? `${p.w.toFixed(1)}″ × ${(p.w * art.px_h / art.px_w).toFixed(1)}″${Number(a.print_cost) ? ` · +₹${a.print_cost}` : ''}` : 'Not printed'}</span>
+                    <div key={a.id} style={{ display: 'flex', justifyContent: 'space-between', gap: '8px', fontSize: '12px', padding: '6px 0', borderBottom: '1px solid rgba(23,43,21,0.08)' }}>
+                      <span style={{ fontWeight: 600, color: art ? '#172B15' : '#A9B6AC' }}>{a.label}</span>
+                      <span style={{ color: '#889B8E' }}>{art && p ? `${p.w.toFixed(1)}″ × ${(p.w * art.px_h / art.px_w).toFixed(1)}″${Number(a.print_cost) ? ` · +₹${a.print_cost}` : ''}` : 'Not printed'}</span>
                     </div>
                   )
                 })}
@@ -406,20 +406,20 @@ export default function DesignEditor({ blank, shopDomain, onClose, onSaved }) {
                   {artwork ? `Replace ${area.label.toLowerCase()} artwork` : `Upload ${area.label.toLowerCase()} artwork (PNG or JPG)`}
                   <input type="file" accept="image/png,image/jpeg" onChange={handleFile} style={{ display: 'none' }} />
                 </label>
-                <p style={{ fontSize: '11px', color: '#BABAB6', marginTop: '6px' }}>
+                <p style={{ fontSize: '11px', color: '#889B8E', marginTop: '6px' }}>
                   {areas.length > 1 && !artwork ? 'Optional. Leave it empty to print nothing here. ' : ''}
                   {Number(area.print_cost) ? `Printing here adds ₹${area.print_cost} to the cost.` : ''}
                 </p>
                 {uploadError && <div style={{ fontSize: '12px', color: '#C53030', marginTop: '8px' }}>⚠ {uploadError}</div>}
                 {artwork && placement && (
                   <>
-                    <div style={{ display: 'flex', justifyContent: 'space-between', gap: '8px', fontSize: '11px', color: '#999', marginTop: '8px' }}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', gap: '8px', fontSize: '11px', color: '#889B8E', marginTop: '8px' }}>
                       <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
                         {artwork.name} · {artwork.px_w}×{artwork.px_h}px {artwork.uploading ? '· uploading…' : artwork.s3_key ? '· uploaded ✓' : ''}
                       </span>
                       <button onClick={removeArtwork} style={{ background: 'none', border: 'none', color: '#C53030', fontSize: '11px', cursor: 'pointer', padding: 0, flexShrink: 0 }}>Remove</button>
                     </div>
-                    <label style={{ display: 'block', fontSize: '12px', fontWeight: 600, color: '#555', margin: '14px 0 6px' }}>
+                    <label style={{ display: 'block', fontSize: '11px', fontWeight: 700, color: '#889B8E', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: '7px', marginTop: '16px' }}>
                       Width: {placement.w.toFixed(1)}″ × {(placement.w * ratio).toFixed(1)}″
                     </label>
                     <input type="range" min={0.5} max={Math.min(area.width_in, area.height_in / ratio)} step={0.1} value={placement.w} onChange={e => resizeTo(Number(e.target.value))} style={{ width: '100%' }} />
@@ -442,7 +442,7 @@ export default function DesignEditor({ blank, shopDomain, onClose, onSaved }) {
                 {blank.colors.map(c => {
                   const on = colors.includes(c.name)
                   return (
-                    <button key={c.name} onClick={() => { toggle(colors, setColors, c.name); setPreviewColor(c.name) }} style={{ display: 'flex', alignItems: 'center', gap: '6px', padding: '6px 10px', borderRadius: '100px', border: on ? '1.5px solid #0A0A0A' : '1px solid #E8E8E4', background: on ? '#FAFAF8' : '#FFFFFF', fontSize: '12px', fontWeight: 600, color: '#0A0A0A', cursor: 'pointer', fontFamily: 'Inter, sans-serif' }}>
+                    <button key={c.name} onClick={() => { toggle(colors, setColors, c.name); setPreviewColor(c.name) }} style={{ display: 'flex', alignItems: 'center', gap: '6px', padding: '6px 10px', borderRadius: '100px', border: on ? '1.5px solid #172B15' : '1px solid rgba(23,43,21,0.08)', background: on ? '#FAFAF8' : '#FFFFFF', fontSize: '12px', fontWeight: 600, color: '#172B15', cursor: 'pointer', fontFamily: 'Inter, sans-serif' }}>
                       <span style={{ width: '12px', height: '12px', borderRadius: '50%', background: c.hex, border: '1px solid #D8D8D4' }} />
                       {c.name}
                     </button>
@@ -460,7 +460,7 @@ export default function DesignEditor({ blank, shopDomain, onClose, onSaved }) {
               {sizes.length > 0 && colors.length > 0 && (
                 <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '12px' }}>
                   <thead>
-                    <tr>{['Size', 'Cost', 'Your price', 'Profit'].map(h => <th key={h} style={{ textAlign: 'left', fontSize: '10px', fontWeight: 600, color: '#BABAB6', textTransform: 'uppercase', letterSpacing: '0.06em', padding: '4px 4px 6px' }}>{h}</th>)}</tr>
+                    <tr>{['Size', 'Cost', 'Your price', 'Profit'].map(h => <th key={h} style={{ textAlign: 'left', fontSize: '10px', fontWeight: 600, color: '#889B8E', textTransform: 'uppercase', letterSpacing: '0.06em', padding: '4px 4px 6px' }}>{h}</th>)}</tr>
                   </thead>
                   <tbody>
                     {sizesInStock.filter(s => sizes.includes(s)).map(s => {
@@ -468,9 +468,9 @@ export default function DesignEditor({ blank, shopDomain, onClose, onSaved }) {
                       const price = priceFor(s)
                       const profit = Number(price) - cost
                       return (
-                        <tr key={s} style={{ borderTop: '1px solid #F4F4F0' }}>
+                        <tr key={s} style={{ borderTop: '1px solid rgba(23,43,21,0.08)' }}>
                           <td style={{ padding: '6px 4px', fontWeight: 700 }}>{s}</td>
-                          <td style={{ padding: '6px 4px', color: '#999' }}>₹{cost}</td>
+                          <td style={{ padding: '6px 4px', color: '#889B8E' }}>₹{cost}</td>
                           <td style={{ padding: '6px 4px' }}>
                             <input type="number" min={cost} value={price} onChange={e => setPrices(p => ({ ...p, [s]: e.target.value === '' ? '' : Number(e.target.value) }))} style={{ ...inputStyle, width: '84px', padding: '6px 8px', fontSize: '12px' }} />
                           </td>
@@ -481,7 +481,7 @@ export default function DesignEditor({ blank, shopDomain, onClose, onSaved }) {
                   </tbody>
                 </table>
               )}
-              <p style={{ fontSize: '11px', color: '#BABAB6', marginTop: '8px' }}>
+              <p style={{ fontSize: '11px', color: '#889B8E', marginTop: '8px' }}>
                 Cost is the blank{printCost ? ` plus ₹${printCost} for the printed areas` : ' and printing'}; shipping and tax are charged separately.
               </p>
             </Card>
@@ -491,24 +491,24 @@ export default function DesignEditor({ blank, shopDomain, onClose, onSaved }) {
               {areas.map(a => {
                 const art = artworks[a.id], p = placements[a.id]
                 return (
-                  <div key={a.id} style={{ border: '1px solid #F0F0EC', borderRadius: '10px', padding: '10px 12px', background: art ? '#FFFFFF' : '#FAFAF8' }}>
-                    <div style={{ fontSize: '12px', fontWeight: 700, color: art ? '#0A0A0A' : '#BABAB6' }}>{a.label}</div>
-                    <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '11px', color: '#999', marginTop: '6px' }}><span>Size</span><span>{art && p ? `${p.w.toFixed(1)}″ × ${(p.w * art.px_h / art.px_w).toFixed(1)}″` : '—'}</span></div>
-                    <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '11px', color: '#999', marginTop: '2px' }}><span>Cost</span><span>{art ? `+₹${Number(a.print_cost || 0)}` : '—'}</span></div>
+                  <div key={a.id} style={{ border: '1px solid rgba(23,43,21,0.08)', borderRadius: '10px', padding: '10px 12px', background: art ? '#FFFFFF' : '#FAFAF8' }}>
+                    <div style={{ fontSize: '12px', fontWeight: 700, color: art ? '#172B15' : '#A9B6AC' }}>{a.label}</div>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '11px', color: '#889B8E', marginTop: '6px' }}><span>Size</span><span>{art && p ? `${p.w.toFixed(1)}″ × ${(p.w * art.px_h / art.px_w).toFixed(1)}″` : '—'}</span></div>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '11px', color: '#889B8E', marginTop: '2px' }}><span>Cost</span><span>{art ? `+₹${Number(a.print_cost || 0)}` : '—'}</span></div>
                   </div>
                 )
               })}
             </div>
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', borderTop: '1px solid #F0F0EC', marginTop: '14px', paddingTop: '12px' }}>
-              <span style={{ fontSize: '13px', fontWeight: 700, color: '#0A0A0A' }}>Total cost per item</span>
-              <span style={{ fontSize: '15px', fontWeight: 800, color: '#0A0A0A' }}>{Number.isFinite(fromCost) ? `from ₹${fromCost}` : '—'} <span style={{ fontSize: '11px', fontWeight: 500, color: '#999' }}>+ tax + shipping</span></span>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', borderTop: '1px solid rgba(23,43,21,0.08)', marginTop: '14px', paddingTop: '12px' }}>
+              <span style={{ fontSize: '13px', fontWeight: 700, color: '#172B15' }}>Total cost per item</span>
+              <span style={{ fontSize: '15px', fontWeight: 800, color: '#172B15' }}>{Number.isFinite(fromCost) ? `from ₹${fromCost}` : '—'} <span style={{ fontSize: '11px', fontWeight: 500, color: '#889B8E' }}>+ tax + shipping</span></span>
             </div>
           </Card>
 
-          <div className="pf-design-save" style={{ background: '#FFFFFF', border: '1px solid #E8E8E4', borderRadius: '16px', padding: '16px 20px' }}>
+          <div className="pf-design-save" style={{ background: '#FFFFFF', border: '1px solid rgba(23,43,21,0.06)', borderRadius: '20px', boxShadow: '0 8px 30px rgba(23,43,21,0.015)', padding: '18px 22px' }}>
             {saveError && <div style={{ background: '#FFF5F5', border: '1px solid #FED7D7', borderRadius: '8px', padding: '10px 14px', marginBottom: '12px', fontSize: '12px', color: '#C53030' }}>⚠ {saveError}</div>}
-            {problems.length > 0 && <div style={{ fontSize: '12px', color: '#999', marginBottom: '10px' }}>{problems[0]}</div>}
-            <button className="pf-btn" onClick={handleSave} disabled={saving || problems.length > 0} style={{ width: '100%', padding: '13px', fontSize: '14px' }}>
+            {problems.length > 0 && <div style={{ fontSize: '12px', color: '#889B8E', marginBottom: '10px' }}>{problems[0]}</div>}
+            <button className="pf-btn" onClick={handleSave} disabled={saving || problems.length > 0} style={{ width: '100%', padding: '14px', fontSize: '14px', fontWeight: 800, background: '#B9F95D', color: '#172B15', borderRadius: '14px', boxShadow: '0 6px 18px rgba(185,249,93,0.35)' }}>
               {saving ? 'Saving…' : 'Save draft'}
             </button>
           </div>
