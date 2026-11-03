@@ -1,12 +1,13 @@
 import { useCallback, useEffect, useState } from 'react'
+import { createPortal } from 'react-dom'
 import GarmentMockup from './GarmentMockup'
 import DesignEditor from './DesignEditor'
 import { fetchCatalogue, fetchMerchantProducts } from '../../utils/api'
 
 function SizeChartModal({ blank, onClose }) {
   const chart = blank.size_chart
-  return (
-    <div onClick={e => { if (e.target === e.currentTarget) onClose() }} style={{ position: 'fixed', inset: 0, zIndex: 300, background: 'rgba(0,0,0,0.45)', backdropFilter: 'blur(6px)', WebkitBackdropFilter: 'blur(6px)', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '16px' }}>
+  return createPortal(
+    <div onClick={e => { if (e.target === e.currentTarget) onClose() }} style={{ position: 'fixed', inset: 0, zIndex: 1000, background: 'rgba(0,0,0,0.45)', backdropFilter: 'blur(6px)', WebkitBackdropFilter: 'blur(6px)', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '16px' }}>
       <div style={{ background: '#FFFFFF', borderRadius: '20px', width: '100%', maxWidth: '420px', overflow: 'hidden', boxShadow: '0 24px 80px rgba(0,0,0,0.2)', animation: 'pf-fade-up 0.25s ease' }}>
         <div style={{ padding: '20px 24px', borderBottom: '1px solid #E8E8E4', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
           <div>
@@ -32,7 +33,7 @@ function SizeChartModal({ blank, onClose }) {
         </div>
       </div>
     </div>
-  )
+  , document.body)
 }
 
 function BlankCard({ blank, onDesign, onSizeChart }) {

@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from 'react'
+import { createPortal } from 'react-dom'
 import GarmentMockup from './GarmentMockup'
 import { uploadArtwork, saveMerchantProduct } from '../../utils/api'
 
@@ -308,8 +309,10 @@ export default function DesignEditor({ blank, shopDomain, onClose, onSaved }) {
   const inputStyle = { width: '100%', padding: '10px 12px', boxSizing: 'border-box', border: '1.5px solid #E8E8E4', borderRadius: '10px', fontSize: '13px', outline: 'none', fontFamily: 'Inter, sans-serif' }
   const chip = on => ({ padding: '6px 12px', borderRadius: '8px', border: on ? '1.5px solid #0A0A0A' : '1px solid #E8E8E4', background: on ? '#0A0A0A' : '#FFFFFF', color: on ? '#FFFFFF' : '#555', fontSize: '12px', fontWeight: 700, cursor: 'pointer', fontFamily: 'Inter, sans-serif' })
 
-  return (
-    <div style={{ position: 'fixed', inset: 0, zIndex: 300, background: 'rgba(0,0,0,0.45)', backdropFilter: 'blur(6px)', WebkitBackdropFilter: 'blur(6px)', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '16px' }}>
+  // Rendered on <body>: inside the dashboard's content area the editor would
+  // sit under its header and sidebar whatever its z-index.
+  return createPortal(
+    <div style={{ position: 'fixed', inset: 0, zIndex: 1000, background: 'rgba(0,0,0,0.45)', backdropFilter: 'blur(6px)', WebkitBackdropFilter: 'blur(6px)', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '16px' }}>
       <div className="pf-editor" style={{ background: '#FFFFFF', borderRadius: '20px', width: '100%', maxWidth: '1100px', maxHeight: '100%', display: 'flex', flexDirection: 'column', overflow: 'hidden', boxShadow: '0 24px 80px rgba(0,0,0,0.2)', animation: 'pf-fade-up 0.25s ease' }}>
         <div style={{ padding: '18px 24px', borderBottom: '1px solid #E8E8E4', display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '12px' }}>
           <div style={{ minWidth: 0 }}>
@@ -489,5 +492,5 @@ export default function DesignEditor({ blank, shopDomain, onClose, onSaved }) {
         </div>
       </div>
     </div>
-  )
+  , document.body)
 }
