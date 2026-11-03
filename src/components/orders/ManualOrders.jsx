@@ -295,12 +295,14 @@ function CreateOrder({ shopDomain, walletBalance, onTopUp, onPlaced, onCancel })
   )
 }
 
-export default function ManualOrdersView({ shopDomain, walletBalance, onWalletChanged, onTopUp }) {
-  const [creating, setCreating] = useState(false)
+// The Manual orders tab, or (startInCreate, from the sidebar's Create order)
+// straight into the create page, handing back to the parent when done.
+export default function ManualOrdersView({ shopDomain, walletBalance, onWalletChanged, onTopUp, startInCreate = false, onCancelCreate, onPlaced, initialNotice = '' }) {
+  const [creating, setCreating] = useState(startInCreate)
   const [orders, setOrders] = useState([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
-  const [notice, setNotice] = useState('')
+  const [notice, setNotice] = useState(initialNotice)
 
   const load = useCallback(() => {
     if (!shopDomain) return
@@ -317,11 +319,13 @@ export default function ManualOrdersView({ shopDomain, walletBalance, onWalletCh
         shopDomain={shopDomain}
         walletBalance={walletBalance}
         onTopUp={onTopUp}
-        onCancel={() => setCreating(false)}
+        onCancel={() => (onCancelCreate ? onCancelCreate() : setCreating(false))}
         onPlaced={res => {
-          setCreating(false)
-          setNotice(`Order ${res.order_id} placed. ${rupees(res.total)} was paid from your wallet.`)
+          const message = `Order ${res.order_id} placed. ${rupees(res.total)} was paid from your wallet.`
           onWalletChanged()
+          if (onPlaced) return onPlaced(message)
+          setCreating(false)
+          setNotice(message)
           load()
         }}
       />
