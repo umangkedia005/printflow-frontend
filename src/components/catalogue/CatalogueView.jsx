@@ -88,6 +88,22 @@ export default function CatalogueView({ shopDomain }) {
 
   useEffect(() => { loadDesigns() }, [loadDesigns])
 
+  if (designing) {
+    return (
+      <DesignEditor
+        blank={designing}
+        shopDomain={shopDomain}
+        onClose={() => setDesigning(null)}
+        onSaved={() => {
+          setDesigning(null)
+          setNotice('Draft saved. Find it under My designs.')
+          setTab('designs')
+          loadDesigns()
+        }}
+      />
+    )
+  }
+
   const q = query.trim().toLowerCase()
   const visible = blanks.filter(b => !q || [b.name, b.category, b.fabric].some(s => s?.toLowerCase().includes(q)))
   const blankName = id => blanks.find(b => b.blank_id === id)?.name || id
@@ -157,19 +173,6 @@ export default function CatalogueView({ shopDomain }) {
       )}
 
       {sizeChartFor && <SizeChartModal blank={sizeChartFor} onClose={() => setSizeChartFor(null)} />}
-      {designing && (
-        <DesignEditor
-          blank={designing}
-          shopDomain={shopDomain}
-          onClose={() => setDesigning(null)}
-          onSaved={() => {
-            setDesigning(null)
-            setNotice('Draft saved. Find it under My designs.')
-            setTab('designs')
-            loadDesigns()
-          }}
-        />
-      )}
     </>
   )
 }

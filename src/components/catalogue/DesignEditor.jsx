@@ -1,5 +1,4 @@
 import { useEffect, useRef, useState } from 'react'
-import { createPortal } from 'react-dom'
 import GarmentMockup from './GarmentMockup'
 import { uploadArtwork, saveMerchantProduct } from '../../utils/api'
 
@@ -42,12 +41,12 @@ function readImageSize(url) {
   })
 }
 
-function Step({ n, title, children }) {
+function Card({ n, title, children }) {
   return (
-    <div style={{ padding: '18px 0', borderBottom: '1px solid #F0F0EC' }}>
-      <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '12px' }}>
-        <span style={{ width: '20px', height: '20px', borderRadius: '50%', background: '#0A0A0A', color: '#FFFFFF', fontSize: '11px', fontWeight: 700, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>{n}</span>
-        <span style={{ fontSize: '13px', fontWeight: 700, color: '#0A0A0A' }}>{title}</span>
+    <div style={{ background: '#FFFFFF', border: '1px solid #E8E8E4', borderRadius: '16px', padding: '18px 20px' }}>
+      <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '14px' }}>
+        {n && <span style={{ width: '20px', height: '20px', borderRadius: '50%', background: '#0A0A0A', color: '#FFFFFF', fontSize: '11px', fontWeight: 700, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>{n}</span>}
+        <span style={{ fontSize: '14px', fontWeight: 700, color: '#0A0A0A' }}>{title}</span>
       </div>
       {children}
     </div>
@@ -81,6 +80,10 @@ export default function DesignEditor({ blank, shopDomain, onClose, onSaved }) {
 
   const dragRef = useRef(null)
   const panRef = useRef(null)
+  const pageRef = useRef(null)
+
+  // Opening the designer replaces the catalogue; start at its top.
+  useEffect(() => { pageRef.current?.scrollIntoView({ block: 'start' }) }, [])
   const previewUrlsRef = useRef([])
 
   // Release every local preview when the editor closes.
@@ -309,21 +312,22 @@ export default function DesignEditor({ blank, shopDomain, onClose, onSaved }) {
   const inputStyle = { width: '100%', padding: '10px 12px', boxSizing: 'border-box', border: '1.5px solid #E8E8E4', borderRadius: '10px', fontSize: '13px', outline: 'none', fontFamily: 'Inter, sans-serif' }
   const chip = on => ({ padding: '6px 12px', borderRadius: '8px', border: on ? '1.5px solid #0A0A0A' : '1px solid #E8E8E4', background: on ? '#0A0A0A' : '#FFFFFF', color: on ? '#FFFFFF' : '#555', fontSize: '12px', fontWeight: 700, cursor: 'pointer', fontFamily: 'Inter, sans-serif' })
 
-  // Rendered on <body>: inside the dashboard's content area the editor would
-  // sit under its header and sidebar whatever its z-index.
-  return createPortal(
-    <div style={{ position: 'fixed', inset: 0, zIndex: 1000, background: 'rgba(0,0,0,0.45)', backdropFilter: 'blur(6px)', WebkitBackdropFilter: 'blur(6px)', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '16px' }}>
-      <div className="pf-editor" style={{ background: '#FFFFFF', borderRadius: '20px', width: '100%', maxWidth: '1100px', maxHeight: '100%', display: 'flex', flexDirection: 'column', overflow: 'hidden', boxShadow: '0 24px 80px rgba(0,0,0,0.2)', animation: 'pf-fade-up 0.25s ease' }}>
-        <div style={{ padding: '18px 24px', borderBottom: '1px solid #E8E8E4', display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '12px' }}>
-          <div style={{ minWidth: 0 }}>
-            <h2 style={{ fontFamily: "'Fraunces', sans-serif", fontSize: '18px', fontWeight: 800, color: '#0A0A0A' }}>Design: {blank.name}</h2>
-            <p style={{ fontSize: '12px', color: '#999', marginTop: '3px' }}>{areas.map(a => `${a.label} ${a.width_in}″ × ${a.height_in}″`).join(' · ')}</p>
-          </div>
-          <button onClick={onClose} aria-label="Close" style={{ width: '30px', height: '30px', background: '#F4F4F0', border: 'none', borderRadius: '8px', fontSize: '14px', color: '#888', cursor: 'pointer', flexShrink: 0 }}>✕</button>
-        </div>
+  // A page in the dashboard (not a pop-up): the product on the left, and the
+  // steps plus a running print cost summary on the right, like an order form.
+  const fromCost = Math.min(...sizesInStock.filter(sz => sizes.includes(sz)).map(costFor).filter(Number.isFinite))
 
-        <div className="pf-editor-body" style={{ display: 'flex', flex: 1, minHeight: 0, overflow: 'auto' }}>
-          <div style={{ flex: '1 1 55%', padding: '20px 24px', minWidth: 0 }}>
+  return (
+    <div ref={pageRef} style={{ scrollMarginTop: '16px' }}>
+      <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: '16px', flexWrap: 'wrap', marginBottom: '22px' }}>
+        <div>
+          <button onClick={onClose} style={{ background: 'none', border: 'none', padding: 0, color: '#888', fontSize: '13px', fontWeight: 600, cursor: 'pointer', fontFamily: 'Inter, sans-serif', marginBottom: '8px' }}>← Back to catalogue</button>
+          <h1 style={{ fontFamily: "'Fraunces', sans-serif", fontSize: '26px', fontWeight: 800, color: '#0A0A0A', letterSpacing: '-0.5px' }}>Design: {blank.name}</h1>
+          <p style={{ fontSize: '13px', color: '#999', marginTop: '4px' }}>{[blank.gsm && `${blank.gsm} GSM`, blank.fabric, blank.fit].filter(Boolean).join(' · ')}</p>
+        </div>
+      </div>
+
+      <div className="pf-design-grid">
+        <div className="pf-design-sticky" style={{ background: '#FFFFFF', border: '1px solid #E8E8E4', borderRadius: '16px', padding: '20px' }}>
             <div style={{ display: 'flex', justifyContent: 'center', gap: '6px', marginBottom: '14px', flexWrap: 'wrap' }}>
               {areas.map(a => (
                 <button key={a.id} onClick={() => switchTab(a.id)} style={chip(!previewing && a.id === area.id)}>
@@ -334,7 +338,7 @@ export default function DesignEditor({ blank, shopDomain, onClose, onSaved }) {
             </div>
 
             {previewing ? (
-              <div style={{ display: 'grid', gridTemplateColumns: previewViews.length > 1 ? '1fr 1fr' : '1fr', gap: '12px', maxWidth: '520px', margin: '0 auto' }}>
+              <div style={{ display: 'grid', gridTemplateColumns: previewViews.length > 1 ? '1fr 1fr' : '1fr', gap: '12px', maxWidth: '600px', margin: '0 auto' }}>
                 {previewViews.map(v => (
                   <div key={v.id}>
                     <GarmentMockup type={blank.mockup} color={previewHex} photoUrl={photoFor(v.id)}>
@@ -345,7 +349,7 @@ export default function DesignEditor({ blank, shopDomain, onClose, onSaved }) {
                 ))}
               </div>
             ) : (
-              <div style={{ maxWidth: '520px', margin: '0 auto', position: 'relative' }}>
+              <div style={{ maxWidth: '600px', margin: '0 auto', position: 'relative' }}>
                 <div
                   onPointerDown={onPhotoPointerDown}
                   onPointerMove={onPhotoPointerMove}
@@ -373,11 +377,19 @@ export default function DesignEditor({ blank, shopDomain, onClose, onSaved }) {
             <p style={{ textAlign: 'center', fontSize: '11px', color: '#BABAB6', marginTop: '8px' }}>
               Preview color: {previewColor}{previewing ? '' : ' · drag the artwork to move it · click the photo to zoom'}
             </p>
-          </div>
+        </div>
 
-          <div className="pf-editor-panel" style={{ flex: '0 0 380px', borderLeft: '1px solid #E8E8E4', padding: '0 24px 24px', overflowY: 'auto' }}>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '14px', minWidth: 0 }}>
+          <Card n={1} title="Product details">
+            <label style={{ display: 'block', fontSize: '12px', fontWeight: 600, color: '#555', marginBottom: '6px' }}>Product name</label>
+            <input value={title} onChange={e => setTitle(e.target.value)} maxLength={255} placeholder="Kunal & Divya anniversary polo" style={{ ...inputStyle, marginBottom: '12px' }} />
+            <label style={{ display: 'block', fontSize: '12px', fontWeight: 600, color: '#555', marginBottom: '6px' }}>Description (optional)</label>
+            <textarea value={description} onChange={e => setDescription(e.target.value)} rows={3} placeholder="Shown on your store's product page" style={{ ...inputStyle, resize: 'vertical' }} />
+            <p style={{ fontSize: '11px', color: '#BABAB6', marginTop: '6px' }}>This is the name your customers see in your Shopify store.</p>
+          </Card>
+
             {previewing ? (
-              <Step n={1} title="Print summary">
+              <Card n={2} title="Print summary">
                 {areas.map(a => {
                   const art = artworks[a.id], p = placements[a.id]
                   return (
@@ -387,9 +399,9 @@ export default function DesignEditor({ blank, shopDomain, onClose, onSaved }) {
                     </div>
                   )
                 })}
-              </Step>
+              </Card>
             ) : (
-              <Step n={1} title={`Artwork: ${area.label}`}>
+              <Card n={2} title={`Artwork: ${area.label}`}>
                 <label className="pf-btn-outline" style={{ width: '100%', boxSizing: 'border-box', cursor: 'pointer', fontSize: '13px', padding: '10px 16px' }}>
                   {artwork ? `Replace ${area.label.toLowerCase()} artwork` : `Upload ${area.label.toLowerCase()} artwork (PNG or JPG)`}
                   <input type="file" accept="image/png,image/jpeg" onChange={handleFile} style={{ display: 'none' }} />
@@ -422,10 +434,10 @@ export default function DesignEditor({ blank, shopDomain, onClose, onSaved }) {
                     )}
                   </>
                 )}
-              </Step>
+              </Card>
             )}
 
-            <Step n={2} title="Colors">
+            <Card n={3} title="Colors">
               <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px' }}>
                 {blank.colors.map(c => {
                   const on = colors.includes(c.name)
@@ -437,9 +449,9 @@ export default function DesignEditor({ blank, shopDomain, onClose, onSaved }) {
                   )
                 })}
               </div>
-            </Step>
+            </Card>
 
-            <Step n={3} title="Sizes and prices">
+            <Card n={4} title="Sizes and prices">
               <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px', marginBottom: '12px' }}>
                 {sizesInStock.map(s => (
                   <button key={s} onClick={() => toggle(sizes, setSizes, s)} style={{ ...chip(sizes.includes(s)), minWidth: '42px' }}>{s}</button>
@@ -472,25 +484,36 @@ export default function DesignEditor({ blank, shopDomain, onClose, onSaved }) {
               <p style={{ fontSize: '11px', color: '#BABAB6', marginTop: '8px' }}>
                 Cost is the blank{printCost ? ` plus ₹${printCost} for the printed areas` : ' and printing'}; shipping and tax are charged separately.
               </p>
-            </Step>
+            </Card>
 
-            <Step n={4} title="Product details">
-              <label style={{ display: 'block', fontSize: '12px', fontWeight: 600, color: '#555', marginBottom: '6px' }}>Title</label>
-              <input value={title} onChange={e => setTitle(e.target.value)} maxLength={255} style={{ ...inputStyle, marginBottom: '12px' }} />
-              <label style={{ display: 'block', fontSize: '12px', fontWeight: 600, color: '#555', marginBottom: '6px' }}>Description (optional)</label>
-              <textarea value={description} onChange={e => setDescription(e.target.value)} rows={3} style={{ ...inputStyle, resize: 'vertical' }} />
-            </Step>
-
-            <div style={{ paddingTop: '18px' }}>
-              {saveError && <div style={{ background: '#FFF5F5', border: '1px solid #FED7D7', borderRadius: '8px', padding: '10px 14px', marginBottom: '12px', fontSize: '12px', color: '#C53030' }}>⚠ {saveError}</div>}
-              {problems.length > 0 && <div style={{ fontSize: '12px', color: '#999', marginBottom: '10px' }}>{problems[0]}</div>}
-              <button className="pf-btn" onClick={handleSave} disabled={saving || problems.length > 0} style={{ width: '100%', padding: '13px', fontSize: '14px' }}>
-                {saving ? 'Saving…' : 'Save draft'}
-              </button>
+          <Card title="Print details">
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(140px, 1fr))', gap: '8px' }}>
+              {areas.map(a => {
+                const art = artworks[a.id], p = placements[a.id]
+                return (
+                  <div key={a.id} style={{ border: '1px solid #F0F0EC', borderRadius: '10px', padding: '10px 12px', background: art ? '#FFFFFF' : '#FAFAF8' }}>
+                    <div style={{ fontSize: '12px', fontWeight: 700, color: art ? '#0A0A0A' : '#BABAB6' }}>{a.label}</div>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '11px', color: '#999', marginTop: '6px' }}><span>Size</span><span>{art && p ? `${p.w.toFixed(1)}″ × ${(p.w * art.px_h / art.px_w).toFixed(1)}″` : '—'}</span></div>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '11px', color: '#999', marginTop: '2px' }}><span>Cost</span><span>{art ? `+₹${Number(a.print_cost || 0)}` : '—'}</span></div>
+                  </div>
+                )
+              })}
             </div>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', borderTop: '1px solid #F0F0EC', marginTop: '14px', paddingTop: '12px' }}>
+              <span style={{ fontSize: '13px', fontWeight: 700, color: '#0A0A0A' }}>Total cost per item</span>
+              <span style={{ fontSize: '15px', fontWeight: 800, color: '#0A0A0A' }}>{Number.isFinite(fromCost) ? `from ₹${fromCost}` : '—'} <span style={{ fontSize: '11px', fontWeight: 500, color: '#999' }}>+ tax + shipping</span></span>
+            </div>
+          </Card>
+
+          <div className="pf-design-save" style={{ background: '#FFFFFF', border: '1px solid #E8E8E4', borderRadius: '16px', padding: '16px 20px' }}>
+            {saveError && <div style={{ background: '#FFF5F5', border: '1px solid #FED7D7', borderRadius: '8px', padding: '10px 14px', marginBottom: '12px', fontSize: '12px', color: '#C53030' }}>⚠ {saveError}</div>}
+            {problems.length > 0 && <div style={{ fontSize: '12px', color: '#999', marginBottom: '10px' }}>{problems[0]}</div>}
+            <button className="pf-btn" onClick={handleSave} disabled={saving || problems.length > 0} style={{ width: '100%', padding: '13px', fontSize: '14px' }}>
+              {saving ? 'Saving…' : 'Save draft'}
+            </button>
           </div>
         </div>
       </div>
     </div>
-  , document.body)
+  )
 }
