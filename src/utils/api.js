@@ -150,6 +150,68 @@ export async function verifyWalletTopup({ shop, amount, razorpay_order_id, razor
   return data
 }
 
+// Endpoints that act on a shop's data need proof the caller may do so. Inside
+// the Shopify admin, App Bridge's session token proves it; on the standalone
+// dashboard, the backend checks the Firebase user is the one the shop is linked to.
+async function shopAuthHeaders() {
+  const headers = {}
+  try {
+    headers['Authorization'] = `Bearer ${await getToken()}`
+  } catch { /* not signed in to Firebase; the session token may still suffice */ }
+  if (window.shopify?.idToken) {
+    try {
+      headers['X-Shopify-Session-Token'] = await window.shopify.idToken()
+    } catch { /* App Bridge unavailable; fall back to Firebase */ }
+  }
+  return headers
+}
+
+export async function fetchCatalogue() {
+  const res = await fetch(`${BASE_URL}/catalogue`)
+  const data = await res.json()
+  if (!res.ok) throw new Error(data.error || 'Failed to load the catalogue')
+  return Array.isArray(data) ? data : []
+}
+
+// Two steps: the backend hands out a presigned POST, then the file goes
+// straight to S3 — print files are often bigger than the API accepts.
+export async function uploadArtwork(shop, file) {
+  const res = await fetch(`${BASE_URL}/uploads/artwork`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...(await shopAuthHeaders()) },
+    body: JSON.stringify({ shop, content_type: file.type }),
+  })
+  const data = await res.json()
+  if (!res.ok) throw new Error(data.error || 'Could not start the upload')
+
+  const form = new FormData()
+  Object.entries(data.fields).forEach(([k, v]) => form.append(k, v))
+  form.append('file', file)
+  const upload = await fetch(data.url, { method: 'POST', body: form })
+  if (!upload.ok) throw new Error('Upload failed. Files must be PNG or JPG and under 50 MB.')
+  return data.key
+}
+
+export async function saveMerchantProduct(product) {
+  const res = await fetch(`${BASE_URL}/merchant-products`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...(await shopAuthHeaders()) },
+    body: JSON.stringify(product),
+  })
+  const data = await res.json()
+  if (!res.ok) throw new Error(data.error || 'Failed to save the product')
+  return data
+}
+
+export async function fetchMerchantProducts(shop) {
+  const res = await fetch(`${BASE_URL}/merchant-products?shop=${encodeURIComponent(shop)}`, {
+    headers: await shopAuthHeaders(),
+  })
+  const data = await res.json()
+  if (!res.ok) throw new Error(data.error || 'Failed to load your designs')
+  return Array.isArray(data) ? data : []
+}
+
 export async function fetchProductMappings(shop) {
   const res = await fetch(`${BASE_URL}/product-mappings?shop=${encodeURIComponent(shop)}`)
   const data = await res.json()

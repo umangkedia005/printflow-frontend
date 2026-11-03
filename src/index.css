@@ -104,3 +104,9 @@ body {
   from { opacity: 0; transform: translateY(10px); }
   to   { opacity: 1; transform: translateY(0); }
 }
+
+/* Design editor: stack preview above the controls on narrow screens */
+@media (max-width: 820px) {
+  .pf-editor-body { flex-direction: column; }
+  .pf-editor-panel { flex: 1 1 auto !important; border-left: none !important; border-top: 1px solid #E8E8E4; overflow-y: visible !important; }
+}
