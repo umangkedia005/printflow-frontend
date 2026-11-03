@@ -34,9 +34,11 @@ async function request(path, options = {}) {
   return data
 }
 
+// Shopify orders only; orders the merchant placed themselves have their own
+// tab (fetchManualOrders).
 export async function fetchOrders(shop) {
   const data = await request(`/orders?shop=${encodeURIComponent(shop)}`)
-  return Array.isArray(data) ? data.map(formatOrder) : []
+  return Array.isArray(data) ? data.filter(o => o.source !== 'manual').map(formatOrder) : []
 }
 
 export async function fetchProducts(shop) {
@@ -315,4 +317,40 @@ function formatDate(iso) {
   return new Date(iso).toLocaleDateString('en-IN', {
     day: 'numeric', month: 'short', year: 'numeric'
   })
+}
+
+// Orders a merchant places themselves, priced and paid from the wallet on
+// the server; the browser only sends what was picked.
+export async function quoteManualOrder(shop, lines, shippingMethod) {
+  const res = await fetch(`${BASE_URL}/manual-orders/quote`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...(await shopAuthHeaders()) },
+    body: JSON.stringify({ shop, lines, shipping_method: shippingMethod }),
+  })
+  const data = await res.json()
+  if (!res.ok) throw new Error(data.error || 'Could not price this order')
+  return data
+}
+
+export async function placeManualOrder(order) {
+  const res = await fetch(`${BASE_URL}/manual-orders`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...(await shopAuthHeaders()) },
+    body: JSON.stringify(order),
+  })
+  const data = await res.json()
+  if (!res.ok) {
+    const err = new Error(data.error || 'Could not place the order')
+    err.status = res.status
+    err.details = data
+    throw err
+  }
+  return data
+}
+
+export async function fetchManualOrders(shop) {
+  const res = await fetch(`${BASE_URL}/manual-orders?shop=${encodeURIComponent(shop)}`, { headers: await shopAuthHeaders() })
+  const data = await res.json()
+  if (!res.ok) throw new Error(data.error || 'Failed to load your orders')
+  return Array.isArray(data) ? data : []
 }

@@ -5,6 +5,7 @@ import { openWalletTopup } from '../utils/razorpay'
 import { fetchOrders, fetchSubscription, fetchMyStores, linkStore, updateSubscription, fetchPlans, fetchWallet, fulfillOrder, fetchProductMappings, updateProductMapping, createShopifySubscription, fetchCatalogue } from '../utils/api'
 import { SHOPIFY_INSTALL_URL } from '../utils/shopify'
 import CatalogueView from '../components/catalogue/CatalogueView'
+import ManualOrdersView from '../components/orders/ManualOrders'
 
 // ── Data ─────────────────────────────────────────────────────────────────────
 
@@ -617,6 +618,7 @@ export default function DashboardPage() {
   const [searchParams, setSearchParams] = useSearchParams()
 
   const [activeNav, setActiveNav]           = useState('dashboard')
+  const [ordersTab, setOrdersTab]           = useState('shopify')
   // The Catalogue tab only appears once at least one product is marked
   // "Visible to merchants" in the admin, so it can be switched off from there.
   const [catalogueOn, setCatalogueOn]       = useState(false)
@@ -1762,9 +1764,16 @@ export default function DashboardPage() {
             <>
               <div style={{ marginBottom: '28px', position: 'relative', zIndex: 1 }}>
                 <h1 style={{ fontFamily: "'Fraunces', sans-serif", fontSize: '26px', fontWeight: 800, color: '#172B15', letterSpacing: '-0.5px', marginBottom: '4px' }}>Order Management</h1>
-                <p style={{ fontSize: '13px', color: '#889B8E', fontWeight: 500 }}>Fulfillment status and print orders synced directly from <span style={{ color: '#172B15', fontWeight: 600 }}>{shopDomain}</span>.</p>
+                <p style={{ fontSize: '13px', color: '#889B8E', fontWeight: 500 }}>Orders from <span style={{ color: '#172B15', fontWeight: 600 }}>{shopDomain}</span>, and orders you place yourself.</p>
+                <div style={{ display: 'inline-flex', background: 'rgba(23,43,21,0.05)', borderRadius: '14px', padding: '4px', marginTop: '18px' }}>
+                  {[['shopify', 'Shopify orders'], ['manual', 'Manual orders']].map(([id, text]) => (
+                    <button key={id} onClick={() => setOrdersTab(id)} style={{ padding: '9px 18px', border: 'none', borderRadius: '11px', background: ordersTab === id ? '#FFFFFF' : 'transparent', boxShadow: ordersTab === id ? '0 2px 8px rgba(23,43,21,0.06)' : 'none', fontSize: '13px', fontWeight: 700, color: ordersTab === id ? '#172B15' : '#889B8E', cursor: 'pointer', fontFamily: 'Inter, sans-serif' }}>{text}</button>
+                  ))}
+                </div>
               </div>
-              <OrdersManagement />
+              {ordersTab === 'shopify'
+                ? <OrdersManagement />
+                : <div style={{ position: 'relative', zIndex: 1 }}><ManualOrdersView shopDomain={shopDomain} walletBalance={walletBalance} onWalletChanged={loadWallet} onTopUp={() => setShowTopup(true)} /></div>}
             </>
           )}
           {activeNav === 'catalogue' && catalogueOn && <div style={{ position: 'relative', zIndex: 1 }}><CatalogueView shopDomain={shopDomain} /></div>}
