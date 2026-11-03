@@ -4,10 +4,11 @@ import { uploadArtwork, saveMerchantProduct } from '../../utils/api'
 
 const MAX_FILE_BYTES = 50 * 1024 * 1024
 const GOOD_DPI = 300
+const FULL_VIEW = { x: 0, y: 0, w: 1 }
 
-// The print area keeps its own measurements in inches; everything about the
-// artwork's placement is stored in inches from its top-left corner too, so
-// the preview, the backend check and the factory file all agree.
+// Each print area keeps its own measurements in inches; the artwork's
+// placement is stored in inches from the area's top-left corner too, so the
+// preview, the backend check and the factory file all agree.
 function clampPlacement(p, area, ratio) {
   const w = Math.min(p.w, area.width_in, area.height_in / ratio)
   const h = w * ratio
@@ -44,8 +45,10 @@ function Step({ n, title, children }) {
 }
 
 export default function DesignEditor({ blank, shopDomain, onClose, onSaved }) {
-  const area = blank.print_areas[0]
-  const sizesInStock = [...new Set(blank.variants.filter(v => v.in_stock).map(v => v.size))]
+  const areas = blank.print_areas
+  const sizesInStock = blank.sizes?.length
+    ? blank.sizes.filter(s => blank.variants.some(v => v.size === s && v.in_stock))
+    : [...new Set(blank.variants.filter(v => v.in_stock).map(v => v.size))]
 
   const [previewColor, setPreviewColor] = useState(blank.colors[0].name)
   const [colors, setColors] = useState([blank.colors[0].name])
@@ -53,14 +56,18 @@ export default function DesignEditor({ blank, shopDomain, onClose, onSaved }) {
   const [title, setTitle] = useState(blank.name)
   const [description, setDescription] = useState('')
   const [prices, setPrices] = useState({})
-  const [artwork, setArtwork] = useState(null)
-  const [placement, setPlacement] = useState(null)
+  const [activeAreaId, setActiveAreaId] = useState(areas[0].id)
+  const [fullView, setFullView] = useState(false)
+  // Keyed by print area id.
+  const [artworks, setArtworks] = useState({})
+  const [placements, setPlacements] = useState({})
   const [uploadError, setUploadError] = useState('')
   const [saving, setSaving] = useState(false)
   const [saveError, setSaveError] = useState('')
 
   const frameRef = useRef(null)
   const dragRef = useRef(null)
+  const previewUrlsRef = useRef([])
   const [frameWidth, setFrameWidth] = useState(0)
 
   useEffect(() => {
@@ -71,15 +78,26 @@ export default function DesignEditor({ blank, shopDomain, onClose, onSaved }) {
     return () => observer.disconnect()
   }, [])
 
-  // Release the local preview when the image changes or the editor closes.
-  useEffect(() => () => { if (artwork?.previewUrl) URL.revokeObjectURL(artwork.previewUrl) }, [artwork?.previewUrl])
+  // Release every local preview when the editor closes.
+  useEffect(() => () => previewUrlsRef.current.forEach(u => URL.revokeObjectURL(u)), [])
 
-  const box = area.mockup_box
-  const boxPx = { left: box.x * frameWidth, top: box.y * frameWidth, width: box.w * frameWidth, height: box.h * frameWidth }
-  const pxPerInch = boxPx.width / area.width_in
+  const area = areas.find(a => a.id === activeAreaId)
+  const artwork = artworks[area.id]
+  const placement = placements[area.id]
   const ratio = artwork ? artwork.px_h / artwork.px_w : 1
-  const dpi = artwork && placement ? Math.round(artwork.px_w / placement.w) : null
   const minDpi = area.min_dpi || 150
+  const dpi = artwork && placement ? Math.round(artwork.px_w / placement.w) : null
+
+  const previewEntry = blank.colors.find(c => c.name === previewColor)
+  const previewHex = previewEntry?.hex || '#FFFFFF'
+  const photoUrl = previewEntry?.image_url
+  const view = fullView ? FULL_VIEW : (area.view || FULL_VIEW)
+  const scale = frameWidth / view.w
+
+  function boxPxFor(a) {
+    const b = a.mockup_box
+    return { left: (b.x - view.x) * scale, top: (b.y - view.y) * scale, width: b.w * scale, height: b.h * scale }
+  }
 
   // Base cost per size is the dearest of the chosen colors, so a price that
   // clears it is profitable for every variant.
@@ -99,50 +117,68 @@ export default function DesignEditor({ blank, shopDomain, onClose, onSaved }) {
     if (!['image/png', 'image/jpeg'].includes(file.type)) return setUploadError('Use a PNG or JPG file. PNG with a transparent background prints best.')
     if (file.size > MAX_FILE_BYTES) return setUploadError('That file is over 50 MB.')
 
+    const target = area
     const previewUrl = URL.createObjectURL(file)
+    previewUrlsRef.current.push(previewUrl)
     let size
     try {
       size = await readImageSize(previewUrl)
     } catch (err) {
-      URL.revokeObjectURL(previewUrl)
       return setUploadError(err.message)
     }
 
     const r = size.h / size.w
-    const fitWidth = Math.min(area.width_in, area.height_in / r) * 0.9
-    setPlacement(clampPlacement({ w: fitWidth, x: (area.width_in - fitWidth) / 2, y: 1 }, area, r))
-    setArtwork({ name: file.name, previewUrl, px_w: size.w, px_h: size.h, s3_key: null, uploading: true })
+    const fitWidth = Math.min(target.width_in, target.height_in / r) * 0.9
+    const startY = Math.min(1, Math.max(0, target.height_in - fitWidth * r) / 2)
+    setPlacements(p => ({ ...p, [target.id]: clampPlacement({ w: fitWidth, x: (target.width_in - fitWidth) / 2, y: startY }, target, r) }))
+    setArtworks(a => ({ ...a, [target.id]: { name: file.name, previewUrl, px_w: size.w, px_h: size.h, s3_key: null, uploading: true } }))
+    setFullView(false)
 
+    // Only apply the result if this file is still the one in that area.
+    const settle = patch => setArtworks(a => (a[target.id]?.previewUrl === previewUrl ? { ...a, [target.id]: { ...a[target.id], ...patch } } : a))
     try {
-      const key = await uploadArtwork(shopDomain, file)
-      setArtwork(a => (a?.previewUrl === previewUrl ? { ...a, s3_key: key, uploading: false } : a))
+      settle({ s3_key: await uploadArtwork(shopDomain, file), uploading: false })
     } catch (err) {
       setUploadError(err.message)
-      setArtwork(a => (a?.previewUrl === previewUrl ? { ...a, uploading: false } : a))
+      settle({ uploading: false })
     }
   }
 
+  function removeArtwork() {
+    const without = obj => Object.fromEntries(Object.entries(obj).filter(([id]) => id !== area.id))
+    setArtworks(without)
+    setPlacements(without)
+  }
+
   function onPointerDown(e) {
+    if (fullView) return
     e.preventDefault()
     e.currentTarget.setPointerCapture(e.pointerId)
     dragRef.current = { startX: e.clientX, startY: e.clientY, from: placement }
   }
   function onPointerMove(e) {
     const drag = dragRef.current
-    if (!drag || !pxPerInch) return
-    setPlacement(clampPlacement({
-      w: drag.from.w,
-      x: drag.from.x + (e.clientX - drag.startX) / pxPerInch,
-      y: drag.from.y + (e.clientY - drag.startY) / pxPerInch,
-    }, area, ratio))
+    if (!drag) return
+    const pxPerInch = boxPxFor(area).width / area.width_in
+    setPlacements(p => ({
+      ...p,
+      [area.id]: clampPlacement({
+        w: drag.from.w,
+        x: drag.from.x + (e.clientX - drag.startX) / pxPerInch,
+        y: drag.from.y + (e.clientY - drag.startY) / pxPerInch,
+      }, area, ratio),
+    }))
   }
   function onPointerUp() { dragRef.current = null }
 
+  function setPlacement(update) {
+    setPlacements(p => ({ ...p, [area.id]: clampPlacement(update(p[area.id]), area, ratio) }))
+  }
   // Resize around the artwork's centre so it doesn't drift while scaling.
   function resizeTo(w) {
     setPlacement(p => {
       const cx = p.x + p.w / 2, cy = p.y + (p.w * ratio) / 2
-      return clampPlacement({ w, x: cx - w / 2, y: cy - (w * ratio) / 2 }, area, ratio)
+      return { w, x: cx - w / 2, y: cy - (w * ratio) / 2 }
     })
   }
 
@@ -150,11 +186,16 @@ export default function DesignEditor({ blank, shopDomain, onClose, onSaved }) {
     setList(list.includes(value) ? list.filter(v => v !== value) : [...list, value])
   }
 
+  const placedAreas = areas.filter(a => artworks[a.id])
   const problems = []
-  if (!artwork) problems.push('Upload your artwork')
-  else if (artwork.uploading) problems.push('Waiting for the upload to finish')
-  else if (!artwork.s3_key) problems.push('Upload the artwork again')
-  if (dpi !== null && dpi < minDpi) problems.push(`Make the artwork smaller or use a higher-resolution file (${dpi} DPI, needs ${minDpi})`)
+  if (!placedAreas.length) problems.push('Upload artwork for at least one print area')
+  placedAreas.forEach(a => {
+    const art = artworks[a.id]
+    const d = Math.round(art.px_w / placements[a.id].w)
+    if (art.uploading) problems.push(`Waiting for the ${a.label} upload to finish`)
+    else if (!art.s3_key) problems.push(`Upload the ${a.label} artwork again`)
+    if (d < (a.min_dpi || 150)) problems.push(`${a.label}: make the artwork smaller or use a higher-resolution file (${d} DPI)`)
+  })
   if (!colors.length) problems.push('Pick at least one color')
   if (!sizes.length) problems.push('Pick at least one size')
   if (!title.trim()) problems.push('Add a product title')
@@ -172,12 +213,10 @@ export default function DesignEditor({ blank, shopDomain, onClose, onSaved }) {
         colors,
         sizes,
         prices: Object.fromEntries(sizes.map(s => [s, Number(priceFor(s))])),
-        artwork: {
-          [area.id]: {
-            s3_key: artwork.s3_key, px_w: artwork.px_w, px_h: artwork.px_h,
-            x_in: placement.x, y_in: placement.y, width_in: placement.w,
-          },
-        },
+        artwork: Object.fromEntries(placedAreas.map(a => {
+          const art = artworks[a.id], p = placements[a.id]
+          return [a.id, { s3_key: art.s3_key, px_w: art.px_w, px_h: art.px_h, x_in: p.x, y_in: p.y, width_in: p.w }]
+        })),
       })
       onSaved()
     } catch (err) {
@@ -187,9 +226,37 @@ export default function DesignEditor({ blank, shopDomain, onClose, onSaved }) {
     }
   }
 
-  const previewHex = blank.colors.find(c => c.name === previewColor)?.hex || '#FFFFFF'
+  function renderArea(a) {
+    const art = artworks[a.id], p = placements[a.id]
+    const box = boxPxFor(a)
+    const active = !fullView && a.id === area.id
+    const pxPerInch = box.width / a.width_in
+    return (
+      <div key={a.id} style={{ position: 'absolute', ...box, outline: active ? '1.5px dashed rgba(59,130,246,0.8)' : 'none' }}>
+        {active && !art && (
+          <div style={{ position: 'absolute', inset: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', textAlign: 'center', fontSize: '12px', color: 'rgba(59,130,246,0.95)', fontWeight: 600, padding: '8px', background: 'rgba(59,130,246,0.06)' }}>
+            {a.label} print area
+          </div>
+        )}
+        {art && p && (
+          <img
+            src={art.previewUrl}
+            alt={`${a.label} artwork`}
+            draggable={false}
+            onPointerDown={active ? onPointerDown : undefined}
+            onPointerMove={active ? onPointerMove : undefined}
+            onPointerUp={active ? onPointerUp : undefined}
+            onPointerCancel={active ? onPointerUp : undefined}
+            style={{ position: 'absolute', left: p.x * pxPerInch, top: p.y * pxPerInch, width: p.w * pxPerInch, height: p.w * (art.px_h / art.px_w) * pxPerInch, cursor: active ? 'move' : 'default', touchAction: 'none', userSelect: 'none', opacity: art.uploading ? 0.6 : 1 }}
+          />
+        )}
+      </div>
+    )
+  }
+
   const dpiTone = dpi === null ? null : dpi >= GOOD_DPI ? ['#F0FDF4', '#166534', 'Sharp print'] : dpi >= minDpi ? ['#FFF7ED', '#C2410C', 'Acceptable, may look soft up close'] : ['#FFF5F5', '#C53030', 'Too low to print']
   const inputStyle = { width: '100%', padding: '10px 12px', boxSizing: 'border-box', border: '1.5px solid #E8E8E4', borderRadius: '10px', fontSize: '13px', outline: 'none', fontFamily: 'Inter, sans-serif' }
+  const chip = on => ({ padding: '6px 12px', borderRadius: '8px', border: on ? '1.5px solid #0A0A0A' : '1px solid #E8E8E4', background: on ? '#0A0A0A' : '#FFFFFF', color: on ? '#FFFFFF' : '#555', fontSize: '12px', fontWeight: 700, cursor: 'pointer', fontFamily: 'Inter, sans-serif' })
 
   return (
     <div style={{ position: 'fixed', inset: 0, zIndex: 300, background: 'rgba(0,0,0,0.45)', backdropFilter: 'blur(6px)', WebkitBackdropFilter: 'blur(6px)', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '16px' }}>
@@ -197,36 +264,26 @@ export default function DesignEditor({ blank, shopDomain, onClose, onSaved }) {
         <div style={{ padding: '18px 24px', borderBottom: '1px solid #E8E8E4', display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '12px' }}>
           <div style={{ minWidth: 0 }}>
             <h2 style={{ fontFamily: "'Fraunces', sans-serif", fontSize: '18px', fontWeight: 800, color: '#0A0A0A' }}>Design: {blank.name}</h2>
-            <p style={{ fontSize: '12px', color: '#999', marginTop: '3px' }}>{area.label} print area · {area.width_in}″ × {area.height_in}″</p>
+            <p style={{ fontSize: '12px', color: '#999', marginTop: '3px' }}>{areas.map(a => `${a.label} ${a.width_in}″ × ${a.height_in}″`).join(' · ')}</p>
           </div>
           <button onClick={onClose} aria-label="Close" style={{ width: '30px', height: '30px', background: '#F4F4F0', border: 'none', borderRadius: '8px', fontSize: '14px', color: '#888', cursor: 'pointer', flexShrink: 0 }}>✕</button>
         </div>
 
         <div className="pf-editor-body" style={{ display: 'flex', flex: 1, minHeight: 0, overflow: 'auto' }}>
-          <div style={{ flex: '1 1 55%', padding: '24px', minWidth: 0 }}>
-            <div ref={frameRef} style={{ maxWidth: '560px', margin: '0 auto' }}>
-              <GarmentMockup type={blank.mockup} color={previewHex} photoUrl={blank.mockup_images?.[previewColor]}>
-                {frameWidth > 0 && (
-                  <div style={{ position: 'absolute', ...boxPx, outline: '1.5px dashed rgba(59,130,246,0.7)', outlineOffset: '0' }}>
-                    {!artwork && (
-                      <div style={{ position: 'absolute', inset: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', textAlign: 'center', fontSize: '12px', color: 'rgba(59,130,246,0.9)', fontWeight: 600, padding: '8px' }}>
-                        Print area
-                      </div>
-                    )}
-                    {artwork && placement && (
-                      <img
-                        src={artwork.previewUrl}
-                        alt="Your artwork"
-                        draggable={false}
-                        onPointerDown={onPointerDown}
-                        onPointerMove={onPointerMove}
-                        onPointerUp={onPointerUp}
-                        onPointerCancel={onPointerUp}
-                        style={{ position: 'absolute', left: placement.x * pxPerInch, top: placement.y * pxPerInch, width: placement.w * pxPerInch, height: placement.w * ratio * pxPerInch, cursor: 'move', touchAction: 'none', userSelect: 'none', opacity: artwork.uploading ? 0.6 : 1 }}
-                      />
-                    )}
-                  </div>
-                )}
+          <div style={{ flex: '1 1 55%', padding: '20px 24px', minWidth: 0 }}>
+            <div style={{ display: 'flex', justifyContent: 'center', gap: '6px', marginBottom: '14px', flexWrap: 'wrap' }}>
+              {areas.map(a => (
+                <button key={a.id} onClick={() => { setActiveAreaId(a.id); setFullView(false) }} style={chip(!fullView && a.id === area.id)}>
+                  {a.label}{artworks[a.id] ? ' ✓' : ''}
+                </button>
+              ))}
+              {areas.some(a => a.view) && (
+                <button onClick={() => setFullView(true)} style={chip(fullView)}>Full preview</button>
+              )}
+            </div>
+            <div ref={frameRef} style={{ maxWidth: '520px', margin: '0 auto' }}>
+              <GarmentMockup type={blank.mockup} color={previewHex} photoUrl={photoUrl} view={view}>
+                {frameWidth > 0 && (fullView ? areas.map(renderArea) : renderArea(area))}
               </GarmentMockup>
             </div>
             <div style={{ display: 'flex', justifyContent: 'center', gap: '8px', marginTop: '14px', flexWrap: 'wrap' }}>
@@ -234,28 +291,34 @@ export default function DesignEditor({ blank, shopDomain, onClose, onSaved }) {
                 <button key={c.name} title={c.name} onClick={() => setPreviewColor(c.name)} style={{ width: '26px', height: '26px', borderRadius: '50%', background: c.hex, border: previewColor === c.name ? '2px solid #0A0A0A' : '1px solid #D8D8D4', outline: previewColor === c.name ? '2px solid #FFFFFF' : 'none', outlineOffset: '-4px', cursor: 'pointer' }} />
               ))}
             </div>
-            <p style={{ textAlign: 'center', fontSize: '11px', color: '#BABAB6', marginTop: '8px' }}>Preview color: {previewColor} · drag the artwork to move it</p>
+            <p style={{ textAlign: 'center', fontSize: '11px', color: '#BABAB6', marginTop: '8px' }}>
+              Preview color: {previewColor}{fullView ? '' : ' · drag the artwork to move it'}
+            </p>
           </div>
 
           <div className="pf-editor-panel" style={{ flex: '0 0 380px', borderLeft: '1px solid #E8E8E4', padding: '0 24px 24px', overflowY: 'auto' }}>
-            <Step n={1} title="Artwork">
+            <Step n={1} title={`Artwork: ${area.label}`}>
               <label className="pf-btn-outline" style={{ width: '100%', boxSizing: 'border-box', cursor: 'pointer', fontSize: '13px', padding: '10px 16px' }}>
-                {artwork ? 'Replace artwork' : 'Upload PNG or JPG'}
+                {artwork ? `Replace ${area.label.toLowerCase()} artwork` : `Upload ${area.label.toLowerCase()} artwork (PNG or JPG)`}
                 <input type="file" accept="image/png,image/jpeg" onChange={handleFile} style={{ display: 'none' }} />
               </label>
+              {areas.length > 1 && !artwork && <p style={{ fontSize: '11px', color: '#BABAB6', marginTop: '6px' }}>Optional. Leave it empty to print nothing here.</p>}
               {uploadError && <div style={{ fontSize: '12px', color: '#C53030', marginTop: '8px' }}>⚠ {uploadError}</div>}
-              {artwork && (
+              {artwork && placement && (
                 <>
-                  <div style={{ fontSize: '11px', color: '#999', marginTop: '8px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-                    {artwork.name} · {artwork.px_w}×{artwork.px_h}px {artwork.uploading ? '· uploading…' : artwork.s3_key ? '· uploaded ✓' : ''}
+                  <div style={{ display: 'flex', justifyContent: 'space-between', gap: '8px', fontSize: '11px', color: '#999', marginTop: '8px' }}>
+                    <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                      {artwork.name} · {artwork.px_w}×{artwork.px_h}px {artwork.uploading ? '· uploading…' : artwork.s3_key ? '· uploaded ✓' : ''}
+                    </span>
+                    <button onClick={removeArtwork} style={{ background: 'none', border: 'none', color: '#C53030', fontSize: '11px', cursor: 'pointer', padding: 0, flexShrink: 0 }}>Remove</button>
                   </div>
                   <label style={{ display: 'block', fontSize: '12px', fontWeight: 600, color: '#555', margin: '14px 0 6px' }}>
                     Width: {placement.w.toFixed(1)}″ × {(placement.w * ratio).toFixed(1)}″
                   </label>
-                  <input type="range" min={1} max={Math.min(area.width_in, area.height_in / ratio)} step={0.1} value={placement.w} onChange={e => resizeTo(Number(e.target.value))} style={{ width: '100%' }} />
+                  <input type="range" min={0.5} max={Math.min(area.width_in, area.height_in / ratio)} step={0.1} value={placement.w} onChange={e => resizeTo(Number(e.target.value))} style={{ width: '100%' }} />
                   <div style={{ display: 'flex', gap: '8px', marginTop: '10px' }}>
                     <button className="pf-btn-outline" style={{ flex: 1, padding: '7px', fontSize: '12px' }} onClick={() => setPlacement(p => ({ ...p, x: (area.width_in - p.w) / 2 }))}>Center</button>
-                    <button className="pf-btn-outline" style={{ flex: 1, padding: '7px', fontSize: '12px' }} onClick={() => setPlacement(clampPlacement({ w: area.width_in, x: 0, y: 0 }, area, ratio))}>Fill area</button>
+                    <button className="pf-btn-outline" style={{ flex: 1, padding: '7px', fontSize: '12px' }} onClick={() => setPlacement(() => ({ w: area.width_in, x: 0, y: 0 }))}>Fill area</button>
                   </div>
                   {dpiTone && (
                     <div style={{ marginTop: '12px', background: dpiTone[0], color: dpiTone[1], borderRadius: '8px', padding: '8px 12px', fontSize: '12px', fontWeight: 600 }}>
@@ -282,12 +345,9 @@ export default function DesignEditor({ blank, shopDomain, onClose, onSaved }) {
 
             <Step n={3} title="Sizes and prices">
               <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px', marginBottom: '12px' }}>
-                {sizesInStock.map(s => {
-                  const on = sizes.includes(s)
-                  return (
-                    <button key={s} onClick={() => toggle(sizes, setSizes, s)} style={{ minWidth: '42px', padding: '6px 10px', borderRadius: '8px', border: on ? '1.5px solid #0A0A0A' : '1px solid #E8E8E4', background: on ? '#0A0A0A' : '#FFFFFF', color: on ? '#FFFFFF' : '#555', fontSize: '12px', fontWeight: 700, cursor: 'pointer', fontFamily: 'Inter, sans-serif' }}>{s}</button>
-                  )
-                })}
+                {sizesInStock.map(s => (
+                  <button key={s} onClick={() => toggle(sizes, setSizes, s)} style={{ ...chip(sizes.includes(s)), minWidth: '42px' }}>{s}</button>
+                ))}
               </div>
               {sizes.length > 0 && colors.length > 0 && (
                 <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '12px' }}>

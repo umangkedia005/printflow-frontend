@@ -41,7 +41,7 @@ function BlankCard({ blank, onDesign, onSizeChart }) {
   return (
     <div style={{ background: '#FFFFFF', border: '1px solid #E8E8E4', borderRadius: '16px', padding: '14px', display: 'flex', flexDirection: 'column' }}>
       <div style={{ position: 'relative' }}>
-        <GarmentMockup type={blank.mockup} color={blank.colors[0].hex} photoUrl={blank.mockup_images?.[blank.colors[0].name]} />
+        <GarmentMockup type={blank.mockup} color={blank.colors[0].hex} photoUrl={blank.colors[0].image_url} />
         {blank.size_chart && (
           <button onClick={onSizeChart} style={{ position: 'absolute', top: '10px', right: '10px', background: '#FFFFFF', border: '1px solid #E8E8E4', borderRadius: '8px', padding: '5px 10px', fontSize: '11px', fontWeight: 600, color: '#555', cursor: 'pointer', fontFamily: 'Inter, sans-serif' }}>Size chart</button>
         )}
