@@ -2,7 +2,7 @@ import React, { useState, useEffect, useCallback } from 'react'
 import { useNavigate, useSearchParams } from 'react-router-dom'
 import { useAuth } from '../contexts/AuthContext'
 import { openWalletTopup } from '../utils/razorpay'
-import { fetchOrders, fetchSubscription, fetchMyStores, linkStore, updateSubscription, fetchPlans, fetchWallet, fulfillOrder, fetchProductMappings, updateProductMapping, createShopifySubscription } from '../utils/api'
+import { fetchOrders, fetchSubscription, fetchMyStores, linkStore, updateSubscription, fetchPlans, fetchWallet, fulfillOrder, fetchProductMappings, updateProductMapping, createShopifySubscription, fetchCatalogue } from '../utils/api'
 import { SHOPIFY_INSTALL_URL } from '../utils/shopify'
 import CatalogueView from '../components/catalogue/CatalogueView'
 
@@ -617,6 +617,13 @@ export default function DashboardPage() {
   const [searchParams, setSearchParams] = useSearchParams()
 
   const [activeNav, setActiveNav]           = useState('dashboard')
+  // The Catalogue tab only appears once at least one product is marked
+  // "Visible to merchants" in the admin, so it can be switched off from there.
+  const [catalogueOn, setCatalogueOn]       = useState(false)
+
+  useEffect(() => {
+    fetchCatalogue().then(blanks => setCatalogueOn(blanks.length > 0)).catch(() => setCatalogueOn(false))
+  }, [])
   const [statusFilter, setStatusFilter]     = useState('all')
   const [selectedOrder, setSelectedOrder]   = useState(null)
   const [fulfillLoading, setFulfillLoading] = useState(false)
@@ -1648,6 +1655,7 @@ export default function DashboardPage() {
           {/* Section 2: Store Hub */}
           <div style={{ fontSize: '10.5px', fontWeight: 800, letterSpacing: '0.08em', textTransform: 'uppercase', color: '#7A7A70', padding: '20px 18px 8px', marginBottom: '4px' }}>Store Hub</div>
           {NAV_ITEMS.slice(3, 6).map(({ id, label, Icon }) => {
+            if (id === 'catalogue' && !catalogueOn) return null
             const active = activeNav === id
             return (
               <button key={id} onClick={() => setActiveNav(id)} style={{ display: 'flex', alignItems: 'center', gap: '12px', width: '100%', padding: '12px 18px', border: 'none', background: active ? '#FFFFFF' : 'transparent', color: '#172B15', fontSize: '14.5px', fontWeight: active ? 800 : 600, cursor: 'pointer', textAlign: 'left', marginBottom: '6px', fontFamily: 'Inter, sans-serif', transition: 'all 0.2s', justifyContent: 'space-between', borderRadius: '12px', boxShadow: active ? '0 4px 12px rgba(23,43,21,0.04)' : 'none' }}
@@ -1759,7 +1767,7 @@ export default function DashboardPage() {
               <OrdersManagement />
             </>
           )}
-          {activeNav === 'catalogue' && <div style={{ position: 'relative', zIndex: 1 }}><CatalogueView shopDomain={shopDomain} /></div>}
+          {activeNav === 'catalogue' && catalogueOn && <div style={{ position: 'relative', zIndex: 1 }}><CatalogueView shopDomain={shopDomain} /></div>}
           {activeNav === 'products' && <div style={{ position: 'relative', zIndex: 1 }}><ProductsView /></div>}
           {activeNav === 'billing'  && <div style={{ position: 'relative', zIndex: 1 }}><BillingView /></div>}
           {activeNav === 'wallet'   && <div style={{ position: 'relative', zIndex: 1 }}><WalletView /></div>}
