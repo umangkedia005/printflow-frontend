@@ -24,7 +24,7 @@ function isDark(hex) {
 // `zoom` shows a square part of the photo (fractions of it), e.g. just the
 // front of a photo that shows front and back side by side. Children are laid
 // over the visible frame.
-export default function GarmentMockup({ type, color, photoUrl, zoom = FULL_PHOTO, children }) {
+export default function GarmentMockup({ type, color, photoUrl, zoom = FULL_PHOTO, smooth = false, children }) {
   const shape = SHAPES[type] || SHAPES.tee
   const line = isDark(color) ? 'rgba(255,255,255,0.18)' : 'rgba(0,0,0,0.16)'
   const gradientId = `shade-${type}`
@@ -36,6 +36,8 @@ export default function GarmentMockup({ type, color, photoUrl, zoom = FULL_PHOTO
     height: `${100 / zoom.w}%`,
     left: `${(-zoom.x / zoom.w) * 100}%`,
     top: `${(-zoom.y / zoom.w) * 100}%`,
+    // Animate zoom steps; off while the user is dragging the view around.
+    transition: smooth ? 'all 0.28s ease' : 'none',
   }
 
   return (

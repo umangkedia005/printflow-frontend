@@ -6,6 +6,14 @@ const MAX_FILE_BYTES = 50 * 1024 * 1024
 const GOOD_DPI = 300
 const PREVIEW = '__preview'
 const FULL_PHOTO = { x: 0, y: 0, w: 1 }
+const ZOOM_STEP = 2.5
+const MIN_VIEW = 0.12
+
+// Keep a zoomed view (a square part of the photo) inside the photo.
+function clampView(v) {
+  const w = Math.min(1, Math.max(MIN_VIEW, v.w))
+  return { w, x: Math.min(Math.max(v.x, 0), 1 - w), y: Math.min(Math.max(v.y, 0), 1 - w) }
+}
 
 // Each print area keeps its own measurements in inches; the artwork's
 // placement is stored in inches from the area's top-left corner too, so the
@@ -60,6 +68,9 @@ export default function DesignEditor({ blank, shopDomain, onClose, onSaved }) {
   const [description, setDescription] = useState('')
   const [prices, setPrices] = useState({})
   const [tab, setTab] = useState(areas[0].id)
+  // Where the merchant has zoomed to; null means the area's starting view.
+  const [view, setView] = useState(null)
+  const [panning, setPanning] = useState(false)
   // Keyed by print area id.
   const [artworks, setArtworks] = useState({})
   const [placements, setPlacements] = useState({})
@@ -68,6 +79,7 @@ export default function DesignEditor({ blank, shopDomain, onClose, onSaved }) {
   const [saveError, setSaveError] = useState('')
 
   const dragRef = useRef(null)
+  const panRef = useRef(null)
   const previewUrlsRef = useRef([])
 
   // Release every local preview when the editor closes.
@@ -142,6 +154,7 @@ export default function DesignEditor({ blank, shopDomain, onClose, onSaved }) {
   // the screen-pixels-per-inch for dragging at any zoom.
   function onPointerDown(e) {
     e.preventDefault()
+    e.stopPropagation()
     e.currentTarget.setPointerCapture(e.pointerId)
     const pxPerInch = e.currentTarget.parentElement.getBoundingClientRect().width / area.width_in
     dragRef.current = { startX: e.clientX, startY: e.clientY, from: placement, pxPerInch }
@@ -216,11 +229,57 @@ export default function DesignEditor({ blank, shopDomain, onClose, onSaved }) {
 
   // Positions are percentages of the visible frame, so the same markup works
   // in the large editor and in the small preview tiles.
+  function switchTab(id) {
+    setTab(id)
+    setView(null)
+  }
+
+  // Click the photo to zoom in on that spot (click again to zoom back out),
+  // drag it to look around while zoomed, like a shop's product gallery.
+  const startView = area.zoom || FULL_PHOTO
+  const shownView = view || startView
+  const zoomedIn = shownView.w < startView.w - 0.001
+
+  function zoomBy(factor, center) {
+    const v = shownView
+    const c = center || { x: v.x + v.w / 2, y: v.y + v.w / 2 }
+    const w = Math.min(1, v.w / factor)
+    setView(clampView({ w, x: c.x - w / 2, y: c.y - w / 2 }))
+  }
+  function onPhotoPointerDown(e) {
+    if (e.button !== 0) return
+    const rect = e.currentTarget.getBoundingClientRect()
+    e.currentTarget.setPointerCapture(e.pointerId)
+    panRef.current = { x: e.clientX, y: e.clientY, from: shownView, rect, moved: false }
+  }
+  function onPhotoPointerMove(e) {
+    const pan = panRef.current
+    if (!pan) return
+    const dx = e.clientX - pan.x, dy = e.clientY - pan.y
+    if (!pan.moved && Math.abs(dx) + Math.abs(dy) < 5) return
+    if (!pan.moved) { pan.moved = true; setPanning(true) }
+    const perPx = pan.from.w / pan.rect.width
+    setView(clampView({ w: pan.from.w, x: pan.from.x - dx * perPx, y: pan.from.y - dy * perPx }))
+  }
+  function onPhotoPointerUp(e) {
+    const pan = panRef.current
+    panRef.current = null
+    setPanning(false)
+    if (!pan || pan.moved) return
+    if (zoomedIn) return setView(null)
+    const v = shownView
+    zoomBy(ZOOM_STEP, {
+      x: v.x + ((e.clientX - pan.rect.left) / pan.rect.width) * v.w,
+      y: v.y + ((e.clientY - pan.rect.top) / pan.rect.width) * v.w,
+    })
+  }
+
   function renderArea(a, zoom, interactive) {
     const art = artworks[a.id], p = placements[a.id], b = a.mockup_box
     const pct = n => `${n * 100}%`
+    const smooth = interactive && !panning
     return (
-      <div key={a.id} style={{ position: 'absolute', left: pct((b.x - zoom.x) / zoom.w), top: pct((b.y - zoom.y) / zoom.w), width: pct(b.w / zoom.w), height: pct(b.h / zoom.w), outline: interactive ? '1.5px dashed rgba(59,130,246,0.8)' : 'none' }}>
+      <div key={a.id} style={{ position: 'absolute', left: pct((b.x - zoom.x) / zoom.w), top: pct((b.y - zoom.y) / zoom.w), width: pct(b.w / zoom.w), height: pct(b.h / zoom.w), outline: interactive ? '1.5px dashed rgba(59,130,246,0.8)' : 'none', transition: smooth ? 'all 0.28s ease' : 'none' }}>
         {interactive && !art && (
           <div style={{ position: 'absolute', inset: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', textAlign: 'center', fontSize: '12px', color: 'rgba(59,130,246,0.95)', fontWeight: 600, padding: '4px', background: 'rgba(59,130,246,0.06)', overflow: 'hidden' }}>
             {a.label}
@@ -264,11 +323,11 @@ export default function DesignEditor({ blank, shopDomain, onClose, onSaved }) {
           <div style={{ flex: '1 1 55%', padding: '20px 24px', minWidth: 0 }}>
             <div style={{ display: 'flex', justifyContent: 'center', gap: '6px', marginBottom: '14px', flexWrap: 'wrap' }}>
               {areas.map(a => (
-                <button key={a.id} onClick={() => setTab(a.id)} style={chip(!previewing && a.id === area.id)}>
+                <button key={a.id} onClick={() => switchTab(a.id)} style={chip(!previewing && a.id === area.id)}>
                   {a.label}{artworks[a.id] ? ' ✓' : ''}
                 </button>
               ))}
-              {areas.length > 1 && <button onClick={() => setTab(PREVIEW)} style={chip(previewing)}>Preview all</button>}
+              {areas.length > 1 && <button onClick={() => switchTab(PREVIEW)} style={chip(previewing)}>Preview all</button>}
             </div>
 
             {previewing ? (
@@ -283,10 +342,23 @@ export default function DesignEditor({ blank, shopDomain, onClose, onSaved }) {
                 ))}
               </div>
             ) : (
-              <div style={{ maxWidth: '520px', margin: '0 auto' }}>
-                <GarmentMockup type={blank.mockup} color={previewHex} photoUrl={photoFor(viewOf(area))} zoom={area.zoom || FULL_PHOTO}>
-                  {renderArea(area, area.zoom || FULL_PHOTO, true)}
-                </GarmentMockup>
+              <div style={{ maxWidth: '520px', margin: '0 auto', position: 'relative' }}>
+                <div
+                  onPointerDown={onPhotoPointerDown}
+                  onPointerMove={onPhotoPointerMove}
+                  onPointerUp={onPhotoPointerUp}
+                  onPointerCancel={() => { panRef.current = null; setPanning(false) }}
+                  style={{ cursor: panning ? 'grabbing' : zoomedIn ? 'zoom-out' : 'zoom-in', touchAction: 'none', userSelect: 'none' }}
+                >
+                  <GarmentMockup type={blank.mockup} color={previewHex} photoUrl={photoFor(viewOf(area))} zoom={shownView} smooth={!panning}>
+                    {renderArea(area, shownView, true)}
+                  </GarmentMockup>
+                </div>
+                <div style={{ position: 'absolute', right: '10px', bottom: '10px', display: 'flex', gap: '4px', background: 'rgba(255,255,255,0.92)', border: '1px solid #E8E8E4', borderRadius: '10px', padding: '3px' }}>
+                  {[['−', 'Zoom out', () => zoomBy(1 / 1.6)], ['+', 'Zoom in', () => zoomBy(1.6)], ['⤢', 'Fit', () => setView(null)]].map(([sym, title, fn]) => (
+                    <button key={title} title={title} aria-label={title} onClick={fn} style={{ width: '28px', height: '28px', border: 'none', background: 'transparent', borderRadius: '7px', fontSize: '15px', color: '#333', cursor: 'pointer' }}>{sym}</button>
+                  ))}
+                </div>
               </div>
             )}
 
@@ -296,7 +368,7 @@ export default function DesignEditor({ blank, shopDomain, onClose, onSaved }) {
               ))}
             </div>
             <p style={{ textAlign: 'center', fontSize: '11px', color: '#BABAB6', marginTop: '8px' }}>
-              Preview color: {previewColor}{previewing ? '' : ' · drag the artwork to move it'}
+              Preview color: {previewColor}{previewing ? '' : ' · drag the artwork to move it · click the photo to zoom'}
             </p>
           </div>
 
