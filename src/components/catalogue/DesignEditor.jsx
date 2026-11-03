@@ -4,7 +4,8 @@ import { uploadArtwork, saveMerchantProduct } from '../../utils/api'
 
 const MAX_FILE_BYTES = 50 * 1024 * 1024
 const GOOD_DPI = 300
-const FULL_VIEW = { x: 0, y: 0, w: 1 }
+const PREVIEW = '__preview'
+const FULL_PHOTO = { x: 0, y: 0, w: 1 }
 
 // Each print area keeps its own measurements in inches; the artwork's
 // placement is stored in inches from the area's top-left corner too, so the
@@ -19,8 +20,8 @@ function clampPlacement(p, area, ratio) {
   }
 }
 
-function suggestedPrice(baseCost) {
-  return Math.ceil((baseCost * 1.8) / 50) * 50 - 1
+function suggestedPrice(cost) {
+  return Math.ceil((cost * 1.8) / 50) * 50 - 1
 }
 
 function readImageSize(url) {
@@ -46,6 +47,8 @@ function Step({ n, title, children }) {
 
 export default function DesignEditor({ blank, shopDomain, onClose, onSaved }) {
   const areas = blank.print_areas
+  const views = blank.views?.length ? blank.views : [{ id: 'main', label: 'Main' }]
+  const viewOf = a => a.view_id || views[0].id
   const sizesInStock = blank.sizes?.length
     ? blank.sizes.filter(s => blank.variants.some(v => v.size === s && v.in_stock))
     : [...new Set(blank.variants.filter(v => v.in_stock).map(v => v.size))]
@@ -56,8 +59,7 @@ export default function DesignEditor({ blank, shopDomain, onClose, onSaved }) {
   const [title, setTitle] = useState(blank.name)
   const [description, setDescription] = useState('')
   const [prices, setPrices] = useState({})
-  const [activeAreaId, setActiveAreaId] = useState(areas[0].id)
-  const [fullView, setFullView] = useState(false)
+  const [tab, setTab] = useState(areas[0].id)
   // Keyed by print area id.
   const [artworks, setArtworks] = useState({})
   const [placements, setPlacements] = useState({})
@@ -65,23 +67,14 @@ export default function DesignEditor({ blank, shopDomain, onClose, onSaved }) {
   const [saving, setSaving] = useState(false)
   const [saveError, setSaveError] = useState('')
 
-  const frameRef = useRef(null)
   const dragRef = useRef(null)
   const previewUrlsRef = useRef([])
-  const [frameWidth, setFrameWidth] = useState(0)
-
-  useEffect(() => {
-    const el = frameRef.current
-    if (!el) return
-    const observer = new ResizeObserver(([entry]) => setFrameWidth(entry.contentRect.width))
-    observer.observe(el)
-    return () => observer.disconnect()
-  }, [])
 
   // Release every local preview when the editor closes.
   useEffect(() => () => previewUrlsRef.current.forEach(u => URL.revokeObjectURL(u)), [])
 
-  const area = areas.find(a => a.id === activeAreaId)
+  const previewing = tab === PREVIEW
+  const area = areas.find(a => a.id === tab) || areas[0]
   const artwork = artworks[area.id]
   const placement = placements[area.id]
   const ratio = artwork ? artwork.px_h / artwork.px_w : 1
@@ -90,23 +83,19 @@ export default function DesignEditor({ blank, shopDomain, onClose, onSaved }) {
 
   const previewEntry = blank.colors.find(c => c.name === previewColor)
   const previewHex = previewEntry?.hex || '#FFFFFF'
-  const photoUrl = previewEntry?.image_url
-  const view = fullView ? FULL_VIEW : (area.view || FULL_VIEW)
-  const scale = frameWidth / view.w
+  const photoFor = viewId => previewEntry?.image_urls?.[viewId] || (viewId === views[0].id ? previewEntry?.image_url : undefined)
 
-  function boxPxFor(a) {
-    const b = a.mockup_box
-    return { left: (b.x - view.x) * scale, top: (b.y - view.y) * scale, width: b.w * scale, height: b.h * scale }
-  }
+  const placedAreas = areas.filter(a => artworks[a.id])
+  const printCost = placedAreas.reduce((sum, a) => sum + Number(a.print_cost || 0), 0)
 
-  // Base cost per size is the dearest of the chosen colors, so a price that
-  // clears it is profitable for every variant.
-  function baseCostFor(size) {
+  // Cost per size: the dearest of the chosen colors plus every printed area,
+  // so a price that clears it is profitable for every variant.
+  function costFor(size) {
     const costs = blank.variants.filter(v => v.size === size && colors.includes(v.color)).map(v => v.base_cost)
-    return costs.length ? Math.max(...costs) : 0
+    return (costs.length ? Math.max(...costs) : 0) + printCost
   }
   function priceFor(size) {
-    return prices[size] ?? suggestedPrice(baseCostFor(size))
+    return prices[size] ?? suggestedPrice(costFor(size))
   }
 
   async function handleFile(e) {
@@ -132,7 +121,6 @@ export default function DesignEditor({ blank, shopDomain, onClose, onSaved }) {
     const startY = Math.min(1, Math.max(0, target.height_in - fitWidth * r) / 2)
     setPlacements(p => ({ ...p, [target.id]: clampPlacement({ w: fitWidth, x: (target.width_in - fitWidth) / 2, y: startY }, target, r) }))
     setArtworks(a => ({ ...a, [target.id]: { name: file.name, previewUrl, px_w: size.w, px_h: size.h, s3_key: null, uploading: true } }))
-    setFullView(false)
 
     // Only apply the result if this file is still the one in that area.
     const settle = patch => setArtworks(a => (a[target.id]?.previewUrl === previewUrl ? { ...a, [target.id]: { ...a[target.id], ...patch } } : a))
@@ -150,22 +138,23 @@ export default function DesignEditor({ blank, shopDomain, onClose, onSaved }) {
     setPlacements(without)
   }
 
+  // The artwork sits inside its print box, so the box's rendered width gives
+  // the screen-pixels-per-inch for dragging at any zoom.
   function onPointerDown(e) {
-    if (fullView) return
     e.preventDefault()
     e.currentTarget.setPointerCapture(e.pointerId)
-    dragRef.current = { startX: e.clientX, startY: e.clientY, from: placement }
+    const pxPerInch = e.currentTarget.parentElement.getBoundingClientRect().width / area.width_in
+    dragRef.current = { startX: e.clientX, startY: e.clientY, from: placement, pxPerInch }
   }
   function onPointerMove(e) {
     const drag = dragRef.current
     if (!drag) return
-    const pxPerInch = boxPxFor(area).width / area.width_in
     setPlacements(p => ({
       ...p,
       [area.id]: clampPlacement({
         w: drag.from.w,
-        x: drag.from.x + (e.clientX - drag.startX) / pxPerInch,
-        y: drag.from.y + (e.clientY - drag.startY) / pxPerInch,
+        x: drag.from.x + (e.clientX - drag.startX) / drag.pxPerInch,
+        y: drag.from.y + (e.clientY - drag.startY) / drag.pxPerInch,
       }, area, ratio),
     }))
   }
@@ -186,7 +175,6 @@ export default function DesignEditor({ blank, shopDomain, onClose, onSaved }) {
     setList(list.includes(value) ? list.filter(v => v !== value) : [...list, value])
   }
 
-  const placedAreas = areas.filter(a => artworks[a.id])
   const problems = []
   if (!placedAreas.length) problems.push('Upload artwork for at least one print area')
   placedAreas.forEach(a => {
@@ -199,7 +187,7 @@ export default function DesignEditor({ blank, shopDomain, onClose, onSaved }) {
   if (!colors.length) problems.push('Pick at least one color')
   if (!sizes.length) problems.push('Pick at least one size')
   if (!title.trim()) problems.push('Add a product title')
-  sizes.forEach(s => { if (!(priceFor(s) >= baseCostFor(s))) problems.push(`Price for ${s} is below the base cost`) })
+  sizes.forEach(s => { if (!(priceFor(s) >= costFor(s))) problems.push(`Price for ${s} is below the cost`) })
 
   async function handleSave() {
     setSaving(true)
@@ -226,16 +214,16 @@ export default function DesignEditor({ blank, shopDomain, onClose, onSaved }) {
     }
   }
 
-  function renderArea(a) {
-    const art = artworks[a.id], p = placements[a.id]
-    const box = boxPxFor(a)
-    const active = !fullView && a.id === area.id
-    const pxPerInch = box.width / a.width_in
+  // Positions are percentages of the visible frame, so the same markup works
+  // in the large editor and in the small preview tiles.
+  function renderArea(a, zoom, interactive) {
+    const art = artworks[a.id], p = placements[a.id], b = a.mockup_box
+    const pct = n => `${n * 100}%`
     return (
-      <div key={a.id} style={{ position: 'absolute', ...box, outline: active ? '1.5px dashed rgba(59,130,246,0.8)' : 'none' }}>
-        {active && !art && (
-          <div style={{ position: 'absolute', inset: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', textAlign: 'center', fontSize: '12px', color: 'rgba(59,130,246,0.95)', fontWeight: 600, padding: '8px', background: 'rgba(59,130,246,0.06)' }}>
-            {a.label} print area
+      <div key={a.id} style={{ position: 'absolute', left: pct((b.x - zoom.x) / zoom.w), top: pct((b.y - zoom.y) / zoom.w), width: pct(b.w / zoom.w), height: pct(b.h / zoom.w), outline: interactive ? '1.5px dashed rgba(59,130,246,0.8)' : 'none' }}>
+        {interactive && !art && (
+          <div style={{ position: 'absolute', inset: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', textAlign: 'center', fontSize: '12px', color: 'rgba(59,130,246,0.95)', fontWeight: 600, padding: '4px', background: 'rgba(59,130,246,0.06)', overflow: 'hidden' }}>
+            {a.label}
           </div>
         )}
         {art && p && (
@@ -243,16 +231,19 @@ export default function DesignEditor({ blank, shopDomain, onClose, onSaved }) {
             src={art.previewUrl}
             alt={`${a.label} artwork`}
             draggable={false}
-            onPointerDown={active ? onPointerDown : undefined}
-            onPointerMove={active ? onPointerMove : undefined}
-            onPointerUp={active ? onPointerUp : undefined}
-            onPointerCancel={active ? onPointerUp : undefined}
-            style={{ position: 'absolute', left: p.x * pxPerInch, top: p.y * pxPerInch, width: p.w * pxPerInch, height: p.w * (art.px_h / art.px_w) * pxPerInch, cursor: active ? 'move' : 'default', touchAction: 'none', userSelect: 'none', opacity: art.uploading ? 0.6 : 1 }}
+            onPointerDown={interactive ? onPointerDown : undefined}
+            onPointerMove={interactive ? onPointerMove : undefined}
+            onPointerUp={interactive ? onPointerUp : undefined}
+            onPointerCancel={interactive ? onPointerUp : undefined}
+            style={{ position: 'absolute', maxWidth: 'none', left: pct(p.x / a.width_in), top: pct(p.y / a.height_in), width: pct(p.w / a.width_in), height: pct((p.w * (art.px_h / art.px_w)) / a.height_in), cursor: interactive ? 'move' : 'default', touchAction: 'none', userSelect: 'none', opacity: art.uploading ? 0.6 : 1 }}
           />
         )}
       </div>
     )
   }
+
+  // Every view that has a print area, each with all of its areas drawn on it.
+  const previewViews = views.filter(v => areas.some(a => viewOf(a) === v.id))
 
   const dpiTone = dpi === null ? null : dpi >= GOOD_DPI ? ['#F0FDF4', '#166534', 'Sharp print'] : dpi >= minDpi ? ['#FFF7ED', '#C2410C', 'Acceptable, may look soft up close'] : ['#FFF5F5', '#C53030', 'Too low to print']
   const inputStyle = { width: '100%', padding: '10px 12px', boxSizing: 'border-box', border: '1.5px solid #E8E8E4', borderRadius: '10px', fontSize: '13px', outline: 'none', fontFamily: 'Inter, sans-serif' }
@@ -273,61 +264,91 @@ export default function DesignEditor({ blank, shopDomain, onClose, onSaved }) {
           <div style={{ flex: '1 1 55%', padding: '20px 24px', minWidth: 0 }}>
             <div style={{ display: 'flex', justifyContent: 'center', gap: '6px', marginBottom: '14px', flexWrap: 'wrap' }}>
               {areas.map(a => (
-                <button key={a.id} onClick={() => { setActiveAreaId(a.id); setFullView(false) }} style={chip(!fullView && a.id === area.id)}>
+                <button key={a.id} onClick={() => setTab(a.id)} style={chip(!previewing && a.id === area.id)}>
                   {a.label}{artworks[a.id] ? ' ✓' : ''}
                 </button>
               ))}
-              {areas.some(a => a.view) && (
-                <button onClick={() => setFullView(true)} style={chip(fullView)}>Full preview</button>
-              )}
+              {areas.length > 1 && <button onClick={() => setTab(PREVIEW)} style={chip(previewing)}>Preview all</button>}
             </div>
-            <div ref={frameRef} style={{ maxWidth: '520px', margin: '0 auto' }}>
-              <GarmentMockup type={blank.mockup} color={previewHex} photoUrl={photoUrl} view={view}>
-                {frameWidth > 0 && (fullView ? areas.map(renderArea) : renderArea(area))}
-              </GarmentMockup>
-            </div>
+
+            {previewing ? (
+              <div style={{ display: 'grid', gridTemplateColumns: previewViews.length > 1 ? '1fr 1fr' : '1fr', gap: '12px', maxWidth: '520px', margin: '0 auto' }}>
+                {previewViews.map(v => (
+                  <div key={v.id}>
+                    <GarmentMockup type={blank.mockup} color={previewHex} photoUrl={photoFor(v.id)}>
+                      {areas.filter(a => viewOf(a) === v.id).map(a => renderArea(a, FULL_PHOTO, false))}
+                    </GarmentMockup>
+                    <div style={{ textAlign: 'center', fontSize: '11px', color: '#999', marginTop: '6px', fontWeight: 600 }}>{v.label}</div>
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <div style={{ maxWidth: '520px', margin: '0 auto' }}>
+                <GarmentMockup type={blank.mockup} color={previewHex} photoUrl={photoFor(viewOf(area))} zoom={area.zoom || FULL_PHOTO}>
+                  {renderArea(area, area.zoom || FULL_PHOTO, true)}
+                </GarmentMockup>
+              </div>
+            )}
+
             <div style={{ display: 'flex', justifyContent: 'center', gap: '8px', marginTop: '14px', flexWrap: 'wrap' }}>
               {blank.colors.map(c => (
                 <button key={c.name} title={c.name} onClick={() => setPreviewColor(c.name)} style={{ width: '26px', height: '26px', borderRadius: '50%', background: c.hex, border: previewColor === c.name ? '2px solid #0A0A0A' : '1px solid #D8D8D4', outline: previewColor === c.name ? '2px solid #FFFFFF' : 'none', outlineOffset: '-4px', cursor: 'pointer' }} />
               ))}
             </div>
             <p style={{ textAlign: 'center', fontSize: '11px', color: '#BABAB6', marginTop: '8px' }}>
-              Preview color: {previewColor}{fullView ? '' : ' · drag the artwork to move it'}
+              Preview color: {previewColor}{previewing ? '' : ' · drag the artwork to move it'}
             </p>
           </div>
 
           <div className="pf-editor-panel" style={{ flex: '0 0 380px', borderLeft: '1px solid #E8E8E4', padding: '0 24px 24px', overflowY: 'auto' }}>
-            <Step n={1} title={`Artwork: ${area.label}`}>
-              <label className="pf-btn-outline" style={{ width: '100%', boxSizing: 'border-box', cursor: 'pointer', fontSize: '13px', padding: '10px 16px' }}>
-                {artwork ? `Replace ${area.label.toLowerCase()} artwork` : `Upload ${area.label.toLowerCase()} artwork (PNG or JPG)`}
-                <input type="file" accept="image/png,image/jpeg" onChange={handleFile} style={{ display: 'none' }} />
-              </label>
-              {areas.length > 1 && !artwork && <p style={{ fontSize: '11px', color: '#BABAB6', marginTop: '6px' }}>Optional. Leave it empty to print nothing here.</p>}
-              {uploadError && <div style={{ fontSize: '12px', color: '#C53030', marginTop: '8px' }}>⚠ {uploadError}</div>}
-              {artwork && placement && (
-                <>
-                  <div style={{ display: 'flex', justifyContent: 'space-between', gap: '8px', fontSize: '11px', color: '#999', marginTop: '8px' }}>
-                    <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-                      {artwork.name} · {artwork.px_w}×{artwork.px_h}px {artwork.uploading ? '· uploading…' : artwork.s3_key ? '· uploaded ✓' : ''}
-                    </span>
-                    <button onClick={removeArtwork} style={{ background: 'none', border: 'none', color: '#C53030', fontSize: '11px', cursor: 'pointer', padding: 0, flexShrink: 0 }}>Remove</button>
-                  </div>
-                  <label style={{ display: 'block', fontSize: '12px', fontWeight: 600, color: '#555', margin: '14px 0 6px' }}>
-                    Width: {placement.w.toFixed(1)}″ × {(placement.w * ratio).toFixed(1)}″
-                  </label>
-                  <input type="range" min={0.5} max={Math.min(area.width_in, area.height_in / ratio)} step={0.1} value={placement.w} onChange={e => resizeTo(Number(e.target.value))} style={{ width: '100%' }} />
-                  <div style={{ display: 'flex', gap: '8px', marginTop: '10px' }}>
-                    <button className="pf-btn-outline" style={{ flex: 1, padding: '7px', fontSize: '12px' }} onClick={() => setPlacement(p => ({ ...p, x: (area.width_in - p.w) / 2 }))}>Center</button>
-                    <button className="pf-btn-outline" style={{ flex: 1, padding: '7px', fontSize: '12px' }} onClick={() => setPlacement(() => ({ w: area.width_in, x: 0, y: 0 }))}>Fill area</button>
-                  </div>
-                  {dpiTone && (
-                    <div style={{ marginTop: '12px', background: dpiTone[0], color: dpiTone[1], borderRadius: '8px', padding: '8px 12px', fontSize: '12px', fontWeight: 600 }}>
-                      {dpi} DPI · {dpiTone[2]}
+            {previewing ? (
+              <Step n={1} title="Print summary">
+                {areas.map(a => {
+                  const art = artworks[a.id], p = placements[a.id]
+                  return (
+                    <div key={a.id} style={{ display: 'flex', justifyContent: 'space-between', gap: '8px', fontSize: '12px', padding: '6px 0', borderBottom: '1px solid #F4F4F0' }}>
+                      <span style={{ fontWeight: 600, color: art ? '#0A0A0A' : '#BABAB6' }}>{a.label}</span>
+                      <span style={{ color: '#999' }}>{art && p ? `${p.w.toFixed(1)}″ × ${(p.w * art.px_h / art.px_w).toFixed(1)}″${Number(a.print_cost) ? ` · +₹${a.print_cost}` : ''}` : 'Not printed'}</span>
                     </div>
-                  )}
-                </>
-              )}
-            </Step>
+                  )
+                })}
+              </Step>
+            ) : (
+              <Step n={1} title={`Artwork: ${area.label}`}>
+                <label className="pf-btn-outline" style={{ width: '100%', boxSizing: 'border-box', cursor: 'pointer', fontSize: '13px', padding: '10px 16px' }}>
+                  {artwork ? `Replace ${area.label.toLowerCase()} artwork` : `Upload ${area.label.toLowerCase()} artwork (PNG or JPG)`}
+                  <input type="file" accept="image/png,image/jpeg" onChange={handleFile} style={{ display: 'none' }} />
+                </label>
+                <p style={{ fontSize: '11px', color: '#BABAB6', marginTop: '6px' }}>
+                  {areas.length > 1 && !artwork ? 'Optional. Leave it empty to print nothing here. ' : ''}
+                  {Number(area.print_cost) ? `Printing here adds ₹${area.print_cost} to the cost.` : ''}
+                </p>
+                {uploadError && <div style={{ fontSize: '12px', color: '#C53030', marginTop: '8px' }}>⚠ {uploadError}</div>}
+                {artwork && placement && (
+                  <>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', gap: '8px', fontSize: '11px', color: '#999', marginTop: '8px' }}>
+                      <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                        {artwork.name} · {artwork.px_w}×{artwork.px_h}px {artwork.uploading ? '· uploading…' : artwork.s3_key ? '· uploaded ✓' : ''}
+                      </span>
+                      <button onClick={removeArtwork} style={{ background: 'none', border: 'none', color: '#C53030', fontSize: '11px', cursor: 'pointer', padding: 0, flexShrink: 0 }}>Remove</button>
+                    </div>
+                    <label style={{ display: 'block', fontSize: '12px', fontWeight: 600, color: '#555', margin: '14px 0 6px' }}>
+                      Width: {placement.w.toFixed(1)}″ × {(placement.w * ratio).toFixed(1)}″
+                    </label>
+                    <input type="range" min={0.5} max={Math.min(area.width_in, area.height_in / ratio)} step={0.1} value={placement.w} onChange={e => resizeTo(Number(e.target.value))} style={{ width: '100%' }} />
+                    <div style={{ display: 'flex', gap: '8px', marginTop: '10px' }}>
+                      <button className="pf-btn-outline" style={{ flex: 1, padding: '7px', fontSize: '12px' }} onClick={() => setPlacement(p => ({ ...p, x: (area.width_in - p.w) / 2 }))}>Center</button>
+                      <button className="pf-btn-outline" style={{ flex: 1, padding: '7px', fontSize: '12px' }} onClick={() => setPlacement(() => ({ w: area.width_in, x: 0, y: 0 }))}>Fill area</button>
+                    </div>
+                    {dpiTone && (
+                      <div style={{ marginTop: '12px', background: dpiTone[0], color: dpiTone[1], borderRadius: '8px', padding: '8px 12px', fontSize: '12px', fontWeight: 600 }}>
+                        {dpi} DPI · {dpiTone[2]}
+                      </div>
+                    )}
+                  </>
+                )}
+              </Step>
+            )}
 
             <Step n={2} title="Colors">
               <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px' }}>
@@ -352,19 +373,19 @@ export default function DesignEditor({ blank, shopDomain, onClose, onSaved }) {
               {sizes.length > 0 && colors.length > 0 && (
                 <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '12px' }}>
                   <thead>
-                    <tr>{['Size', 'Base cost', 'Your price', 'Profit'].map(h => <th key={h} style={{ textAlign: 'left', fontSize: '10px', fontWeight: 600, color: '#BABAB6', textTransform: 'uppercase', letterSpacing: '0.06em', padding: '4px 4px 6px' }}>{h}</th>)}</tr>
+                    <tr>{['Size', 'Cost', 'Your price', 'Profit'].map(h => <th key={h} style={{ textAlign: 'left', fontSize: '10px', fontWeight: 600, color: '#BABAB6', textTransform: 'uppercase', letterSpacing: '0.06em', padding: '4px 4px 6px' }}>{h}</th>)}</tr>
                   </thead>
                   <tbody>
                     {sizesInStock.filter(s => sizes.includes(s)).map(s => {
-                      const base = baseCostFor(s)
+                      const cost = costFor(s)
                       const price = priceFor(s)
-                      const profit = Number(price) - base
+                      const profit = Number(price) - cost
                       return (
                         <tr key={s} style={{ borderTop: '1px solid #F4F4F0' }}>
                           <td style={{ padding: '6px 4px', fontWeight: 700 }}>{s}</td>
-                          <td style={{ padding: '6px 4px', color: '#999' }}>₹{base}</td>
+                          <td style={{ padding: '6px 4px', color: '#999' }}>₹{cost}</td>
                           <td style={{ padding: '6px 4px' }}>
-                            <input type="number" min={base} value={price} onChange={e => setPrices(p => ({ ...p, [s]: e.target.value === '' ? '' : Number(e.target.value) }))} style={{ ...inputStyle, width: '84px', padding: '6px 8px', fontSize: '12px' }} />
+                            <input type="number" min={cost} value={price} onChange={e => setPrices(p => ({ ...p, [s]: e.target.value === '' ? '' : Number(e.target.value) }))} style={{ ...inputStyle, width: '84px', padding: '6px 8px', fontSize: '12px' }} />
                           </td>
                           <td style={{ padding: '6px 4px', fontWeight: 600, color: profit >= 0 ? '#166534' : '#C53030' }}>₹{Number.isFinite(profit) ? profit : '–'}</td>
                         </tr>
@@ -373,7 +394,9 @@ export default function DesignEditor({ blank, shopDomain, onClose, onSaved }) {
                   </tbody>
                 </table>
               )}
-              <p style={{ fontSize: '11px', color: '#BABAB6', marginTop: '8px' }}>Base cost covers printing and the blank; shipping and tax are charged separately.</p>
+              <p style={{ fontSize: '11px', color: '#BABAB6', marginTop: '8px' }}>
+                Cost is the blank{printCost ? ` plus ₹${printCost} for the printed areas` : ' and printing'}; shipping and tax are charged separately.
+              </p>
             </Step>
 
             <Step n={4} title="Product details">

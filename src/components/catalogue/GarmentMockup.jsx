@@ -12,7 +12,7 @@ const SHAPES = {
   },
 }
 
-const FULL_VIEW = { x: 0, y: 0, w: 1 }
+const FULL_PHOTO = { x: 0, y: 0, w: 1 }
 
 // Seams need to stay visible on both white and black fabric.
 function isDark(hex) {
@@ -21,29 +21,29 @@ function isDark(hex) {
   return 0.299 * r + 0.587 * g + 0.114 * b < 110
 }
 
-// `view` zooms into a square part of the photo (fractions of it), e.g. just
-// the front of a photo that shows front and back side by side. Children are
-// laid over the visible frame.
-export default function GarmentMockup({ type, color, photoUrl, view = FULL_VIEW, children }) {
+// `zoom` shows a square part of the photo (fractions of it), e.g. just the
+// front of a photo that shows front and back side by side. Children are laid
+// over the visible frame.
+export default function GarmentMockup({ type, color, photoUrl, zoom = FULL_PHOTO, children }) {
   const shape = SHAPES[type] || SHAPES.tee
   const line = isDark(color) ? 'rgba(255,255,255,0.18)' : 'rgba(0,0,0,0.16)'
   const gradientId = `shade-${type}`
   // maxWidth: Tailwind's base styles cap img/svg at 100%, which would undo the zoom.
-  const zoom = {
+  const zoomed = {
     position: 'absolute',
     maxWidth: 'none',
-    width: `${100 / view.w}%`,
-    height: `${100 / view.w}%`,
-    left: `${(-view.x / view.w) * 100}%`,
-    top: `${(-view.y / view.w) * 100}%`,
+    width: `${100 / zoom.w}%`,
+    height: `${100 / zoom.w}%`,
+    left: `${(-zoom.x / zoom.w) * 100}%`,
+    top: `${(-zoom.y / zoom.w) * 100}%`,
   }
 
   return (
     <div style={{ position: 'relative', width: '100%', aspectRatio: '1 / 1', background: photoUrl ? '#FFFFFF' : '#F4F4F0', borderRadius: '12px', overflow: 'hidden' }}>
       {photoUrl ? (
-        <img src={photoUrl} alt="" draggable={false} style={{ ...zoom, objectFit: 'cover', userSelect: 'none' }} />
+        <img src={photoUrl} alt="" draggable={false} style={{ ...zoomed, objectFit: 'cover', userSelect: 'none' }} />
       ) : (
-        <svg viewBox="0 0 1000 1000" style={zoom} aria-hidden="true">
+        <svg viewBox="0 0 1000 1000" style={zoomed} aria-hidden="true">
           <defs>
             <linearGradient id={gradientId} x1="0" y1="0" x2="1" y2="1">
               <stop offset="0" stopColor="#FFFFFF" stopOpacity="0.14" />
