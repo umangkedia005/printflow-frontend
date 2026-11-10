@@ -18,13 +18,30 @@ function clampView(v) {
 // Each print area keeps its own measurements in inches; the artwork's
 // placement is stored in inches from the area's top-left corner too, so the
 // preview, the backend check and the factory file all agree.
+// Artwork can be moved and sized freely, like any design tool: whatever
+// falls outside the print area is shown faded and isn't printed. It just has
+// to keep MIN_OVERLAP inches inside so it can't be lost off the garment.
+const MIN_OVERLAP = 0.5
+const MAX_SCALE = 2
+
 function clampPlacement(p, area, ratio) {
-  const w = Math.min(p.w, area.width_in, area.height_in / ratio)
+  const maxW = MAX_SCALE * Math.max(area.width_in, area.height_in / ratio)
+  const w = Math.min(Math.max(p.w, 0.5), maxW)
   const h = w * ratio
   return {
     w,
-    x: Math.min(Math.max(p.x, 0), area.width_in - w),
-    y: Math.min(Math.max(p.y, 0), area.height_in - h),
+    x: Math.min(Math.max(p.x, MIN_OVERLAP - w), area.width_in - MIN_OVERLAP),
+    y: Math.min(Math.max(p.y, MIN_OVERLAP - h), area.height_in - MIN_OVERLAP),
+  }
+}
+
+// The part of the artwork that lands inside the print area, in inches.
+function printedSize(p, area, ratio) {
+  const h = p.w * ratio
+  return {
+    w: Math.max(0, Math.min(p.x + p.w, area.width_in) - Math.max(p.x, 0)),
+    h: Math.max(0, Math.min(p.y + h, area.height_in) - Math.max(p.y, 0)),
+    clipped: p.x < -0.01 || p.y < -0.01 || p.x + p.w > area.width_in + 0.01 || p.y + h > area.height_in + 0.01,
   }
 }
 
@@ -154,26 +171,31 @@ export default function DesignEditor({ blank, shopDomain, onClose, onSaved }) {
     setPlacements(without)
   }
 
-  // The artwork sits inside its print box, so the box's rendered width gives
-  // the screen-pixels-per-inch for dragging at any zoom.
-  function onPointerDown(e) {
+  // The print box's rendered width gives the screen-pixels-per-inch for
+  // dragging at any zoom. `corner` is set when a resize handle is dragged:
+  // [-1|1, -1|1] for left/right and top/bottom, the opposite corner staying put.
+  function onPointerDown(e, corner = null) {
     e.preventDefault()
     e.stopPropagation()
     e.currentTarget.setPointerCapture(e.pointerId)
-    const pxPerInch = e.currentTarget.parentElement.getBoundingClientRect().width / area.width_in
-    dragRef.current = { startX: e.clientX, startY: e.clientY, from: placement, pxPerInch }
+    const pxPerInch = e.currentTarget.closest('[data-print-box]').getBoundingClientRect().width / area.width_in
+    dragRef.current = { startX: e.clientX, startY: e.clientY, from: placement, pxPerInch, corner }
   }
   function onPointerMove(e) {
     const drag = dragRef.current
     if (!drag) return
-    setPlacements(p => ({
-      ...p,
-      [area.id]: clampPlacement({
-        w: drag.from.w,
-        x: drag.from.x + (e.clientX - drag.startX) / drag.pxPerInch,
-        y: drag.from.y + (e.clientY - drag.startY) / drag.pxPerInch,
-      }, area, ratio),
-    }))
+    const dx = (e.clientX - drag.startX) / drag.pxPerInch
+    const dy = (e.clientY - drag.startY) / drag.pxPerInch
+    const f = drag.from
+    let next
+    if (drag.corner) {
+      const [sx, sy] = drag.corner
+      const w = Math.max(0.5, f.w + (sx * dx + (sy * dy) / ratio) / 2)
+      next = { w, x: sx < 0 ? f.x + f.w - w : f.x, y: sy < 0 ? f.y + (f.w - w) * ratio : f.y }
+    } else {
+      next = { w: f.w, x: f.x + dx, y: f.y + dy }
+    }
+    setPlacements(p => ({ ...p, [area.id]: clampPlacement(next, area, ratio) }))
   }
   function onPointerUp() { dragRef.current = null }
 
@@ -282,24 +304,50 @@ export default function DesignEditor({ blank, shopDomain, onClose, onSaved }) {
     const art = artworks[a.id], p = placements[a.id], b = a.mockup_box
     const pct = n => `${n * 100}%`
     const smooth = interactive && !panning
+    const artBox = art && p && {
+      position: 'absolute', maxWidth: 'none',
+      left: pct(p.x / a.width_in), top: pct(p.y / a.height_in),
+      width: pct(p.w / a.width_in), height: pct((p.w * (art.px_h / art.px_w)) / a.height_in),
+    }
     return (
-      <div key={a.id} style={{ position: 'absolute', left: pct((b.x - zoom.x) / zoom.w), top: pct((b.y - zoom.y) / zoom.w), width: pct(b.w / zoom.w), height: pct(b.h / zoom.w), outline: interactive ? '1.5px dashed rgba(59,130,246,0.8)' : 'none', transition: smooth ? 'all 0.28s ease' : 'none' }}>
+      <div key={a.id} data-print-box style={{ position: 'absolute', left: pct((b.x - zoom.x) / zoom.w), top: pct((b.y - zoom.y) / zoom.w), width: pct(b.w / zoom.w), height: pct(b.h / zoom.w), outline: interactive ? '1.5px dashed rgba(59,130,246,0.8)' : 'none', transition: smooth ? 'all 0.28s ease' : 'none' }}>
         {interactive && !art && (
           <div style={{ position: 'absolute', inset: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', textAlign: 'center', fontSize: '12px', color: 'rgba(59,130,246,0.95)', fontWeight: 600, padding: '4px', background: 'rgba(59,130,246,0.06)', overflow: 'hidden' }}>
             {a.label}
           </div>
         )}
-        {art && p && (
+        {artBox && interactive && (
+          // Whole artwork, faded: what lies outside the print area won't print.
           <img
             src={art.previewUrl}
             alt={`${a.label} artwork`}
             draggable={false}
-            onPointerDown={interactive ? onPointerDown : undefined}
-            onPointerMove={interactive ? onPointerMove : undefined}
-            onPointerUp={interactive ? onPointerUp : undefined}
-            onPointerCancel={interactive ? onPointerUp : undefined}
-            style={{ position: 'absolute', maxWidth: 'none', left: pct(p.x / a.width_in), top: pct(p.y / a.height_in), width: pct(p.w / a.width_in), height: pct((p.w * (art.px_h / art.px_w)) / a.height_in), cursor: interactive ? 'move' : 'default', touchAction: 'none', userSelect: 'none', opacity: art.uploading ? 0.6 : 1 }}
+            onPointerDown={e => onPointerDown(e)}
+            onPointerMove={onPointerMove}
+            onPointerUp={onPointerUp}
+            onPointerCancel={onPointerUp}
+            style={{ ...artBox, cursor: 'move', touchAction: 'none', userSelect: 'none', opacity: 0.35 }}
           />
+        )}
+        {artBox && (
+          // The printed part at full strength, cut to the print area.
+          <div style={{ position: 'absolute', inset: 0, overflow: 'hidden', pointerEvents: 'none' }}>
+            <img src={art.previewUrl} alt="" draggable={false} style={{ ...artBox, userSelect: 'none', opacity: art.uploading ? 0.6 : 1 }} />
+          </div>
+        )}
+        {artBox && interactive && (
+          <div style={{ ...artBox, outline: '1px solid #2563EB', pointerEvents: 'none' }}>
+            {[[-1, -1], [1, -1], [-1, 1], [1, 1]].map(([sx, sy]) => (
+              <span
+                key={`${sx}${sy}`}
+                onPointerDown={e => onPointerDown(e, [sx, sy])}
+                onPointerMove={onPointerMove}
+                onPointerUp={onPointerUp}
+                onPointerCancel={onPointerUp}
+                style={{ position: 'absolute', width: '12px', height: '12px', background: '#FFFFFF', border: '2px solid #2563EB', borderRadius: '3px', boxSizing: 'border-box', left: sx < 0 ? '-6px' : 'auto', right: sx > 0 ? '-6px' : 'auto', top: sy < 0 ? '-6px' : 'auto', bottom: sy > 0 ? '-6px' : 'auto', cursor: sx === sy ? 'nwse-resize' : 'nesw-resize', pointerEvents: 'auto', touchAction: 'none' }}
+              />
+            ))}
+          </div>
         )}
       </div>
     )
@@ -395,7 +443,7 @@ export default function DesignEditor({ blank, shopDomain, onClose, onSaved }) {
                   return (
                     <div key={a.id} style={{ display: 'flex', justifyContent: 'space-between', gap: '8px', fontSize: '12px', padding: '6px 0', borderBottom: '1px solid rgba(23,43,21,0.08)' }}>
                       <span style={{ fontWeight: 600, color: art ? '#172B15' : '#A9B6AC' }}>{a.label}</span>
-                      <span style={{ color: '#889B8E' }}>{art && p ? `${p.w.toFixed(1)}″ × ${(p.w * art.px_h / art.px_w).toFixed(1)}″${Number(a.print_cost) ? ` · +₹${a.print_cost}` : ''}` : 'Not printed'}</span>
+                      <span style={{ color: '#889B8E' }}>{art && p ? (ps => `${ps.w.toFixed(1)}″ × ${ps.h.toFixed(1)}″${Number(a.print_cost) ? ` · +₹${a.print_cost}` : ''}`)(printedSize(p, a, art.px_h / art.px_w)) : 'Not printed'}</span>
                     </div>
                   )
                 })}
@@ -420,13 +468,18 @@ export default function DesignEditor({ blank, shopDomain, onClose, onSaved }) {
                       <button onClick={removeArtwork} style={{ background: 'none', border: 'none', color: '#C53030', fontSize: '11px', cursor: 'pointer', padding: 0, flexShrink: 0 }}>Remove</button>
                     </div>
                     <label style={{ display: 'block', fontSize: '11px', fontWeight: 700, color: '#889B8E', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: '7px', marginTop: '16px' }}>
-                      Width: {placement.w.toFixed(1)}″ × {(placement.w * ratio).toFixed(1)}″
+                      Artwork size: {placement.w.toFixed(1)}″ × {(placement.w * ratio).toFixed(1)}″
                     </label>
-                    <input type="range" min={0.5} max={Math.min(area.width_in, area.height_in / ratio)} step={0.1} value={placement.w} onChange={e => resizeTo(Number(e.target.value))} style={{ width: '100%' }} />
+                    <input type="range" min={0.5} max={MAX_SCALE * Math.max(area.width_in, area.height_in / ratio)} step={0.1} value={placement.w} onChange={e => resizeTo(Number(e.target.value))} style={{ width: '100%' }} />
                     <div style={{ display: 'flex', gap: '8px', marginTop: '10px' }}>
                       <button className="pf-btn-outline" style={{ flex: 1, padding: '7px', fontSize: '12px' }} onClick={() => setPlacement(p => ({ ...p, x: (area.width_in - p.w) / 2 }))}>Center</button>
-                      <button className="pf-btn-outline" style={{ flex: 1, padding: '7px', fontSize: '12px' }} onClick={() => setPlacement(() => ({ w: area.width_in, x: 0, y: 0 }))}>Fill area</button>
+                      <button className="pf-btn-outline" style={{ flex: 1, padding: '7px', fontSize: '12px' }} onClick={() => setPlacement(() => { const w = Math.min(area.width_in, area.height_in / ratio); return { w, x: (area.width_in - w) / 2, y: 0 } })}>Fit to area</button>
                     </div>
+                    {printedSize(placement, area, ratio).clipped && (
+                      <div style={{ marginTop: '12px', background: '#FFF7ED', color: '#C2410C', borderRadius: '8px', padding: '8px 12px', fontSize: '12px', fontWeight: 600 }}>
+                        Part of the artwork is outside the print area. The faded part won't be printed; {(() => { const ps = printedSize(placement, area, ratio); return `${ps.w.toFixed(1)}″ × ${ps.h.toFixed(1)}″ will.` })()}
+                      </div>
+                    )}
                     {dpiTone && (
                       <div style={{ marginTop: '12px', background: dpiTone[0], color: dpiTone[1], borderRadius: '8px', padding: '8px 12px', fontSize: '12px', fontWeight: 600 }}>
                         {dpi} DPI · {dpiTone[2]}
@@ -493,7 +546,7 @@ export default function DesignEditor({ blank, shopDomain, onClose, onSaved }) {
                 return (
                   <div key={a.id} style={{ border: '1px solid rgba(23,43,21,0.08)', borderRadius: '10px', padding: '10px 12px', background: art ? '#FFFFFF' : '#FAFAF8' }}>
                     <div style={{ fontSize: '12px', fontWeight: 700, color: art ? '#172B15' : '#A9B6AC' }}>{a.label}</div>
-                    <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '11px', color: '#889B8E', marginTop: '6px' }}><span>Size</span><span>{art && p ? `${p.w.toFixed(1)}″ × ${(p.w * art.px_h / art.px_w).toFixed(1)}″` : '—'}</span></div>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '11px', color: '#889B8E', marginTop: '6px' }}><span>Size</span><span>{art && p ? (ps => `${ps.w.toFixed(1)}″ × ${ps.h.toFixed(1)}″`)(printedSize(p, a, art.px_h / art.px_w)) : '—'}</span></div>
                     <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '11px', color: '#889B8E', marginTop: '2px' }}><span>Cost</span><span>{art ? `+₹${Number(a.print_cost || 0)}` : '—'}</span></div>
                   </div>
                 )
