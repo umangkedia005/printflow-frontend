@@ -60,7 +60,7 @@ function BlankCard({ blank, onDesign, onSizeChart }) {
   )
 }
 
-export default function CatalogueView({ shopDomain }) {
+export default function CatalogueView() {
   const [tab, setTab] = useState('catalogue')
   const [blanks, setBlanks] = useState([])
   const [loading, setLoading] = useState(true)
@@ -80,11 +80,10 @@ export default function CatalogueView({ shopDomain }) {
   }, [])
 
   const loadDesigns = useCallback(() => {
-    if (!shopDomain) return
-    fetchMerchantProducts(shopDomain)
+    fetchMerchantProducts()
       .then(list => { setDesigns(list); setDesignsError('') })
       .catch(err => setDesignsError(err.message))
-  }, [shopDomain])
+  }, [])
 
   useEffect(() => { loadDesigns() }, [loadDesigns])
 
@@ -92,7 +91,6 @@ export default function CatalogueView({ shopDomain }) {
     return (
       <DesignEditor
         blank={designing}
-        shopDomain={shopDomain}
         onClose={() => setDesigning(null)}
         onSaved={() => {
           setDesigning(null)

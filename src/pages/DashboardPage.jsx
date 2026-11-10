@@ -275,7 +275,7 @@ const NAV_ITEMS = [
 
 const TOPUP_PRESETS = [500, 1000, 2500, 5000]
 
-function TopupModal({ shopDomain, onClose, onSuccess }) {
+function TopupModal({ onClose, onSuccess }) {
   const [amount, setAmount] = useState('')
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
@@ -290,7 +290,6 @@ function TopupModal({ shopDomain, onClose, onSuccess }) {
     setLoading(true)
     setError('')
     await openWalletTopup({
-      shop: shopDomain,
       amount: numAmount,
       email: currentUser?.email,
       onSuccess: (newBalance) => { setLoading(false); onSuccess(newBalance) },
@@ -771,7 +770,7 @@ export default function DashboardPage() {
         }
       }
 
-      const list = await fetchMyStores(currentUser.email)
+      const list = await fetchMyStores()
       setMyStores(list)
       if (list.length > 0) {
         const saved = localStorage.getItem('pf_shop')
@@ -824,11 +823,12 @@ export default function DashboardPage() {
 
   useEffect(() => { loadProducts() }, [loadProducts])
 
+  // The wallet is the account's, so it loads with or without a store.
   const loadWallet = useCallback(async () => {
-    if (!shopDomain) return
+    if (!currentUser) return
     setWalletLoading(true)
     try {
-      const data = await fetchWallet(shopDomain)
+      const data = await fetchWallet()
       setWalletBalance(data.balance || 0)
       setWalletTransactions(data.transactions || [])
     } catch {
@@ -836,7 +836,7 @@ export default function DashboardPage() {
     } finally {
       setWalletLoading(false)
     }
-  }, [shopDomain])
+  }, [currentUser])
 
   useEffect(() => { loadWallet() }, [loadWallet])
 
@@ -1629,18 +1629,17 @@ export default function DashboardPage() {
 
   // ── Render ─────────────────────────────────────────────────────────────────
 
-  // Shown instead of pages that save to a store (designs, manual orders)
-  // when no store is linked to this account yet; otherwise they'd fail with
-  // "Missing shop".
+  // Shown instead of Shopify-only pages (Shopify orders) when no store is
+  // linked to this account; designs, the wallet and manual orders don't need one.
   function needStore(action) {
     if (!storesChecked) {
       return <div style={{ textAlign: 'center', padding: '64px', color: '#889B8E', fontSize: '13px' }}>Loading your store…</div>
     }
     return (
       <div style={{ background: '#FFFFFF', border: '1px solid rgba(23,43,21,0.06)', borderRadius: '20px', boxShadow: '0 8px 30px rgba(23,43,21,0.015)', padding: '48px 32px', textAlign: 'center', maxWidth: '560px', margin: '24px auto' }}>
-        <div style={{ fontFamily: "'Fraunces', sans-serif", fontSize: '22px', fontWeight: 800, color: '#172B15' }}>Connect your Shopify store first</div>
+        <div style={{ fontFamily: "'Fraunces', sans-serif", fontSize: '22px', fontWeight: 800, color: '#172B15' }}>Connect your Shopify store</div>
         <p style={{ fontSize: '13px', color: '#889B8E', fontWeight: 500, lineHeight: 1.6, margin: '10px 0 22px' }}>
-          You need a connected store to {action}. No store is linked to {currentUser?.email || 'this account'} yet. If you've already installed the app, open it once from your Shopify admin while signed in here and it will link.
+          Connect a store to {action}. Designs, your wallet and manual orders work without one. If you've already installed the app, open it once from your Shopify admin while signed in here and it will link.
         </p>
         <button onClick={() => { if (window.shopify) window.open(SHOPIFY_INSTALL_URL, '_top'); else window.location.href = SHOPIFY_INSTALL_URL }} style={{ background: '#B9F95D', color: '#172B15', border: 'none', borderRadius: '12px', padding: '12px 22px', fontSize: '13px', fontWeight: 800, cursor: 'pointer', fontFamily: 'Inter, sans-serif' }}>+ Connect store</button>
       </div>
@@ -1798,18 +1797,16 @@ export default function DashboardPage() {
                 </div>
               </div>
               {ordersTab === 'shopify'
-                ? <OrdersManagement />
-                : !shopDomain ? <div style={{ position: 'relative', zIndex: 1 }}>{needStore('see and create manual orders')}</div>
-                : <div style={{ position: 'relative', zIndex: 1 }}><ManualOrdersView shopDomain={shopDomain} walletBalance={walletBalance} onWalletChanged={loadWallet} onTopUp={() => setShowTopup(true)} initialNotice={orderNotice} /></div>}
+                ? (shopDomain ? <OrdersManagement /> : <div style={{ position: 'relative', zIndex: 1 }}>{needStore('receive Shopify orders')}</div>)
+                : <div style={{ position: 'relative', zIndex: 1 }}><ManualOrdersView walletBalance={walletBalance} onWalletChanged={loadWallet} onTopUp={() => setShowTopup(true)} initialNotice={orderNotice} /></div>}
             </>
           )}
-          {activeNav === 'create-order' && !shopDomain && <div style={{ position: 'relative', zIndex: 1 }}>{needStore('create an order')}</div>}
-          {activeNav === 'create-order' && shopDomain && (
+          {activeNav === 'create-order' && (
             <div style={{ position: 'relative', zIndex: 1 }}>
               <ManualOrdersView
                 key="create"
                 startInCreate
-                shopDomain={shopDomain}
+
                 walletBalance={walletBalance}
                 onWalletChanged={loadWallet}
                 onTopUp={() => setShowTopup(true)}
@@ -1818,7 +1815,7 @@ export default function DashboardPage() {
               />
             </div>
           )}
-          {activeNav === 'catalogue' && catalogueOn && <div style={{ position: 'relative', zIndex: 1 }}>{shopDomain ? <CatalogueView shopDomain={shopDomain} /> : needStore('design products')}</div>}
+          {activeNav === 'catalogue' && catalogueOn && <div style={{ position: 'relative', zIndex: 1 }}><CatalogueView /></div>}
           {activeNav === 'products' && <div style={{ position: 'relative', zIndex: 1 }}><ProductsView /></div>}
           {activeNav === 'billing'  && <div style={{ position: 'relative', zIndex: 1 }}><BillingView /></div>}
           {activeNav === 'wallet'   && <div style={{ position: 'relative', zIndex: 1 }}><WalletView /></div>}
@@ -2412,7 +2409,6 @@ export default function DashboardPage() {
       {/* Wallet top-up modal */}
       {showTopup && (
         <TopupModal
-          shopDomain={shopDomain}
           onClose={() => setShowTopup(false)}
           onSuccess={(newBalance) => {
             setWalletBalance(newBalance)

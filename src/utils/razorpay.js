@@ -15,7 +15,7 @@ function loadRazorpayScript() {
 // createShopifySubscription/confirmShopifySubscription in api.js) instead of
 // Razorpay. Razorpay is still used here for wallet top-ups, since those pay
 // for a real-world fulfillment service rather than app-usage billing.
-export async function openWalletTopup({ shop, amount, email, onSuccess, onDismiss, onError }) {
+export async function openWalletTopup({ amount, email, onSuccess, onDismiss, onError }) {
   const loaded = await loadRazorpayScript()
   if (!loaded) {
     alert('Payment gateway failed to load. Please refresh and try again.')
@@ -24,7 +24,7 @@ export async function openWalletTopup({ shop, amount, email, onSuccess, onDismis
 
   let order
   try {
-    order = await createWalletTopupOrder(shop, amount)
+    order = await createWalletTopupOrder(amount)
   } catch (err) {
     onError?.(err.message)
     return
@@ -43,8 +43,6 @@ export async function openWalletTopup({ shop, amount, email, onSuccess, onDismis
     handler: async response => {
       try {
         const result = await verifyWalletTopup({
-          shop,
-          amount,
           razorpay_order_id: response.razorpay_order_id,
           razorpay_payment_id: response.razorpay_payment_id,
           razorpay_signature: response.razorpay_signature,

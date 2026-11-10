@@ -70,7 +70,7 @@ function Card({ n, title, children }) {
   )
 }
 
-export default function DesignEditor({ blank, shopDomain, onClose, onSaved }) {
+export default function DesignEditor({ blank, onClose, onSaved }) {
   const areas = blank.print_areas
   const views = blank.views?.length ? blank.views : [{ id: 'main', label: 'Main' }]
   const viewOf = a => a.view_id || views[0].id
@@ -158,7 +158,7 @@ export default function DesignEditor({ blank, shopDomain, onClose, onSaved }) {
     // Only apply the result if this file is still the one in that area.
     const settle = patch => setArtworks(a => (a[target.id]?.previewUrl === previewUrl ? { ...a, [target.id]: { ...a[target.id], ...patch } } : a))
     try {
-      settle({ s3_key: await uploadArtwork(shopDomain, file), uploading: false })
+      settle({ s3_key: await uploadArtwork(file), uploading: false })
     } catch (err) {
       setUploadError(err.message)
       settle({ uploading: false })
@@ -233,7 +233,6 @@ export default function DesignEditor({ blank, shopDomain, onClose, onSaved }) {
     setSaveError('')
     try {
       await saveMerchantProduct({
-        shop: shopDomain,
         blank_id: blank.blank_id,
         title: title.trim(),
         description: description.trim(),

@@ -82,8 +82,10 @@ export async function fetchPlans() {
     }))
 }
 
-export async function fetchMyStores(email) {
-  const res = await fetch(`${BASE_URL}/my-stores?email=${encodeURIComponent(email)}`)
+// Stores linked to the signed-in account; the server reads the account from
+// the sign-in token, so the email is only kept for older callers.
+export async function fetchMyStores() {
+  const res = await fetch(`${BASE_URL}/my-stores`, { headers: await shopAuthHeaders() })
   if (!res.ok) return []
   const data = await res.json()
   return Array.isArray(data) ? data : []
@@ -123,38 +125,40 @@ export async function confirmShopifySubscription(shop, plan) {
   return data
 }
 
-export async function fetchWallet(shop) {
-  const res = await fetch(`${BASE_URL}/wallet?shop=${encodeURIComponent(shop)}`)
+// The wallet belongs to the signed-in account, not to a store.
+export async function fetchWallet() {
+  const res = await fetch(`${BASE_URL}/wallet`, { headers: await shopAuthHeaders() })
   const data = await res.json()
   if (!res.ok) throw new Error(data.error || 'Failed to fetch wallet')
   return data
 }
 
-export async function createWalletTopupOrder(shop, amount) {
+export async function createWalletTopupOrder(amount) {
   const res = await fetch(`${BASE_URL}/wallet/create-order`, {
     method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ shop, amount }),
+    headers: { 'Content-Type': 'application/json', ...(await shopAuthHeaders()) },
+    body: JSON.stringify({ amount }),
   })
   const data = await res.json()
   if (!res.ok) throw new Error(data.error || 'Failed to create top-up order')
   return data
 }
 
-export async function verifyWalletTopup({ shop, amount, razorpay_order_id, razorpay_payment_id, razorpay_signature }) {
+// The server credits what Razorpay received, not an amount sent from here.
+export async function verifyWalletTopup({ razorpay_order_id, razorpay_payment_id, razorpay_signature }) {
   const res = await fetch(`${BASE_URL}/wallet/verify-payment`, {
     method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ shop, amount, razorpay_order_id, razorpay_payment_id, razorpay_signature }),
+    headers: { 'Content-Type': 'application/json', ...(await shopAuthHeaders()) },
+    body: JSON.stringify({ razorpay_order_id, razorpay_payment_id, razorpay_signature }),
   })
   const data = await res.json()
   if (!res.ok) throw new Error(data.error || 'Top-up verification failed')
   return data
 }
 
-// Endpoints that act on a shop's data need proof the caller may do so. Inside
-// the Shopify admin, App Bridge's session token proves it; on the standalone
-// dashboard, the backend checks the Firebase user is the one the shop is linked to.
+// The signed-in account's Firebase token, which account endpoints (wallet,
+// designs, manual orders) are keyed by; inside the Shopify admin, App Bridge's
+// session token is added too for endpoints that act on a store.
 async function shopAuthHeaders() {
   const headers = {}
   try {
@@ -177,11 +181,11 @@ export async function fetchCatalogue() {
 
 // Two steps: the backend hands out a presigned POST, then the file goes
 // straight to S3 — print files are often bigger than the API accepts.
-export async function uploadArtwork(shop, file) {
+export async function uploadArtwork(file) {
   const res = await fetch(`${BASE_URL}/uploads/artwork`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json', ...(await shopAuthHeaders()) },
-    body: JSON.stringify({ shop, content_type: file.type }),
+    body: JSON.stringify({ content_type: file.type }),
   })
   const data = await res.json()
   if (!res.ok) throw new Error(data.error || 'Could not start the upload')
@@ -205,8 +209,9 @@ export async function saveMerchantProduct(product) {
   return data
 }
 
-export async function fetchMerchantProducts(shop) {
-  const res = await fetch(`${BASE_URL}/merchant-products?shop=${encodeURIComponent(shop)}`, {
+// Designs belong to the signed-in account.
+export async function fetchMerchantProducts() {
+  const res = await fetch(`${BASE_URL}/merchant-products`, {
     headers: await shopAuthHeaders(),
   })
   const data = await res.json()
@@ -241,7 +246,7 @@ export async function updateProductMapping({ shop, shopifyProductId, factorySku,
 export async function fulfillOrder(shop, orderId) {
   const res = await fetch(`${BASE_URL}/orders/fulfill`, {
     method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
+    headers: { 'Content-Type': 'application/json', ...(await shopAuthHeaders()) },
     body: JSON.stringify({ shop, order_id: orderId }),
   })
   const data = await res.json()
@@ -321,11 +326,11 @@ function formatDate(iso) {
 
 // Orders a merchant places themselves, priced and paid from the wallet on
 // the server; the browser only sends what was picked.
-export async function quoteManualOrder(shop, lines, shippingMethod) {
+export async function quoteManualOrder(lines, shippingMethod) {
   const res = await fetch(`${BASE_URL}/manual-orders/quote`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json', ...(await shopAuthHeaders()) },
-    body: JSON.stringify({ shop, lines, shipping_method: shippingMethod }),
+    body: JSON.stringify({ lines, shipping_method: shippingMethod }),
   })
   const data = await res.json()
   if (!res.ok) throw new Error(data.error || 'Could not price this order')
@@ -348,8 +353,8 @@ export async function placeManualOrder(order) {
   return data
 }
 
-export async function fetchManualOrders(shop) {
-  const res = await fetch(`${BASE_URL}/manual-orders?shop=${encodeURIComponent(shop)}`, { headers: await shopAuthHeaders() })
+export async function fetchManualOrders() {
+  const res = await fetch(`${BASE_URL}/manual-orders`, { headers: await shopAuthHeaders() })
   const data = await res.json()
   if (!res.ok) throw new Error(data.error || 'Failed to load your orders')
   return Array.isArray(data) ? data : []

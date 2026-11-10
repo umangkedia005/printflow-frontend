@@ -100,7 +100,7 @@ function ProductPicker({ designs, blanks, onPick, onClose }) {
   )
 }
 
-function CreateOrder({ shopDomain, walletBalance, onTopUp, onPlaced, onCancel }) {
+function CreateOrder({ walletBalance, onTopUp, onPlaced, onCancel }) {
   const [designs, setDesigns] = useState([])
   const [blanks, setBlanks] = useState([])
   const [picking, setPicking] = useState(false)
@@ -113,9 +113,9 @@ function CreateOrder({ shopDomain, walletBalance, onTopUp, onPlaced, onCancel })
   const [error, setError] = useState('')
 
   useEffect(() => {
-    fetchMerchantProducts(shopDomain).then(setDesigns).catch(() => setDesigns([]))
+    fetchMerchantProducts().then(setDesigns).catch(() => setDesigns([]))
     fetchCatalogue().then(setBlanks).catch(() => setBlanks([]))
-  }, [shopDomain])
+  }, [])
 
   const payload = useMemo(() => lines.map(l => (
     l.kind === 'design'
@@ -128,12 +128,12 @@ function CreateOrder({ shopDomain, walletBalance, onTopUp, onPlaced, onCancel })
     if (!payload.length || payload.some(l => !(l.qty >= 1))) return
     let stale = false
     const t = setTimeout(() => {
-      quoteManualOrder(shopDomain, payload, method)
+      quoteManualOrder(payload, method)
         .then(res => { if (!stale) { setQuote(res); setQuoteError('') } })
         .catch(err => { if (!stale) { setQuote(null); setQuoteError(err.message) } })
     }, 300)
     return () => { stale = true; clearTimeout(t) }
-  }, [payload, method, shopDomain])
+  }, [payload, method])
 
   function addLine(item, kind) {
     const { colors, sizes } = optionsFor(item, kind)
@@ -170,7 +170,7 @@ function CreateOrder({ shopDomain, walletBalance, onTopUp, onPlaced, onCancel })
     setError('')
     try {
       const { reference, ...addr } = address
-      const res = await placeManualOrder({ shop: shopDomain, lines: payload, shipping_method: method, address: addr, reference })
+      const res = await placeManualOrder({ lines: payload, shipping_method: method, address: addr, reference })
       onPlaced(res)
     } catch (err) {
       setError(err.message)
@@ -297,7 +297,7 @@ function CreateOrder({ shopDomain, walletBalance, onTopUp, onPlaced, onCancel })
 
 // The Manual orders tab, or (startInCreate, from the sidebar's Create order)
 // straight into the create page, handing back to the parent when done.
-export default function ManualOrdersView({ shopDomain, walletBalance, onWalletChanged, onTopUp, startInCreate = false, onCancelCreate, onPlaced, initialNotice = '' }) {
+export default function ManualOrdersView({ walletBalance, onWalletChanged, onTopUp, startInCreate = false, onCancelCreate, onPlaced, initialNotice = '' }) {
   const [creating, setCreating] = useState(startInCreate)
   const [orders, setOrders] = useState([])
   const [loading, setLoading] = useState(true)
@@ -305,18 +305,16 @@ export default function ManualOrdersView({ shopDomain, walletBalance, onWalletCh
   const [notice, setNotice] = useState(initialNotice)
 
   const load = useCallback(() => {
-    if (!shopDomain) return
-    fetchManualOrders(shopDomain)
+    fetchManualOrders()
       .then(list => { setOrders(list); setError('') })
       .catch(err => setError(err.message))
       .finally(() => setLoading(false))
-  }, [shopDomain])
+  }, [])
   useEffect(() => { load() }, [load])
 
   if (creating) {
     return (
       <CreateOrder
-        shopDomain={shopDomain}
         walletBalance={walletBalance}
         onTopUp={onTopUp}
         onCancel={() => (onCancelCreate ? onCancelCreate() : setCreating(false))}
