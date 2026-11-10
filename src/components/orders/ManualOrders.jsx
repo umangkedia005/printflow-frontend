@@ -100,7 +100,8 @@ function ProductPicker({ designs, blanks, onPick, onClose }) {
   )
 }
 
-function CreateOrder({ walletBalance, onTopUp, onPlaced, onCancel }) {
+// initialDesignId: a design to start the order with (from My files → Order).
+function CreateOrder({ walletBalance, onTopUp, onPlaced, onCancel, initialDesignId = null }) {
   const [designs, setDesigns] = useState([])
   const [blanks, setBlanks] = useState([])
   const [picking, setPicking] = useState(false)
@@ -113,8 +114,14 @@ function CreateOrder({ walletBalance, onTopUp, onPlaced, onCancel }) {
   const [error, setError] = useState('')
 
   useEffect(() => {
-    fetchMerchantProducts().then(setDesigns).catch(() => setDesigns([]))
+    fetchMerchantProducts().then(list => {
+      setDesigns(list)
+      const start = initialDesignId && list.find(d => d.product_id === initialDesignId)
+      if (start) addLine(start, 'design')
+    }).catch(() => setDesigns([]))
     fetchCatalogue().then(setBlanks).catch(() => setBlanks([]))
+    // Load once; addLine only appends.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
 
   const payload = useMemo(() => lines.map(l => (
@@ -297,7 +304,7 @@ function CreateOrder({ walletBalance, onTopUp, onPlaced, onCancel }) {
 
 // The Manual orders tab, or (startInCreate, from the sidebar's Create order)
 // straight into the create page, handing back to the parent when done.
-export default function ManualOrdersView({ walletBalance, onWalletChanged, onTopUp, startInCreate = false, onCancelCreate, onPlaced, initialNotice = '' }) {
+export default function ManualOrdersView({ walletBalance, onWalletChanged, onTopUp, startInCreate = false, onCancelCreate, onPlaced, initialNotice = '', initialDesignId = null }) {
   const [creating, setCreating] = useState(startInCreate)
   const [orders, setOrders] = useState([])
   const [loading, setLoading] = useState(true)
@@ -315,6 +322,7 @@ export default function ManualOrdersView({ walletBalance, onWalletChanged, onTop
   if (creating) {
     return (
       <CreateOrder
+        initialDesignId={initialDesignId}
         walletBalance={walletBalance}
         onTopUp={onTopUp}
         onCancel={() => (onCancelCreate ? onCancelCreate() : setCreating(false))}

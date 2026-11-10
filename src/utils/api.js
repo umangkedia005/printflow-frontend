@@ -1,4 +1,5 @@
 import { auth } from '../firebase'
+import { ARTWORK_TYPES, MAX_ARTWORK_BYTES, readImageSize, makeThumbnail } from './artworkImage'
 
 const BASE_URL = import.meta.env.VITE_API_URL
 
@@ -200,6 +201,51 @@ export async function uploadArtwork(file) {
   const upload = await fetch(data.url, { method: 'POST', body: form })
   if (!upload.ok) throw new Error('Upload failed. Files must be PNG or JPG and under 50 MB.')
   return data.key
+}
+
+// Upload a design to My files: the original and a thumbnail go straight to
+// S3, then the file is listed on the account. Returns the saved file
+// ({ file_id, s3_key, name, px_w, px_h, url, thumb_url, ... }).
+export async function uploadArtworkFile(file) {
+  if (!ARTWORK_TYPES.includes(file.type)) throw new Error('Use a PNG or JPG file. PNG with a transparent background prints best.')
+  if (file.size > MAX_ARTWORK_BYTES) throw new Error('That file is over 50 MB.')
+  const local = URL.createObjectURL(file)
+  try {
+    const { w, h, img } = await readImageSize(local)
+    const thumb = await makeThumbnail(img).catch(() => null)
+    const [s3Key, thumbKey] = await Promise.all([
+      uploadArtwork(file),
+      thumb ? uploadArtwork(thumb).catch(() => null) : null,
+    ])
+    const res = await fetch(`${BASE_URL}/artwork-files`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', ...(await shopAuthHeaders()) },
+      body: JSON.stringify({ s3_key: s3Key, thumb_key: thumbKey, name: file.name, px_w: w, px_h: h }),
+    })
+    const data = await res.json()
+    if (!res.ok) throw new Error(data.error || 'Could not save the file')
+    return data
+  } finally {
+    URL.revokeObjectURL(local)
+  }
+}
+
+export async function fetchArtworkFiles() {
+  const res = await fetch(`${BASE_URL}/artwork-files`, { headers: await shopAuthHeaders() })
+  const data = await res.json()
+  if (!res.ok) throw new Error(data.error || 'Could not load your files')
+  return Array.isArray(data) ? data : []
+}
+
+export async function deleteArtworkFile(fileId) {
+  const res = await fetch(`${BASE_URL}/artwork-files/delete`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...(await shopAuthHeaders()) },
+    body: JSON.stringify({ file_id: fileId }),
+  })
+  const data = await res.json()
+  if (!res.ok) throw new Error(data.error || 'Could not remove the file')
+  return data
 }
 
 export async function saveMerchantProduct(product) {

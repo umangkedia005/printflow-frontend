@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from 'react'
 import GarmentMockup from './GarmentMockup'
-import { uploadArtwork, saveMerchantProduct } from '../../utils/api'
+import { uploadArtworkFile, saveMerchantProduct } from '../../utils/api'
+import { FilePicker } from '../files/FilePicker'
 
 const MAX_FILE_BYTES = 50 * 1024 * 1024
 const GOOD_DPI = 300
@@ -70,7 +71,8 @@ function Card({ n, title, children }) {
   )
 }
 
-export default function DesignEditor({ blank, onClose, onSaved }) {
+// initialArtwork: a My files entry to start with on the first print area.
+export default function DesignEditor({ blank, onClose, onSaved, initialArtwork = null, backLabel = 'Back to catalogue' }) {
   const areas = blank.print_areas
   const views = blank.views?.length ? blank.views : [{ id: 'main', label: 'Main' }]
   const viewOf = a => a.view_id || views[0].id
@@ -94,6 +96,7 @@ export default function DesignEditor({ blank, onClose, onSaved }) {
   const [uploadError, setUploadError] = useState('')
   const [saving, setSaving] = useState(false)
   const [saveError, setSaveError] = useState('')
+  const [pickingFile, setPickingFile] = useState(false)
 
   const dragRef = useRef(null)
   const panRef = useRef(null)
@@ -149,21 +152,41 @@ export default function DesignEditor({ blank, onClose, onSaved }) {
       return setUploadError(err.message)
     }
 
-    const r = size.h / size.w
-    const fitWidth = Math.min(target.width_in, target.height_in / r) * 0.9
-    const startY = Math.min(1, Math.max(0, target.height_in - fitWidth * r) / 2)
-    setPlacements(p => ({ ...p, [target.id]: clampPlacement({ w: fitWidth, x: (target.width_in - fitWidth) / 2, y: startY }, target, r) }))
-    setArtworks(a => ({ ...a, [target.id]: { name: file.name, previewUrl, px_w: size.w, px_h: size.h, s3_key: null, uploading: true } }))
+    placeOn(target, { name: file.name, previewUrl, px_w: size.w, px_h: size.h, s3_key: null, uploading: true })
 
     // Only apply the result if this file is still the one in that area.
+    // Uploads also land in My files, so they can be reused later.
     const settle = patch => setArtworks(a => (a[target.id]?.previewUrl === previewUrl ? { ...a, [target.id]: { ...a[target.id], ...patch } } : a))
     try {
-      settle({ s3_key: await uploadArtwork(file), uploading: false })
+      settle({ s3_key: (await uploadArtworkFile(file)).s3_key, uploading: false })
     } catch (err) {
       setUploadError(err.message)
       settle({ uploading: false })
     }
   }
+
+  // Put artwork on a print area, centred and a little smaller than the area.
+  function placeOn(target, art) {
+    const r = art.px_h / art.px_w
+    const fitWidth = Math.min(target.width_in, target.height_in / r) * 0.9
+    const startY = Math.min(1, Math.max(0, target.height_in - fitWidth * r) / 2)
+    setPlacements(p => ({ ...p, [target.id]: clampPlacement({ w: fitWidth, x: (target.width_in - fitWidth) / 2, y: startY }, target, r) }))
+    setArtworks(a => ({ ...a, [target.id]: art }))
+  }
+
+  const fromLibrary = f => ({ name: f.name, previewUrl: f.url, px_w: Number(f.px_w), px_h: Number(f.px_h), s3_key: f.s3_key, uploading: false })
+
+  function pickFile(f) {
+    setPickingFile(false)
+    setUploadError('')
+    placeOn(area, fromLibrary(f))
+  }
+
+  useEffect(() => {
+    if (initialArtwork) placeOn(areas[0], fromLibrary(initialArtwork))
+    // Only when the designer opens.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [])
 
   function removeArtwork() {
     const without = obj => Object.fromEntries(Object.entries(obj).filter(([id]) => id !== area.id))
@@ -367,7 +390,7 @@ export default function DesignEditor({ blank, onClose, onSaved }) {
     <div ref={pageRef} style={{ scrollMarginTop: '16px' }}>
       <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: '16px', flexWrap: 'wrap', marginBottom: '22px' }}>
         <div>
-          <button onClick={onClose} style={{ background: 'none', border: 'none', padding: 0, color: '#889B8E', fontSize: '13px', fontWeight: 600, cursor: 'pointer', fontFamily: 'Inter, sans-serif', marginBottom: '8px' }}>← Back to catalogue</button>
+          <button onClick={onClose} style={{ background: 'none', border: 'none', padding: 0, color: '#889B8E', fontSize: '13px', fontWeight: 600, cursor: 'pointer', fontFamily: 'Inter, sans-serif', marginBottom: '8px' }}>← {backLabel}</button>
           <h1 style={{ fontFamily: "'Fraunces', sans-serif", fontSize: '28px', fontWeight: 800, color: '#172B15', letterSpacing: '-0.5px' }}>Design: {blank.name}</h1>
           <p style={{ fontSize: '13px', color: '#889B8E', fontWeight: 500, marginTop: '4px' }}>{[blank.gsm && `${blank.gsm} GSM`, blank.fabric, blank.fit].filter(Boolean).join(' · ')}</p>
         </div>
@@ -453,6 +476,10 @@ export default function DesignEditor({ blank, onClose, onSaved }) {
                   {artwork ? `Replace ${area.label.toLowerCase()} artwork` : `Upload ${area.label.toLowerCase()} artwork (PNG or JPG)`}
                   <input type="file" accept="image/png,image/jpeg" onChange={handleFile} style={{ display: 'none' }} />
                 </label>
+                <button onClick={() => setPickingFile(true)} style={{ display: 'block', margin: '8px auto 0', background: 'none', border: 'none', color: '#172B15', fontSize: '12px', fontWeight: 700, textDecoration: 'underline', cursor: 'pointer', fontFamily: 'Inter, sans-serif' }}>
+                  Choose from My files
+                </button>
+                {pickingFile && <FilePicker onPick={pickFile} onClose={() => setPickingFile(false)} />}
                 <p style={{ fontSize: '11px', color: '#889B8E', marginTop: '6px' }}>
                   {areas.length > 1 && !artwork ? 'Optional. Leave it empty to print nothing here. ' : ''}
                   {Number(area.print_cost) ? `Printing here adds ₹${area.print_cost} to the cost.` : ''}
