@@ -919,9 +919,16 @@ export default function DashboardPage() {
 
   async function handleCancelSubscription() {
     if (!window.confirm('Cancel your subscription and move to the Free plan?')) return
+    if (shopDomain) {
+      try {
+        await updateSubscription(shopDomain, 'free')
+      } catch (err) {
+        window.alert(err.message || 'Could not cancel the subscription. Please try again.')
+        return
+      }
+    }
     setCurrentPlan('free')
     localStorage.setItem('pf_plan', 'free')
-    if (shopDomain) await updateSubscription(shopDomain, 'free')
   }
 
   const greeting = () => {

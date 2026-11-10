@@ -42,24 +42,28 @@ export async function fetchOrders(shop) {
 }
 
 export async function fetchProducts(shop) {
-  const res = await fetch(`${BASE_URL}/products?shop=${encodeURIComponent(shop)}`)
+  const res = await fetch(`${BASE_URL}/products?shop=${encodeURIComponent(shop)}`, { headers: await shopAuthHeaders() })
   const data = await res.json()
   return Array.isArray(data) ? data : []
 }
 
 export async function fetchSubscription(shop) {
-  const res = await fetch(`${BASE_URL}/subscription?shop=${encodeURIComponent(shop)}`)
+  const res = await fetch(`${BASE_URL}/subscription?shop=${encodeURIComponent(shop)}`, { headers: await shopAuthHeaders() })
   const data = await res.json()
   return data.plan || 'free'
 }
 
+// Only moves a store back to Free (and cancels the charge in Shopify); paid
+// plans go through createShopifySubscription and Shopify's approval page.
 export async function updateSubscription(shop, plan) {
   const res = await fetch(`${BASE_URL}/subscription`, {
     method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
+    headers: { 'Content-Type': 'application/json', ...(await shopAuthHeaders()) },
     body: JSON.stringify({ shop, plan }),
   })
-  return res.json()
+  const data = await res.json()
+  if (!res.ok) throw new Error(data.error || 'Could not change the plan')
+  return data
 }
 
 export async function fetchPlans() {
@@ -110,7 +114,7 @@ export async function linkStore(shop, email) {
 export async function createShopifySubscription(shop, plan, billingCycle) {
   const res = await fetch(`${BASE_URL}/billing/shopify/create`, {
     method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
+    headers: { 'Content-Type': 'application/json', ...(await shopAuthHeaders()) },
     body: JSON.stringify({ shop, plan, billing_cycle: billingCycle }),
   })
   const data = await res.json()
@@ -119,7 +123,7 @@ export async function createShopifySubscription(shop, plan, billingCycle) {
 }
 
 export async function confirmShopifySubscription(shop, plan) {
-  const res = await fetch(`${BASE_URL}/billing/shopify/confirm?shop=${encodeURIComponent(shop)}&plan=${encodeURIComponent(plan)}`)
+  const res = await fetch(`${BASE_URL}/billing/shopify/confirm?shop=${encodeURIComponent(shop)}&plan=${encodeURIComponent(plan)}`, { headers: await shopAuthHeaders() })
   const data = await res.json()
   if (!res.ok) throw new Error(data.error || 'Failed to confirm subscription')
   return data
@@ -220,21 +224,21 @@ export async function fetchMerchantProducts() {
 }
 
 export async function fetchProductMappings(shop) {
-  const res = await fetch(`${BASE_URL}/product-mappings?shop=${encodeURIComponent(shop)}`)
+  const res = await fetch(`${BASE_URL}/product-mappings?shop=${encodeURIComponent(shop)}`, { headers: await shopAuthHeaders() })
   const data = await res.json()
   if (!res.ok) throw new Error(data.error || 'Failed to fetch products')
   return Array.isArray(data) ? data : []
 }
 
-export async function updateProductMapping({ shop, shopifyProductId, factorySku, fulfillmentCost, printFileUrl }) {
+// Merchants set the print file only; factory SKU and fulfilment cost are set
+// by No Limit Studio in the admin app.
+export async function updateProductMapping({ shop, shopifyProductId, printFileUrl }) {
   const res = await fetch(`${BASE_URL}/product-mappings`, {
     method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
+    headers: { 'Content-Type': 'application/json', ...(await shopAuthHeaders()) },
     body: JSON.stringify({
       shop,
       shopify_product_id: shopifyProductId,
-      factory_sku: factorySku,
-      fulfillment_cost: fulfillmentCost,
       print_file_url: printFileUrl,
     }),
   })
