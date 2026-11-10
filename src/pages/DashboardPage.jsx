@@ -740,6 +740,9 @@ export default function DashboardPage() {
   }, [activeNav])
 
   const [myStores, setMyStores] = useState([])
+  // False until the signed-in account's stores have been looked up, so pages
+  // that need a store can tell "still loading" from "none linked".
+  const [storesChecked, setStoresChecked] = useState(false)
 
   function activateStore(shop) {
     localStorage.setItem('pf_shop', shop)
@@ -780,6 +783,7 @@ export default function DashboardPage() {
         setShopDomain('')
         setCurrentPlan('free')
       }
+      setStoresChecked(true)
     }
     resolveShop()
   }, [currentUser])
@@ -1625,6 +1629,24 @@ export default function DashboardPage() {
 
   // ── Render ─────────────────────────────────────────────────────────────────
 
+  // Shown instead of pages that save to a store (designs, manual orders)
+  // when no store is linked to this account yet; otherwise they'd fail with
+  // "Missing shop".
+  function needStore(action) {
+    if (!storesChecked) {
+      return <div style={{ textAlign: 'center', padding: '64px', color: '#889B8E', fontSize: '13px' }}>Loading your store…</div>
+    }
+    return (
+      <div style={{ background: '#FFFFFF', border: '1px solid rgba(23,43,21,0.06)', borderRadius: '20px', boxShadow: '0 8px 30px rgba(23,43,21,0.015)', padding: '48px 32px', textAlign: 'center', maxWidth: '560px', margin: '24px auto' }}>
+        <div style={{ fontFamily: "'Fraunces', sans-serif", fontSize: '22px', fontWeight: 800, color: '#172B15' }}>Connect your Shopify store first</div>
+        <p style={{ fontSize: '13px', color: '#889B8E', fontWeight: 500, lineHeight: 1.6, margin: '10px 0 22px' }}>
+          You need a connected store to {action}. No store is linked to {currentUser?.email || 'this account'} yet. If you've already installed the app, open it once from your Shopify admin while signed in here and it will link.
+        </p>
+        <button onClick={() => { if (window.shopify) window.open(SHOPIFY_INSTALL_URL, '_top'); else window.location.href = SHOPIFY_INSTALL_URL }} style={{ background: '#B9F95D', color: '#172B15', border: 'none', borderRadius: '12px', padding: '12px 22px', fontSize: '13px', fontWeight: 800, cursor: 'pointer', fontFamily: 'Inter, sans-serif' }}>+ Connect store</button>
+      </div>
+    )
+  }
+
   return (
     <div style={{ display: 'flex', minHeight: '100vh', background: '#FAFAF8', fontFamily: 'Inter, -apple-system, sans-serif', color: '#0A0A0A' }}>
 
@@ -1777,10 +1799,12 @@ export default function DashboardPage() {
               </div>
               {ordersTab === 'shopify'
                 ? <OrdersManagement />
+                : !shopDomain ? <div style={{ position: 'relative', zIndex: 1 }}>{needStore('see and create manual orders')}</div>
                 : <div style={{ position: 'relative', zIndex: 1 }}><ManualOrdersView shopDomain={shopDomain} walletBalance={walletBalance} onWalletChanged={loadWallet} onTopUp={() => setShowTopup(true)} initialNotice={orderNotice} /></div>}
             </>
           )}
-          {activeNav === 'create-order' && (
+          {activeNav === 'create-order' && !shopDomain && <div style={{ position: 'relative', zIndex: 1 }}>{needStore('create an order')}</div>}
+          {activeNav === 'create-order' && shopDomain && (
             <div style={{ position: 'relative', zIndex: 1 }}>
               <ManualOrdersView
                 key="create"
@@ -1794,7 +1818,7 @@ export default function DashboardPage() {
               />
             </div>
           )}
-          {activeNav === 'catalogue' && catalogueOn && <div style={{ position: 'relative', zIndex: 1 }}><CatalogueView shopDomain={shopDomain} /></div>}
+          {activeNav === 'catalogue' && catalogueOn && <div style={{ position: 'relative', zIndex: 1 }}>{shopDomain ? <CatalogueView shopDomain={shopDomain} /> : needStore('design products')}</div>}
           {activeNav === 'products' && <div style={{ position: 'relative', zIndex: 1 }}><ProductsView /></div>}
           {activeNav === 'billing'  && <div style={{ position: 'relative', zIndex: 1 }}><BillingView /></div>}
           {activeNav === 'wallet'   && <div style={{ position: 'relative', zIndex: 1 }}><WalletView /></div>}
