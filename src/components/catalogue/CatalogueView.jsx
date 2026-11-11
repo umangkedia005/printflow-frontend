@@ -2,7 +2,7 @@ import { useCallback, useEffect, useState } from 'react'
 import { createPortal } from 'react-dom'
 import GarmentMockup from './GarmentMockup'
 import DesignEditor from './DesignEditor'
-import { fetchCatalogue, fetchMerchantProducts } from '../../utils/api'
+import { fetchDesignableProducts, fetchMerchantProducts } from '../../utils/api'
 
 function SizeChartModal({ blank, onClose }) {
   const chart = blank.size_chart
@@ -49,11 +49,11 @@ function BlankCard({ blank, onDesign, onSizeChart }) {
       </div>
       <div style={{ padding: '14px 4px 0', flex: 1, display: 'flex', flexDirection: 'column' }}>
         <div style={{ fontFamily: "'Fraunces', sans-serif", fontSize: '17px', fontWeight: 800, color: '#172B15', letterSpacing: '-0.2px' }}>{blank.name}</div>
-        <div style={{ fontSize: '12px', color: '#889B8E', marginTop: '4px' }}>{blank.gsm} GSM | {sizes[0]}–{sizes[sizes.length - 1]} | {blank.fabric}</div>
+        <div style={{ fontSize: '12px', color: '#889B8E', marginTop: '4px' }}>{blank.own ? `Your garment · ${blank.category} | ${sizes[0]}–${sizes[sizes.length - 1]}` : `${blank.gsm} GSM | ${sizes[0]}–${sizes[sizes.length - 1]} | ${blank.fabric}`}</div>
         <div style={{ display: 'flex', gap: '5px', marginTop: '10px' }}>
           {blank.colors.map(c => <span key={c.name} title={c.name} style={{ width: '14px', height: '14px', borderRadius: '50%', background: c.hex, border: '1px solid #D8D8D4' }} />)}
         </div>
-        <div style={{ fontSize: '12px', color: '#172B15', marginTop: '10px', marginBottom: '14px' }}>Base cost from <strong style={{ color: '#172B15' }}>₹{fromCost}</strong> + tax</div>
+        <div style={{ fontSize: '12px', color: '#172B15', marginTop: '10px', marginBottom: '14px' }}>{blank.own ? 'You supply the garment · printing only' : <>Base cost from <strong style={{ color: '#172B15' }}>₹{fromCost}</strong> + tax</>}</div>
         <button className="pf-btn" onClick={onDesign} style={{ marginTop: 'auto', width: '100%', padding: '12px', fontSize: '13px', fontWeight: 800, background: '#172B15', color: '#FFFFFF', borderRadius: '12px' }}>Design now</button>
       </div>
     </div>
@@ -73,7 +73,7 @@ export default function CatalogueView() {
   const [notice, setNotice] = useState('')
 
   useEffect(() => {
-    fetchCatalogue()
+    fetchDesignableProducts()
       .then(setBlanks)
       .catch(err => setError(err.message))
       .finally(() => setLoading(false))

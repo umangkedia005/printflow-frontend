@@ -1,7 +1,10 @@
 import { auth } from '../firebase'
-import { ARTWORK_TYPES, MAX_ARTWORK_BYTES, readImageSize, makeThumbnail } from './artworkImage'
+import { ARTWORK_TYPES, MAX_ARTWORK_BYTES, readImageSize, makeThumbnail, squarePhoto } from './artworkImage'
 
 const BASE_URL = import.meta.env.VITE_API_URL
+
+// Where customers reach the team (Help Center, My garments).
+export const SUPPORT_EMAIL = 'talktonolimitstudios@gmail.com'
 
 async function getToken() {
   const user = auth.currentUser
@@ -183,6 +186,50 @@ export async function fetchActivity() {
   const data = await res.json()
   if (!res.ok) throw new Error(data.error || 'Could not load your activity')
   return Array.isArray(data) ? data : []
+}
+
+// The account's own garments (My garments), each with its review status.
+// Approved ones carry `blank`: the garment in catalogue-product shape.
+export async function fetchGarments() {
+  const res = await fetch(`${BASE_URL}/garments`, { headers: await shopAuthHeaders() })
+  const data = await res.json()
+  if (!res.ok) throw new Error(data.error || 'Could not load your garments')
+  return Array.isArray(data) ? data : []
+}
+
+export async function saveGarment(garment) {
+  const res = await fetch(`${BASE_URL}/garments`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...(await shopAuthHeaders()) },
+    body: JSON.stringify(garment),
+  })
+  const data = await res.json()
+  if (!res.ok) throw new Error(data.error || 'Could not save the garment')
+  return data
+}
+
+export async function deleteGarment(garmentId) {
+  const res = await fetch(`${BASE_URL}/garments/delete`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...(await shopAuthHeaders()) },
+    body: JSON.stringify({ garment_id: garmentId }),
+  })
+  const data = await res.json()
+  if (!res.ok) throw new Error(data.error || 'Could not remove the garment')
+  return data
+}
+
+// Square the photo first, then the usual direct-to-S3 upload. Returns its key.
+export async function uploadGarmentPhoto(file) {
+  if (!ARTWORK_TYPES.includes(file.type)) throw new Error('Use a PNG or JPG photo.')
+  return uploadArtwork(await squarePhoto(file))
+}
+
+// Everything the account can design on: its approved garments first, then
+// the catalogue. Garments are optional, so a failure there doesn't block.
+export async function fetchDesignableProducts() {
+  const [catalogue, garments] = await Promise.all([fetchCatalogue(), fetchGarments().catch(() => [])])
+  return [...garments.filter(g => g.blank).map(g => g.blank), ...catalogue]
 }
 
 export async function fetchCatalogue() {

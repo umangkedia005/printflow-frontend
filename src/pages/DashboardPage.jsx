@@ -2,12 +2,13 @@ import React, { useState, useEffect, useCallback } from 'react'
 import { useNavigate, useSearchParams } from 'react-router-dom'
 import { useAuth } from '../contexts/AuthContext'
 import { openWalletTopup } from '../utils/razorpay'
-import { fetchOrders, fetchSubscription, fetchMyStores, linkStore, updateSubscription, fetchPlans, fetchWallet, fulfillOrder, fetchProductMappings, updateProductMapping, createShopifySubscription, fetchCatalogue } from '../utils/api'
+import { SUPPORT_EMAIL, fetchOrders, fetchSubscription, fetchMyStores, linkStore, updateSubscription, fetchPlans, fetchWallet, fulfillOrder, fetchProductMappings, updateProductMapping, createShopifySubscription, fetchCatalogue } from '../utils/api'
 import { SHOPIFY_INSTALL_URL } from '../utils/shopify'
 import CatalogueView from '../components/catalogue/CatalogueView'
 import ManualOrdersView from '../components/orders/ManualOrders'
 import FilesView from '../components/files/FilesView'
 import ActivityFeed from '../components/activity/ActivityFeed'
+import GarmentsView from '../components/garments/GarmentsView'
 
 // ── Data ─────────────────────────────────────────────────────────────────────
 
@@ -82,6 +83,7 @@ const IconTrends        = () => <svg width="15" height="15" viewBox="0 0 16 16" 
 const IconOrders   = () => <svg width="15" height="15" viewBox="0 0 16 16" fill="none"><path d="M2 4h12M2 8h12M2 12h8" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/></svg>
 const IconCatalogue = () => <svg width="15" height="15" viewBox="0 0 16 16" fill="none"><path d="M5.5 2L2 4l1.2 3L4.5 6.5V14h7V6.5l1.3.5L14 4l-3.5-2a2.5 2.5 0 01-5 0Z" stroke="currentColor" strokeWidth="1.5" strokeLinejoin="round"/></svg>
 const IconFiles = () => <svg width="15" height="15" viewBox="0 0 16 16" fill="none"><rect x="2" y="2" width="12" height="12" rx="2" stroke="currentColor" strokeWidth="1.5"/><circle cx="6" cy="6" r="1.3" fill="currentColor"/><path d="M2.5 12l3.5-3.5 2.5 2.5 2-2 3 3" stroke="currentColor" strokeWidth="1.5" strokeLinejoin="round"/></svg>
+const IconGarments = () => <svg width="15" height="15" viewBox="0 0 16 16" fill="none"><path d="M5.5 2L2 4l1.2 3L4.5 6.5V14h7V6.5l1.3.5L14 4l-3.5-2a2.5 2.5 0 01-5 0Z" stroke="currentColor" strokeWidth="1.5" strokeLinejoin="round"/><path d="M6.5 9.5h3" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/></svg>
 const IconCreateOrder = () => <svg width="15" height="15" viewBox="0 0 16 16" fill="none"><path d="M1.5 2h2l1.6 7.5h7.4L14 4.5H4.4" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/><circle cx="6" cy="13" r="1.2" fill="currentColor"/><circle cx="11.5" cy="13" r="1.2" fill="currentColor"/></svg>
 const IconProducts = () => <svg width="15" height="15" viewBox="0 0 16 16" fill="none"><path d="M8 1.5L14 4.5V11.5L8 14.5L2 11.5V4.5L8 1.5Z" stroke="currentColor" strokeWidth="1.5" strokeLinejoin="round"/><path d="M8 1.5V14.5M2 4.5L8 7.5L14 4.5" stroke="currentColor" strokeWidth="1.5"/></svg>
 const IconSettings = () => <svg width="15" height="15" viewBox="0 0 16 16" fill="none"><circle cx="8" cy="8" r="2.5" stroke="currentColor" strokeWidth="1.5"/><path d="M8 1.5V3M8 13v1.5M1.5 8H3M13 8h1.5M3.4 3.4l1.06 1.06M11.54 11.54l1.06 1.06M3.4 12.6l1.06-1.06M11.54 4.46l1.06-1.06" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/></svg>
@@ -258,14 +260,13 @@ const PRODUCT_GRADIENTS = [
   'linear-gradient(135deg, #FBCFE8, #EC4899)',
 ]
 
-const SUPPORT_EMAIL = 'talktonolimitstudios@gmail.com'
-
 const NAV_ITEMS = [
   { id: 'dashboard',     label: 'Dashboard',     Icon: IconDashboard },
   { id: 'notifications', label: 'Notifications', Icon: IconNotifications },
   { id: 'trends',        label: 'Trends',        Icon: IconTrends },
   { id: 'catalogue',     label: 'Catalogue',     Icon: IconCatalogue },
   { id: 'files',         label: 'My files',      Icon: IconFiles },
+  { id: 'garments',      label: 'My garments',   Icon: IconGarments },
   { id: 'orders',        label: 'Orders',        Icon: IconOrders },
   { id: 'create-order',  label: 'Create order',  Icon: IconCreateOrder },
   { id: 'products',      label: 'Products',      Icon: IconProducts },
@@ -1663,8 +1664,8 @@ export default function DashboardPage() {
 
           {/* Section 2: Store Hub */}
           <div style={{ fontSize: '10.5px', fontWeight: 800, letterSpacing: '0.08em', textTransform: 'uppercase', color: '#7A7A70', padding: '20px 18px 8px', marginBottom: '4px' }}>Store Hub</div>
-          {NAV_ITEMS.slice(3, 8).map(({ id, label, Icon }) => {
-            if ((id === 'catalogue' || id === 'files') && !catalogueOn) return null
+          {NAV_ITEMS.slice(3, 9).map(({ id, label, Icon }) => {
+            if ((id === 'catalogue' || id === 'files' || id === 'garments') && !catalogueOn) return null
             const active = activeNav === id
             return (
               <button key={id} onClick={() => { setActiveNav(id); setOrderNotice(''); setOrderDesignId(null) }} style={{ display: 'flex', alignItems: 'center', gap: '12px', width: '100%', padding: '12px 18px', border: 'none', background: active ? '#FFFFFF' : 'transparent', color: '#172B15', fontSize: '14.5px', fontWeight: active ? 800 : 600, cursor: 'pointer', textAlign: 'left', marginBottom: '6px', fontFamily: 'Inter, sans-serif', transition: 'all 0.2s', justifyContent: 'space-between', borderRadius: '12px', boxShadow: active ? '0 4px 12px rgba(23,43,21,0.04)' : 'none' }}
@@ -1678,7 +1679,7 @@ export default function DashboardPage() {
 
           {/* Section 3: Settings & Support */}
           <div style={{ fontSize: '10.5px', fontWeight: 800, letterSpacing: '0.08em', textTransform: 'uppercase', color: '#7A7A70', padding: '20px 18px 8px', marginBottom: '4px' }}>Settings & Support</div>
-          {NAV_ITEMS.slice(8).map(({ id, label, Icon }) => {
+          {NAV_ITEMS.slice(9).map(({ id, label, Icon }) => {
             const active = activeNav === id
             return (
               <button key={id} onClick={() => setActiveNav(id)} style={{ display: 'flex', alignItems: 'center', gap: '12px', width: '100%', padding: '12px 18px', border: 'none', background: active ? '#FFFFFF' : 'transparent', color: '#172B15', fontSize: '14.5px', fontWeight: active ? 800 : 600, cursor: 'pointer', textAlign: 'left', marginBottom: '6px', fontFamily: 'Inter, sans-serif', transition: 'all 0.2s', justifyContent: 'space-between', borderRadius: '12px', boxShadow: active ? '0 4px 12px rgba(23,43,21,0.04)' : 'none' }}
@@ -1799,6 +1800,7 @@ export default function DashboardPage() {
               />
             </div>
           )}
+          {activeNav === 'garments' && catalogueOn && <div style={{ position: 'relative', zIndex: 1 }}><GarmentsView /></div>}
           {activeNav === 'files' && catalogueOn && <div style={{ position: 'relative', zIndex: 1 }}><FilesView onOrder={id => { setOrderDesignId(id); setActiveNav('create-order') }} /></div>}
           {activeNav === 'catalogue' && catalogueOn && <div style={{ position: 'relative', zIndex: 1 }}><CatalogueView /></div>}
           {activeNav === 'products' && <div style={{ position: 'relative', zIndex: 1 }}><ProductsView /></div>}

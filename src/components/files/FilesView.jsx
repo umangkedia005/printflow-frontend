@@ -2,7 +2,7 @@ import { useCallback, useEffect, useRef, useState } from 'react'
 import DesignEditor from '../catalogue/DesignEditor'
 import { Modal, Thumb } from './FilePicker'
 import { INK, SAGE, LIME, LINE, SERIF, CARD, LABEL } from './theme'
-import { fetchArtworkFiles, uploadArtworkFile, deleteArtworkFile, fetchCatalogue, saveMerchantProduct } from '../../utils/api'
+import { fetchArtworkFiles, uploadArtworkFile, deleteArtworkFile, fetchDesignableProducts, saveMerchantProduct } from '../../utils/api'
 import { printSizeAt } from '../../utils/artworkImage'
 
 const megabytes = b => `${(Number(b || 0) / 1024 / 1024).toFixed(1)} MB`
@@ -22,7 +22,7 @@ function BlankGrid({ blanks, onPick, selectedId }) {
               {photo && <img src={photo} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover', maxWidth: 'none' }} />}
             </div>
             <div style={{ fontSize: '13px', fontWeight: 700, color: INK, marginTop: '8px' }}>{b.name}</div>
-            <div style={{ fontSize: '11px', color: SAGE }}>{b.gsm} GSM · from ₹{Math.min(...b.variants.map(v => Number(v.base_cost)))}</div>
+            <div style={{ fontSize: '11px', color: SAGE }}>{b.own ? 'Your garment · printing only' : `${b.gsm} GSM · from ₹${Math.min(...b.variants.map(v => Number(v.base_cost)))}`}</div>
           </button>
         )
       })}
@@ -162,7 +162,7 @@ export default function FilesView({ onOrder }) {
       .finally(() => setLoading(false))
   }, [])
   useEffect(() => { load() }, [load])
-  useEffect(() => { fetchCatalogue().then(setBlanks).catch(() => setBlanks([])) }, [])
+  useEffect(() => { fetchDesignableProducts().then(setBlanks).catch(() => setBlanks([])) }, [])
 
   async function addFiles(list) {
     setNotice('')

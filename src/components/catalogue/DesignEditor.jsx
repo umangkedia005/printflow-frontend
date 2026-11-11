@@ -392,7 +392,7 @@ export default function DesignEditor({ blank, onClose, onSaved, initialArtwork =
         <div>
           <button onClick={onClose} style={{ background: 'none', border: 'none', padding: 0, color: '#889B8E', fontSize: '13px', fontWeight: 600, cursor: 'pointer', fontFamily: 'Inter, sans-serif', marginBottom: '8px' }}>← {backLabel}</button>
           <h1 style={{ fontFamily: "'Fraunces', sans-serif", fontSize: '28px', fontWeight: 800, color: '#172B15', letterSpacing: '-0.5px' }}>Design: {blank.name}</h1>
-          <p style={{ fontSize: '13px', color: '#889B8E', fontWeight: 500, marginTop: '4px' }}>{[blank.gsm && `${blank.gsm} GSM`, blank.fabric, blank.fit].filter(Boolean).join(' · ')}</p>
+          <p style={{ fontSize: '13px', color: '#889B8E', fontWeight: 500, marginTop: '4px' }}>{(blank.own ? ['Your garment', blank.category] : [blank.gsm && `${blank.gsm} GSM`, blank.fabric, blank.fit]).filter(Boolean).join(' · ')}</p>
         </div>
       </div>
 
