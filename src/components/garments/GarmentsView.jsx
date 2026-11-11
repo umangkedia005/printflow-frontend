@@ -321,7 +321,7 @@ export default function GarmentsView({ onOrderPlain }) {
                 </div>
                 {g.status === 'approved' && (
                   <div style={{ fontSize: '12px', color: INK, marginTop: '4px', lineHeight: 1.5 }}>
-                    {priceRange(g) && <div><strong>{priceRange(g)}</strong> per piece</div>}
+                    {priceRange(g) ? <div><strong>{priceRange(g)}</strong> per piece</div> : <div style={{ color: '#C2410C' }}>Price coming soon: we'll email you when it's set</div>}
                     <div>Prints on {(g.areas || []).map(a => `${a.label} (+₹${Number(a.print_cost)})`).join(', ')}</div>
                   </div>
                 )}
@@ -329,7 +329,7 @@ export default function GarmentsView({ onOrderPlain }) {
                 <div style={{ marginTop: 'auto', paddingTop: '14px' }}>
                   {g.status === 'approved' ? (
                     <div style={{ display: 'flex', gap: '8px' }}>
-                      <button onClick={() => setDesigning(g.blank)} style={{ flex: 1, background: INK, color: '#FFFFFF', border: 'none', borderRadius: '12px', padding: '11px', fontSize: '13px', fontWeight: 800, cursor: 'pointer', fontFamily: 'Inter, sans-serif' }}>Design on it</button>
+                      <button disabled={!priceRange(g)} onClick={() => setDesigning(g.blank)} title={priceRange(g) ? undefined : 'Available once we set the price'} style={{ flex: 1, background: INK, color: '#FFFFFF', border: 'none', borderRadius: '12px', padding: '11px', fontSize: '13px', fontWeight: 800, cursor: priceRange(g) ? 'pointer' : 'not-allowed', opacity: priceRange(g) ? 1 : 0.4, fontFamily: 'Inter, sans-serif' }}>Design on it</button>
                       {onOrderPlain && priceRange(g) && <button className="pf-btn-outline" onClick={() => onOrderPlain(g.blank.blank_id)} style={{ flex: 1, padding: '10px', fontSize: '12px', whiteSpace: 'nowrap' }}>Order plain</button>}
                     </div>
                   ) : (

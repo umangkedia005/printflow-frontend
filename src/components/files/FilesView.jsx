@@ -9,6 +9,13 @@ const megabytes = b => `${(Number(b || 0) / 1024 / 1024).toFixed(1)} MB`
 const baseName = name => name.replace(/\.[a-z0-9]+$/i, '')
 const suggestedPrice = cost => Math.max(cost, Math.ceil((cost * 1.8) / 50) * 50 - 1)
 
+// "Your garment · from ₹299", "240 GSM · from ₹349", or a note while unpriced.
+function fromLabel(b) {
+  const prices = b.variants.filter(v => v.in_stock !== false && Number(v.base_cost) > 0).map(v => Number(v.base_cost))
+  if (!prices.length) return b.own ? 'Your garment · price coming soon' : `${b.gsm} GSM`
+  return `${b.own ? 'Your garment' : `${b.gsm} GSM`} · from ₹${Math.min(...prices)}`
+}
+
 function BlankGrid({ blanks, onPick, selectedId }) {
   if (!blanks.length) return <div style={{ textAlign: 'center', padding: '32px', color: SAGE, fontSize: '13px' }}>The catalogue is empty.</div>
   return (
@@ -22,7 +29,7 @@ function BlankGrid({ blanks, onPick, selectedId }) {
               {photo && <img src={photo} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover', maxWidth: 'none' }} />}
             </div>
             <div style={{ fontSize: '13px', fontWeight: 700, color: INK, marginTop: '8px' }}>{b.name}</div>
-            <div style={{ fontSize: '11px', color: SAGE }}>{b.own ? `Your garment · from ₹${Math.min(...b.variants.filter(v => v.in_stock !== false).map(v => Number(v.base_cost)))}` : `${b.gsm} GSM · from ₹${Math.min(...b.variants.map(v => Number(v.base_cost)))}`}</div>
+            <div style={{ fontSize: '11px', color: SAGE }}>{fromLabel(b)}</div>
           </button>
         )
       })}

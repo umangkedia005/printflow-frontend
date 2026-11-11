@@ -39,8 +39,10 @@ function SizeChartModal({ blank, onClose }) {
 
 function BlankCard({ blank, onDesign, onSizeChart, onOrderPlain }) {
   const sizes = [...new Set(blank.variants.map(v => v.size))]
-  // Lowest price among sizes that can be ordered (unpriced own-garment sizes can't).
-  const fromCost = Math.min(...blank.variants.filter(v => v.in_stock !== false).map(v => Number(v.base_cost)))
+  // Lowest price among sizes that can be ordered; null when none can be
+  // (an own garment we haven't priced yet).
+  const orderable = blank.variants.filter(v => v.in_stock !== false && Number(v.base_cost) > 0).map(v => Number(v.base_cost))
+  const fromCost = orderable.length ? Math.min(...orderable) : null
   return (
     <div style={{ background: '#FFFFFF', border: '1px solid rgba(23,43,21,0.06)', borderRadius: '20px', boxShadow: '0 8px 30px rgba(23,43,21,0.015)', padding: '14px', display: 'flex', flexDirection: 'column' }}>
       <div style={{ position: 'relative' }}>
@@ -55,10 +57,10 @@ function BlankCard({ blank, onDesign, onSizeChart, onOrderPlain }) {
         <div style={{ display: 'flex', gap: '5px', marginTop: '10px' }}>
           {blank.colors.map(c => <span key={c.name} title={c.name} style={{ width: '14px', height: '14px', borderRadius: '50%', background: c.hex, border: '1px solid #D8D8D4' }} />)}
         </div>
-        <div style={{ fontSize: '12px', color: '#172B15', marginTop: '10px', marginBottom: '14px' }}>{blank.own ? <>Your garment · from <strong style={{ color: '#172B15' }}>₹{fromCost}</strong> + tax</> : <>Base cost from <strong style={{ color: '#172B15' }}>₹{fromCost}</strong> + tax</>}</div>
+        <div style={{ fontSize: '12px', color: '#172B15', marginTop: '10px', marginBottom: '14px' }}>{fromCost == null ? 'Price coming soon: we\'ll email you when it\'s set' : <>{blank.own ? 'Your garment · from' : 'Base cost from'} <strong style={{ color: '#172B15' }}>₹{fromCost}</strong> + tax</>}</div>
         <button className="pf-btn" onClick={onDesign} style={{ marginTop: 'auto', width: '100%', padding: '12px', fontSize: '13px', fontWeight: 800, background: '#172B15', color: '#FFFFFF', borderRadius: '12px' }}>Design now</button>
         {/* Plain, unprinted pieces. */}
-        {onOrderPlain && fromCost > 0 && <button className="pf-btn-outline" onClick={onOrderPlain} style={{ width: '100%', padding: '10px', fontSize: '12px', marginTop: '8px' }}>Order plain (no print)</button>}
+        {onOrderPlain && fromCost != null && <button className="pf-btn-outline" onClick={onOrderPlain} style={{ width: '100%', padding: '10px', fontSize: '12px', marginTop: '8px' }}>Order plain (no print)</button>}
       </div>
     </div>
   )

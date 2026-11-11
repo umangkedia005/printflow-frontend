@@ -229,7 +229,9 @@ export async function uploadGarmentPhoto(file) {
 // the catalogue. Garments are optional, so a failure there doesn't block.
 export async function fetchDesignableProducts() {
   const [catalogue, garments] = await Promise.all([fetchCatalogue(), fetchGarments().catch(() => [])])
-  return [...garments.filter(g => g.blank).map(g => g.blank), ...catalogue]
+  // Garments we haven't priced yet can't be designed on or ordered.
+  const ready = g => g.blank?.variants?.some(v => v.in_stock !== false && Number(v.base_cost) > 0)
+  return [...garments.filter(ready).map(g => g.blank), ...catalogue]
 }
 
 export async function fetchCatalogue() {
