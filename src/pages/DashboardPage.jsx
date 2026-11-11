@@ -1726,7 +1726,8 @@ export default function DashboardPage() {
           <span style={{ fontSize: '14px', color: '#172B15', fontWeight: 550 }}>{greeting()}, <strong style={{ fontWeight: 700 }}>{firstName}</strong></span>
           <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
             <span style={{ fontSize: '12px', color: '#71717A' }}>{new Date().toLocaleDateString('en-IN', { weekday: 'short', day: 'numeric', month: 'short', year: 'numeric' })}</span>
-            <button
+            {/* Only for accounts with no store yet; the sidebar shows the linked one. */}
+            {!shopDomain && <button
               onClick={() => {
                 // Shopify owns installation. Embedded, the admin refuses to be
                 // framed, so this has to break out to the top window.
@@ -1749,7 +1750,7 @@ export default function DashboardPage() {
               }}
             >
               + Connect Store
-            </button>
+            </button>}
           </div>
         </div>
 
