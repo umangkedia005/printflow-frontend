@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useMemo, useState } from 'react'
 import { createPortal } from 'react-dom'
+import DesignMockup from '../catalogue/DesignMockup'
 import { fetchCatalogue, fetchMerchantProducts, quoteManualOrder, placeManualOrder, fetchManualOrders } from '../../utils/api'
 
 const INK = '#172B15', SAGE = '#889B8E', LIME = '#B9F95D', LINE = 'rgba(23,43,21,0.08)'
@@ -85,9 +86,11 @@ function ProductPicker({ designs, blanks, onPick, onClose }) {
               : item.colors[0]?.image_urls?.[item.views?.[0]?.id] || item.colors[0]?.image_url
             return (
               <button key={kind === 'design' ? item.product_id : item.blank_id} onClick={() => onPick(item, kind)} style={{ textAlign: 'left', background: '#FFFFFF', border: `1px solid ${LINE}`, borderRadius: '16px', padding: '10px', cursor: 'pointer', fontFamily: 'Inter, sans-serif' }}>
-                <div style={{ aspectRatio: '1 / 1', borderRadius: '12px', background: '#F4F5F0', overflow: 'hidden', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                  {image && <img src={image} alt="" style={{ width: kind === 'design' ? '75%' : '100%', height: kind === 'design' ? '75%' : '100%', objectFit: kind === 'design' ? 'contain' : 'cover' }} />}
-                </div>
+                {kind === 'design' ? <DesignMockup design={item} blank={blanks.find(b => b.blank_id === item.blank_id)} /> : (
+                  <div style={{ aspectRatio: '1 / 1', borderRadius: '12px', background: '#F4F5F0', overflow: 'hidden', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                    {image && <img src={image} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />}
+                  </div>
+                )}
                 <div style={{ fontSize: '13px', fontWeight: 700, color: INK, marginTop: '8px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{kind === 'design' ? item.title : item.name}</div>
                 <div style={{ fontSize: '11px', color: SAGE, marginTop: '2px' }}>{kind === 'design' ? blankName(item.blank_id) : `${item.gsm} GSM · no print`}</div>
               </button>

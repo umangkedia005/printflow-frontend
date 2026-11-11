@@ -2,6 +2,7 @@ import { useCallback, useEffect, useState } from 'react'
 import { createPortal } from 'react-dom'
 import GarmentMockup from './GarmentMockup'
 import DesignEditor from './DesignEditor'
+import DesignMockup from './DesignMockup'
 import { fetchDesignableProducts, fetchMerchantProducts } from '../../utils/api'
 
 function SizeChartModal({ blank, onClose }) {
@@ -63,7 +64,8 @@ function BlankCard({ blank, onDesign, onSizeChart, onOrderPlain }) {
 }
 
 // onOrderPlain(blankId): open Create order with this product as a plain line.
-export default function CatalogueView({ onOrderPlain }) {
+// onOrderDesign(productId): open Create order with this saved design.
+export default function CatalogueView({ onOrderPlain, onOrderDesign }) {
   const [tab, setTab] = useState('catalogue')
   const [blanks, setBlanks] = useState([])
   const [loading, setLoading] = useState(true)
@@ -154,17 +156,16 @@ export default function CatalogueView({ onOrderPlain }) {
           ) : (
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(230px, 1fr))', gap: '16px' }}>
               {designs.map(d => {
-                const art = Object.values(d.artwork || {})[0]
+                const blank = blanks.find(b => b.blank_id === d.blank_id)
                 return (
-                  <div key={d.product_id} style={{ background: '#FFFFFF', border: '1px solid rgba(23,43,21,0.08)', borderRadius: '16px', padding: '14px' }}>
-                    <div style={{ aspectRatio: '1 / 1', background: '#F4F4F0', borderRadius: '12px', display: 'flex', alignItems: 'center', justifyContent: 'center', overflow: 'hidden' }}>
-                      {art?.preview_url && <img src={art.preview_url} alt="" style={{ maxWidth: '70%', maxHeight: '70%', objectFit: 'contain' }} />}
-                    </div>
+                  <div key={d.product_id} style={{ background: '#FFFFFF', border: '1px solid rgba(23,43,21,0.08)', borderRadius: '16px', padding: '14px', display: 'flex', flexDirection: 'column' }}>
+                    <DesignMockup design={d} blank={blank} />
                     <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: '8px', marginTop: '12px' }}>
                       <div style={{ fontSize: '14px', fontWeight: 700, color: '#172B15', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{d.title}</div>
-                      <span style={{ flexShrink: 0, background: '#F4F4F0', color: '#172B15', padding: '3px 9px', borderRadius: '100px', fontSize: '10px', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.04em' }}>{d.status}</span>
+                      <span title="Saved here; not published to a Shopify store yet" style={{ flexShrink: 0, background: '#F4F4F0', color: '#172B15', padding: '3px 9px', borderRadius: '100px', fontSize: '10px', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.04em' }}>{d.status}</span>
                     </div>
-                    <div style={{ fontSize: '12px', color: '#889B8E', marginTop: '4px' }}>{blankName(d.blank_id)} · {d.colors.length} color{d.colors.length === 1 ? '' : 's'} · {d.sizes.join(', ')}</div>
+                    <div style={{ fontSize: '12px', color: '#889B8E', marginTop: '4px', marginBottom: '12px' }}>{blankName(d.blank_id)} · {d.colors.length} color{d.colors.length === 1 ? '' : 's'} · {d.sizes.join(', ')}</div>
+                    {onOrderDesign && <button className="pf-btn" onClick={() => onOrderDesign(d.product_id)} style={{ marginTop: 'auto', width: '100%', padding: '11px', fontSize: '13px', fontWeight: 800, background: '#B9F95D', color: '#172B15', borderRadius: '12px' }}>Order</button>}
                   </div>
                 )
               })}
