@@ -45,19 +45,22 @@ function QuickOrder({ file, blanks, onClose, onReady }) {
   const only = blanks.length === 1 ? blanks[0] : null
   const [blank, setBlank] = useState(only)
   const [color, setColor] = useState(only?.colors[0]?.name || '')
-  const [areaId, setAreaId] = useState(only?.print_areas[0]?.id || '')
+  // Positions to print on (front, back, sleeves...); the same file goes on each.
+  const [areaIds, setAreaIds] = useState(only?.print_areas[0] ? [only.print_areas[0].id] : [])
   const [saving, setSaving] = useState(false)
   const [error, setError] = useState('')
 
   function chooseBlank(b) {
     setBlank(b)
     setColor(b.colors[0]?.name || '')
-    setAreaId(b.print_areas[0]?.id || '')
+    setAreaIds(b.print_areas[0] ? [b.print_areas[0].id] : [])
     setError('')
   }
 
-  const area = blank?.print_areas.find(a => a.id === areaId)
-  const place = area ? autoPlacement(file, area) : null
+  const toggleArea = id => setAreaIds(ids => (ids.includes(id) ? ids.filter(x => x !== id) : [...ids, id]))
+  // In the catalogue's order, each with where the file lands on it.
+  const placed = (blank?.print_areas || []).filter(a => areaIds.includes(a.id)).map(a => ({ area: a, place: autoPlacement(file, a) }))
+  const printCost = placed.reduce((sum, p) => sum + Number(p.area.print_cost || 0), 0)
   const sizes = blank ? (blank.sizes?.length ? blank.sizes : [...new Set(blank.variants.map(v => v.size))])
     .filter(s => blank.variants.some(v => v.size === s && v.color === color && v.in_stock)) : []
 
@@ -65,7 +68,7 @@ function QuickOrder({ file, blanks, onClose, onReady }) {
     setSaving(true)
     setError('')
     try {
-      const cost = s => Number(blank.variants.find(v => v.size === s && v.color === color).base_cost) + Number(area.print_cost || 0)
+      const cost = s => Number(blank.variants.find(v => v.size === s && v.color === color).base_cost) + printCost
       const { product_id } = await saveMerchantProduct({
         blank_id: blank.blank_id,
         title: `${baseName(file.name)} · ${blank.name}`,
@@ -73,7 +76,7 @@ function QuickOrder({ file, blanks, onClose, onReady }) {
         colors: [color],
         sizes,
         prices: Object.fromEntries(sizes.map(s => [s, suggestedPrice(cost(s))])),
-        artwork: { [area.id]: { s3_key: file.s3_key, px_w: Number(file.px_w), px_h: Number(file.px_h), x_in: place.x, y_in: place.y, width_in: place.w } },
+        artwork: Object.fromEntries(placed.map(({ area, place }) => [area.id, { s3_key: file.s3_key, px_w: Number(file.px_w), px_h: Number(file.px_h), x_in: place.x, y_in: place.y, width_in: place.w }])),
       })
       onReady(product_id)
     } catch (err) {
@@ -98,31 +101,40 @@ function QuickOrder({ file, blanks, onClose, onReady }) {
             </div>
           </div>
           <div>
-            <span style={LABEL}>3. Print on</span>
+            <span style={LABEL}>3. Print on · tick one or more</span>
             <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
-              {blank.print_areas.map(a => (
-                <button key={a.id} onClick={() => setAreaId(a.id)} style={{ padding: '8px 14px', borderRadius: '10px', border: areaId === a.id ? `1px solid ${INK}` : `1px solid ${LINE}`, background: areaId === a.id ? INK : '#FFFFFF', color: areaId === a.id ? '#FFFFFF' : INK, fontSize: '12px', fontWeight: 700, cursor: 'pointer', fontFamily: 'Inter, sans-serif' }}>
-                  {a.label}{Number(a.print_cost) ? ` · +₹${a.print_cost}` : ''}
-                </button>
-              ))}
+              {blank.print_areas.map(a => {
+                const on = areaIds.includes(a.id)
+                return (
+                  <button key={a.id} onClick={() => toggleArea(a.id)} aria-pressed={on} style={{ padding: '8px 14px', borderRadius: '10px', border: on ? `1px solid ${INK}` : `1px solid ${LINE}`, background: on ? INK : '#FFFFFF', color: on ? '#FFFFFF' : INK, fontSize: '12px', fontWeight: 700, cursor: 'pointer', fontFamily: 'Inter, sans-serif' }}>
+                    {on ? '✓ ' : ''}{a.label}{Number(a.print_cost) ? ` · +₹${a.print_cost}` : ''}
+                  </button>
+                )
+              })}
             </div>
           </div>
         </div>
       )}
 
-      {place && (
+      {placed.length > 0 && (
         <div style={{ marginTop: '20px', background: '#F7F8F4', borderRadius: '12px', padding: '12px 14px', fontSize: '12px', color: INK, lineHeight: 1.6 }}>
-          Printed centred on the {area.label.toLowerCase()}, {place.w.toFixed(1)}″ × {(place.w * file.px_h / file.px_w).toFixed(1)}″.
-          {place.shrunk && <span style={{ color: '#C2410C' }}> Smaller than the print area so it stays sharp; upload a larger file to print bigger.</span>}
-          <div style={{ color: SAGE, marginTop: '4px' }}>Want to move or resize it? Close this and use Design product instead.</div>
+          {placed.map(({ area, place }) => (
+            <div key={area.id}>
+              <strong>{area.label}:</strong> centred, {place.w.toFixed(1)}″ × {(place.w * file.px_h / file.px_w).toFixed(1)}″
+              {place.shrunk && <span style={{ color: '#C2410C' }}> (smaller than the area so it stays sharp)</span>}
+            </div>
+          ))}
+          {printCost > 0 && <div style={{ marginTop: '4px' }}>Printing adds ₹{printCost} per piece.</div>}
+          <div style={{ color: SAGE, marginTop: '4px' }}>Want a different file per position, or to move or resize it? Close this and use Design product instead.</div>
         </div>
       )}
+      {blank && placed.length === 0 && <div style={{ marginTop: '12px', fontSize: '12px', color: '#C2410C' }}>Tick at least one position to print on.</div>}
       {blank && sizes.length === 0 && <div style={{ marginTop: '12px', fontSize: '12px', color: '#C53030' }}>This colour is out of stock in every size.</div>}
       {error && <div style={{ marginTop: '12px', fontSize: '12px', color: '#C53030' }}>⚠ {error}</div>}
 
       <div style={{ display: 'flex', justifyContent: 'flex-end', alignItems: 'center', gap: '12px', marginTop: '24px' }}>
         <span style={{ fontSize: '11px', color: SAGE }}>{blank ? 'Sizes and quantities are chosen on the next page.' : 'Choose a product above to continue.'}</span>
-        <button disabled={!place || !sizes.length || saving} onClick={proceed} style={{ background: LIME, color: INK, border: 'none', borderRadius: '12px', padding: '12px 20px', fontSize: '13px', fontWeight: 800, cursor: !place || saving ? 'not-allowed' : 'pointer', opacity: !place || !sizes.length || saving ? 0.5 : 1, fontFamily: 'Inter, sans-serif' }}>
+        <button disabled={!placed.length || !sizes.length || saving} onClick={proceed} style={{ background: LIME, color: INK, border: 'none', borderRadius: '12px', padding: '12px 20px', fontSize: '13px', fontWeight: 800, cursor: !placed.length || saving ? 'not-allowed' : 'pointer', opacity: !placed.length || !sizes.length || saving ? 0.5 : 1, fontFamily: 'Inter, sans-serif' }}>
           {saving ? 'Preparing…' : 'Continue to order →'}
         </button>
       </div>
