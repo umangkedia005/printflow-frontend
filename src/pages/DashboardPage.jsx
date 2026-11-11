@@ -633,6 +633,7 @@ export default function DashboardPage() {
   // "Visible to merchants" in the admin, so it can be switched off from there.
   const [catalogueOn, setCatalogueOn]       = useState(false)
   const [orderDesignId, setOrderDesignId]   = useState(null)
+  const [orderBlankId, setOrderBlankId]     = useState(null)
 
   useEffect(() => {
     fetchCatalogue().then(blanks => setCatalogueOn(blanks.length > 0)).catch(() => setCatalogueOn(false))
@@ -1668,7 +1669,7 @@ export default function DashboardPage() {
             if ((id === 'catalogue' || id === 'files' || id === 'garments') && !catalogueOn) return null
             const active = activeNav === id
             return (
-              <button key={id} onClick={() => { setActiveNav(id); setOrderNotice(''); setOrderDesignId(null) }} style={{ display: 'flex', alignItems: 'center', gap: '12px', width: '100%', padding: '12px 18px', border: 'none', background: active ? '#FFFFFF' : 'transparent', color: '#172B15', fontSize: '14.5px', fontWeight: active ? 800 : 600, cursor: 'pointer', textAlign: 'left', marginBottom: '6px', fontFamily: 'Inter, sans-serif', transition: 'all 0.2s', justifyContent: 'space-between', borderRadius: '12px', boxShadow: active ? '0 4px 12px rgba(23,43,21,0.04)' : 'none' }}
+              <button key={id} onClick={() => { setActiveNav(id); setOrderNotice(''); setOrderDesignId(null); setOrderBlankId(null) }} style={{ display: 'flex', alignItems: 'center', gap: '12px', width: '100%', padding: '12px 18px', border: 'none', background: active ? '#FFFFFF' : 'transparent', color: '#172B15', fontSize: '14.5px', fontWeight: active ? 800 : 600, cursor: 'pointer', textAlign: 'left', marginBottom: '6px', fontFamily: 'Inter, sans-serif', transition: 'all 0.2s', justifyContent: 'space-between', borderRadius: '12px', boxShadow: active ? '0 4px 12px rgba(23,43,21,0.04)' : 'none' }}
                 onMouseOver={e => { if (!active) { e.currentTarget.style.background = 'rgba(255,255,255,0.45)' } }}
                 onMouseOut={e => { if (!active) { e.currentTarget.style.background = 'transparent' } }}
               >
@@ -1788,9 +1789,10 @@ export default function DashboardPage() {
           {activeNav === 'create-order' && (
             <div style={{ position: 'relative', zIndex: 1 }}>
               <ManualOrdersView
-                key={`create-${orderDesignId || ''}`}
+                key={`create-${orderDesignId || ''}-${orderBlankId || ''}`}
                 startInCreate
                 initialDesignId={orderDesignId}
+                initialBlankId={orderBlankId}
 
                 walletBalance={walletBalance}
                 onWalletChanged={loadWallet}
@@ -1801,8 +1803,8 @@ export default function DashboardPage() {
             </div>
           )}
           {activeNav === 'garments' && catalogueOn && <div style={{ position: 'relative', zIndex: 1 }}><GarmentsView /></div>}
-          {activeNav === 'files' && catalogueOn && <div style={{ position: 'relative', zIndex: 1 }}><FilesView onOrder={id => { setOrderDesignId(id); setActiveNav('create-order') }} /></div>}
-          {activeNav === 'catalogue' && catalogueOn && <div style={{ position: 'relative', zIndex: 1 }}><CatalogueView /></div>}
+          {activeNav === 'files' && catalogueOn && <div style={{ position: 'relative', zIndex: 1 }}><FilesView onOrder={id => { setOrderBlankId(null); setOrderDesignId(id); setActiveNav('create-order') }} /></div>}
+          {activeNav === 'catalogue' && catalogueOn && <div style={{ position: 'relative', zIndex: 1 }}><CatalogueView onOrderPlain={id => { setOrderDesignId(null); setOrderBlankId(id); setActiveNav('create-order') }} /></div>}
           {activeNav === 'products' && <div style={{ position: 'relative', zIndex: 1 }}><ProductsView /></div>}
           {activeNav === 'billing'  && <div style={{ position: 'relative', zIndex: 1 }}><BillingView /></div>}
           {activeNav === 'wallet'   && <div style={{ position: 'relative', zIndex: 1 }}><WalletView /></div>}

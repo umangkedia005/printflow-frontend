@@ -36,7 +36,7 @@ function SizeChartModal({ blank, onClose }) {
   , document.body)
 }
 
-function BlankCard({ blank, onDesign, onSizeChart }) {
+function BlankCard({ blank, onDesign, onSizeChart, onOrderPlain }) {
   const sizes = [...new Set(blank.variants.map(v => v.size))]
   const fromCost = Math.min(...blank.variants.map(v => v.base_cost))
   return (
@@ -55,12 +55,15 @@ function BlankCard({ blank, onDesign, onSizeChart }) {
         </div>
         <div style={{ fontSize: '12px', color: '#172B15', marginTop: '10px', marginBottom: '14px' }}>{blank.own ? 'You supply the garment · printing only' : <>Base cost from <strong style={{ color: '#172B15' }}>₹{fromCost}</strong> + tax</>}</div>
         <button className="pf-btn" onClick={onDesign} style={{ marginTop: 'auto', width: '100%', padding: '12px', fontSize: '13px', fontWeight: 800, background: '#172B15', color: '#FFFFFF', borderRadius: '12px' }}>Design now</button>
+        {/* Plain, unprinted pieces: only our stock (customers already own their garments). */}
+        {!blank.own && onOrderPlain && <button className="pf-btn-outline" onClick={onOrderPlain} style={{ width: '100%', padding: '10px', fontSize: '12px', marginTop: '8px' }}>Order plain (no print)</button>}
       </div>
     </div>
   )
 }
 
-export default function CatalogueView() {
+// onOrderPlain(blankId): open Create order with this product as a plain line.
+export default function CatalogueView({ onOrderPlain }) {
   const [tab, setTab] = useState('catalogue')
   const [blanks, setBlanks] = useState([])
   const [loading, setLoading] = useState(true)
@@ -137,7 +140,7 @@ export default function CatalogueView() {
             <div style={{ textAlign: 'center', padding: '48px', color: '#889B8E', fontSize: '13px' }}>{q ? 'No products match your search.' : 'The catalogue is empty.'}</div>
           ) : (
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(230px, 1fr))', gap: '16px' }}>
-              {visible.map(b => <BlankCard key={b.blank_id} blank={b} onDesign={() => setDesigning(b)} onSizeChart={() => setSizeChartFor(b)} />)}
+              {visible.map(b => <BlankCard key={b.blank_id} blank={b} onDesign={() => setDesigning(b)} onSizeChart={() => setSizeChartFor(b)} onOrderPlain={onOrderPlain && (() => onOrderPlain(b.blank_id))} />)}
             </div>
           )}
         </>

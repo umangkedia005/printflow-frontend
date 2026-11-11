@@ -100,8 +100,9 @@ function ProductPicker({ designs, blanks, onPick, onClose }) {
   )
 }
 
-// initialDesignId: a design to start the order with (from My files → Order).
-function CreateOrder({ walletBalance, onTopUp, onPlaced, onCancel, initialDesignId = null }) {
+// initialDesignId: a design to start the order with (from My files → Order);
+// initialBlankId: a catalogue product to start with, plain (Catalogue → Order plain).
+function CreateOrder({ walletBalance, onTopUp, onPlaced, onCancel, initialDesignId = null, initialBlankId = null }) {
   const [designs, setDesigns] = useState([])
   const [blanks, setBlanks] = useState([])
   const [picking, setPicking] = useState(false)
@@ -119,7 +120,11 @@ function CreateOrder({ walletBalance, onTopUp, onPlaced, onCancel, initialDesign
       const start = initialDesignId && list.find(d => d.product_id === initialDesignId)
       if (start) addLine(start, 'design')
     }).catch(() => setDesigns([]))
-    fetchCatalogue().then(setBlanks).catch(() => setBlanks([]))
+    fetchCatalogue().then(list => {
+      setBlanks(list)
+      const start = initialBlankId && list.find(b => b.blank_id === initialBlankId)
+      if (start) addLine(start, 'blank')
+    }).catch(() => setBlanks([]))
     // Load once; addLine only appends.
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
@@ -304,7 +309,7 @@ function CreateOrder({ walletBalance, onTopUp, onPlaced, onCancel, initialDesign
 
 // The Manual orders tab, or (startInCreate, from the sidebar's Create order)
 // straight into the create page, handing back to the parent when done.
-export default function ManualOrdersView({ walletBalance, onWalletChanged, onTopUp, startInCreate = false, onCancelCreate, onPlaced, initialNotice = '', initialDesignId = null }) {
+export default function ManualOrdersView({ walletBalance, onWalletChanged, onTopUp, startInCreate = false, onCancelCreate, onPlaced, initialNotice = '', initialDesignId = null, initialBlankId = null }) {
   const [creating, setCreating] = useState(startInCreate)
   const [orders, setOrders] = useState([])
   const [loading, setLoading] = useState(true)
@@ -323,6 +328,7 @@ export default function ManualOrdersView({ walletBalance, onWalletChanged, onTop
     return (
       <CreateOrder
         initialDesignId={initialDesignId}
+        initialBlankId={initialBlankId}
         walletBalance={walletBalance}
         onTopUp={onTopUp}
         onCancel={() => (onCancelCreate ? onCancelCreate() : setCreating(false))}
