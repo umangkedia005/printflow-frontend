@@ -22,7 +22,7 @@ function BlankGrid({ blanks, onPick, selectedId }) {
               {photo && <img src={photo} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover', maxWidth: 'none' }} />}
             </div>
             <div style={{ fontSize: '13px', fontWeight: 700, color: INK, marginTop: '8px' }}>{b.name}</div>
-            <div style={{ fontSize: '11px', color: SAGE }}>{b.own ? 'Your garment · printing only' : `${b.gsm} GSM · from ₹${Math.min(...b.variants.map(v => Number(v.base_cost)))}`}</div>
+            <div style={{ fontSize: '11px', color: SAGE }}>{b.own ? `Your garment · from ₹${Math.min(...b.variants.filter(v => v.in_stock !== false).map(v => Number(v.base_cost)))}` : `${b.gsm} GSM · from ₹${Math.min(...b.variants.map(v => Number(v.base_cost)))}`}</div>
           </button>
         )
       })}

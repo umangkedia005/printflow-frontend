@@ -56,7 +56,7 @@ function ProductPicker({ designs, blanks, onPick, onClose }) {
   const blankName = id => blanks.find(b => b.blank_id === id)?.name || ''
   const items = tab === 'designs'
     ? designs.filter(d => !q || d.title.toLowerCase().includes(q))
-    : blanks.filter(b => !b.own && (!q || b.name.toLowerCase().includes(q)))
+    : blanks.filter(b => b.variants.some(v => v.in_stock !== false && Number(v.base_cost) > 0) && (!q || b.name.toLowerCase().includes(q)))
 
   return createPortal(
     <div onClick={e => { if (e.target === e.currentTarget) onClose() }} style={{ position: 'fixed', inset: 0, zIndex: 1000, background: 'rgba(0,0,0,0.45)', backdropFilter: 'blur(6px)', WebkitBackdropFilter: 'blur(6px)', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '16px' }}>
@@ -66,7 +66,7 @@ function ProductPicker({ designs, blanks, onPick, onClose }) {
           <button onClick={onClose} aria-label="Close" style={{ width: '32px', height: '32px', background: '#F4F5F0', border: 'none', borderRadius: '10px', fontSize: '14px', color: INK, cursor: 'pointer' }}>✕</button>
         </div>
         <div style={{ display: 'flex', gap: '22px', padding: '18px 28px 0', borderBottom: `1px solid ${LINE}` }}>
-          {[['designs', `My designs (${designs.length})`], ['blanks', `Blank products (${blanks.filter(b => !b.own).length})`]].map(([id, text]) => (
+          {[['designs', `My designs (${designs.length})`], ['blanks', `Blank products (${blanks.filter(b => b.variants.some(v => v.in_stock !== false && Number(v.base_cost) > 0)).length})`]].map(([id, text]) => (
             <button key={id} onClick={() => setTab(id)} style={{ background: 'none', border: 'none', borderBottom: `2px solid ${tab === id ? INK : 'transparent'}`, padding: '0 2px 12px', fontSize: '14px', fontWeight: 700, color: tab === id ? INK : SAGE, cursor: 'pointer', fontFamily: 'Inter, sans-serif' }}>{text}</button>
           ))}
         </div>
@@ -92,7 +92,7 @@ function ProductPicker({ designs, blanks, onPick, onClose }) {
                   </div>
                 )}
                 <div style={{ fontSize: '13px', fontWeight: 700, color: INK, marginTop: '8px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{kind === 'design' ? item.title : item.name}</div>
-                <div style={{ fontSize: '11px', color: SAGE, marginTop: '2px' }}>{kind === 'design' ? blankName(item.blank_id) : `${item.gsm} GSM · no print`}</div>
+                <div style={{ fontSize: '11px', color: SAGE, marginTop: '2px' }}>{kind === 'design' ? blankName(item.blank_id) : item.own ? 'Your garment · no print' : `${item.gsm} GSM · no print`}</div>
               </button>
             )
           })}

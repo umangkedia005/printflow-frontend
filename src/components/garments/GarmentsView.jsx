@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
 import DesignEditor from '../catalogue/DesignEditor'
-import { fetchGarments, saveGarment, deleteGarment, uploadGarmentPhoto, SUPPORT_EMAIL } from '../../utils/api'
+import { fetchGarments, saveGarment, deleteGarment, uploadGarmentPhoto } from '../../utils/api'
 import { INK, SAGE, LIME, LINE, SERIF, CARD, LABEL } from '../files/theme'
 
 const TYPES = [
@@ -23,6 +23,13 @@ const STATUS = {
   rejected: ['Needs changes', '#FFF5F5', '#C53030'],
 }
 const typeName = t => (TYPES.find(([id]) => id === t) || [])[1] || t
+// "₹299" or "₹299–₹349" across the sizes we priced; null until priced.
+function priceRange(g) {
+  const prices = Object.values(g.prices || {}).map(Number).filter(n => n > 0)
+  if (!prices.length) return null
+  const lo = Math.min(...prices), hi = Math.max(...prices)
+  return lo === hi ? `₹${lo}` : `₹${lo}–₹${hi}`
+}
 const EMPTY = { name: '', type: 'tee', color: { name: '', hex: '#FFFFFF' }, sizes: ['S', 'M', 'L', 'XL'], photos: {} }
 
 // A photo with the print box drawn on it (box = fractions of the square photo).
@@ -143,7 +150,7 @@ function GarmentForm({ initial, onCancel, onSaved }) {
     <div>
       <button onClick={onCancel} style={{ background: 'none', border: 'none', padding: 0, color: SAGE, fontSize: '13px', fontWeight: 600, cursor: 'pointer', fontFamily: 'Inter, sans-serif', marginBottom: '8px' }}>← Back to My garments</button>
       <h1 style={{ fontFamily: SERIF, fontSize: '26px', fontWeight: 800, color: INK, letterSpacing: '-0.5px', marginBottom: '4px' }}>{initial?.garment_id ? 'Edit garment' : 'Add your garment'}</h1>
-      <p style={{ fontSize: '13px', color: SAGE, marginBottom: '20px' }}>Tell us about the garment you'll send us. We review it, check where printing can go, and let you know.</p>
+      <p style={{ fontSize: '13px', color: SAGE, marginBottom: '20px' }}>Show us the garment you want. We review it, set where printing can go and its price, and let you know.</p>
       {initial?.status === 'rejected' && initial.note && (
         <div style={{ background: '#FFF5F5', border: '1px solid #FED7D7', borderRadius: '12px', padding: '10px 14px', marginBottom: '16px', fontSize: '13px', color: '#C53030' }}>Our note: {initial.note}</div>
       )}
@@ -166,7 +173,7 @@ function GarmentForm({ initial, onCancel, onSaved }) {
             <input value={g.color.name} onChange={e => set({ color: { ...g.color, name: e.target.value } })} maxLength={40} placeholder="Colour name, e.g. Cream" style={{ flex: 1, padding: '11px 14px', border: '1px solid rgba(23,43,21,0.1)', borderRadius: '12px', fontSize: '13px', outline: 'none', fontFamily: 'Inter, sans-serif' }} />
           </div>
 
-          <span style={LABEL}>Sizes you'll send</span>
+          <span style={LABEL}>Sizes you want</span>
           <div style={{ display: 'flex', gap: '6px', flexWrap: 'wrap' }}>
             {SIZES.map(s => {
               const on = g.sizes.includes(s)
@@ -216,7 +223,8 @@ function GarmentForm({ initial, onCancel, onSaved }) {
   )
 }
 
-export default function GarmentsView() {
+// onOrderPlain(blankId): open Create order with this garment as a plain line.
+export default function GarmentsView({ onOrderPlain }) {
   const [garments, setGarments] = useState(null)
   const [error, setError] = useState('')
   const [notice, setNotice] = useState('')
@@ -259,7 +267,7 @@ export default function GarmentsView() {
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: '16px', marginBottom: '20px', flexWrap: 'wrap' }}>
         <div>
           <h1 style={{ fontFamily: SERIF, fontSize: '26px', fontWeight: 800, color: INK, letterSpacing: '-0.5px', marginBottom: '4px' }}>My garments</h1>
-          <p style={{ fontSize: '13px', color: SAGE, fontWeight: 500 }}>Print on your own T-shirts, polos and hoodies: you send them, we print and ship.</p>
+          <p style={{ fontSize: '13px', color: SAGE, fontWeight: 500 }}>Add the T-shirt, polo or hoodie style you want. Once we approve and price it, design on it or order it plain.</p>
         </div>
         <button onClick={() => setEditing({})} style={{ background: LIME, color: INK, border: 'none', borderRadius: '12px', padding: '11px 18px', fontSize: '13px', fontWeight: 800, cursor: 'pointer', fontFamily: 'Inter, sans-serif' }}>+ Add garment</button>
       </div>
@@ -267,9 +275,8 @@ export default function GarmentsView() {
       <div style={{ ...CARD, padding: '16px 20px', marginBottom: '20px', display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(170px, 1fr))', gap: '12px' }}>
         {[
           ['1', 'Add your garment', 'Photos, type, colour and sizes'],
-          ['2', 'We review it', 'We check where printing can go and set the print cost'],
-          ['3', 'Send us the garments', `Courier them to us; ask ${SUPPORT_EMAIL} for the address`],
-          ['4', 'Design and order', 'Pay printing and shipping only'],
+          ['2', 'We review and price it', 'We set where printing goes and the price per piece'],
+          ['3', 'Design or order', 'Print your designs on it, or order it plain'],
         ].map(([n, title, desc]) => (
           <div key={n} style={{ display: 'flex', gap: '10px' }}>
             <div style={{ width: '24px', height: '24px', borderRadius: '50%', background: INK, color: '#FFFFFF', fontSize: '11px', fontWeight: 800, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>{n}</div>
@@ -313,14 +320,18 @@ export default function GarmentsView() {
                   {typeName(g.type)} · {g.color?.name} · {(g.sizes || []).join(', ')}
                 </div>
                 {g.status === 'approved' && (
-                  <div style={{ fontSize: '12px', color: INK, marginTop: '4px' }}>
-                    Prints on {(g.areas || []).map(a => `${a.label} (₹${Number(a.print_cost)})`).join(', ')}
+                  <div style={{ fontSize: '12px', color: INK, marginTop: '4px', lineHeight: 1.5 }}>
+                    {priceRange(g) && <div><strong>{priceRange(g)}</strong> per piece</div>}
+                    <div>Prints on {(g.areas || []).map(a => `${a.label} (+₹${Number(a.print_cost)})`).join(', ')}</div>
                   </div>
                 )}
                 {g.note && <div style={{ fontSize: '12px', color: g.status === 'rejected' ? '#C53030' : SAGE, marginTop: '6px' }}>Note: {g.note}</div>}
                 <div style={{ marginTop: 'auto', paddingTop: '14px' }}>
                   {g.status === 'approved' ? (
-                    <button onClick={() => setDesigning(g.blank)} style={{ width: '100%', background: INK, color: '#FFFFFF', border: 'none', borderRadius: '12px', padding: '11px', fontSize: '13px', fontWeight: 800, cursor: 'pointer', fontFamily: 'Inter, sans-serif' }}>Design on it</button>
+                    <div style={{ display: 'flex', gap: '8px' }}>
+                      <button onClick={() => setDesigning(g.blank)} style={{ flex: 1, background: INK, color: '#FFFFFF', border: 'none', borderRadius: '12px', padding: '11px', fontSize: '13px', fontWeight: 800, cursor: 'pointer', fontFamily: 'Inter, sans-serif' }}>Design on it</button>
+                      {onOrderPlain && priceRange(g) && <button className="pf-btn-outline" onClick={() => onOrderPlain(g.blank.blank_id)} style={{ flex: 1, padding: '10px', fontSize: '12px', whiteSpace: 'nowrap' }}>Order plain</button>}
+                    </div>
                   ) : (
                     <button className="pf-btn-outline" onClick={() => setEditing(g)} style={{ width: '100%', padding: '10px', fontSize: '13px' }}>{g.status === 'rejected' ? 'Fix and resend' : 'Edit'}</button>
                   )}
