@@ -177,6 +177,14 @@ async function shopAuthHeaders() {
   return headers
 }
 
+// The account's Notifications feed: orders, shipping and wallet events.
+export async function fetchActivity() {
+  const res = await fetch(`${BASE_URL}/activity`, { headers: await shopAuthHeaders() })
+  const data = await res.json()
+  if (!res.ok) throw new Error(data.error || 'Could not load your activity')
+  return Array.isArray(data) ? data : []
+}
+
 export async function fetchCatalogue() {
   const res = await fetch(`${BASE_URL}/catalogue`)
   const data = await res.json()

@@ -7,6 +7,7 @@ import { SHOPIFY_INSTALL_URL } from '../utils/shopify'
 import CatalogueView from '../components/catalogue/CatalogueView'
 import ManualOrdersView from '../components/orders/ManualOrders'
 import FilesView from '../components/files/FilesView'
+import ActivityFeed from '../components/activity/ActivityFeed'
 
 // ── Data ─────────────────────────────────────────────────────────────────────
 
@@ -256,6 +257,8 @@ const PRODUCT_GRADIENTS = [
   'linear-gradient(135deg, #BBF7D0, #22C55E)',
   'linear-gradient(135deg, #FBCFE8, #EC4899)',
 ]
+
+const SUPPORT_EMAIL = 'talktonolimitstudios@gmail.com'
 
 const NAV_ITEMS = [
   { id: 'dashboard',     label: 'Dashboard',     Icon: IconDashboard },
@@ -637,21 +640,9 @@ export default function DashboardPage() {
   const [selectedOrder, setSelectedOrder]   = useState(null)
   const [fulfillLoading, setFulfillLoading] = useState(false)
   const [fulfillError, setFulfillError]     = useState('')
-  const [notifs, setNotifs]                 = useState({ orderReceived: true, orderShipped: true, orderDelivered: false })
-  const [autoFulfill, setAutoFulfill]       = useState(false)
   const [currentPlan, setCurrentPlan]       = useState('free')
   const [blogOffset, setBlogOffset]         = useState(0)
   const [activeArticle, setActiveArticle]   = useState(null)
-
-  // Interactive notifications state
-  const [customNotifTitle, setCustomNotifTitle] = useState('')
-  const [customNotifDesc, setCustomNotifDesc]   = useState('')
-  const [customNotifType, setCustomNotifType]   = useState('success')
-  const [activeNotifs, setActiveNotifs]         = useState([
-    { id: 1, title: 'Shopify Store Synced', desc: 'Store domain synced successfully.', type: 'success', time: 'Just now' },
-    { id: 2, title: 'Fulfillment Active', desc: 'No Limit printing queue operational.', type: 'info', time: '1 hour ago' },
-    { id: 3, title: 'Low order limit warning', desc: 'Starter plan order quota is at 84%.', type: 'warning', time: '4 hours ago' }
-  ])
 
   // Google trends keyword filters
   const [trendFilter, setTrendFilter] = useState('apparel')
@@ -1494,23 +1485,13 @@ export default function DashboardPage() {
               <button onClick={() => setShowUpgrade(true)} className="pf-btn" style={{ padding: '9px 20px', fontSize: '13px' }}>View Plans →</button>
             </div>
           ) : (
-            [
-              { id: 'INV-002', date: '1 Jun 2026', amount: `₹${planInfo?.monthlyPrice.toLocaleString('en-IN')}`, plan: planInfo?.name, status: 'paid' },
-              { id: 'INV-001', date: '1 May 2026', amount: `₹${planInfo?.monthlyPrice.toLocaleString('en-IN')}`, plan: planInfo?.name, status: 'paid' },
-            ].map((inv, i, arr) => (
-              <div key={inv.id} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '12px 0', borderBottom: i < arr.length-1 ? '1px solid #F4F4F0' : 'none' }}>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-                  <div style={{ fontSize: '12px', fontFamily: 'monospace', color: '#999' }}>{inv.id}</div>
-                  <div style={{ fontSize: '13px', color: '#0A0A0A', fontWeight: 500 }}>{inv.plan} Plan</div>
-                  <div style={{ fontSize: '12px', color: '#BABAB6' }}>{inv.date}</div>
-                </div>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-                  <span style={{ display: 'inline-flex', alignItems: 'center', gap: '5px', background: '#F0FDF4', color: '#166534', padding: '3px 10px', borderRadius: '100px', fontSize: '11px', fontWeight: 600 }}><span style={{ width: '5px', height: '5px', borderRadius: '50%', background: '#22C55E' }}/>Paid</span>
-                  <div style={{ fontSize: '13px', fontWeight: 600, color: '#0A0A0A' }}>{inv.amount}</div>
-                  <button style={{ background: 'transparent', border: '1px solid #E8E8E4', borderRadius: '7px', padding: '5px 12px', fontSize: '11px', color: '#666', cursor: 'pointer', fontFamily: 'Inter, sans-serif' }}>↓ PDF</button>
-                </div>
-              </div>
-            ))
+            <div style={{ padding: '8px 0' }}>
+              <div style={{ fontSize: '13px', color: '#0A0A0A', marginBottom: '6px' }}>Your plan is billed by Shopify, on your regular Shopify bill.</div>
+              <div style={{ fontSize: '12px', color: '#999', marginBottom: '14px' }}>Invoices and payment history are in your Shopify admin under Settings → Billing.</div>
+              {shopDomain && (
+                <a href={`https://admin.shopify.com/store/${shopDomain.replace('.myshopify.com', '')}/settings/billing`} target="_blank" rel="noopener noreferrer" className="pf-btn-outline" style={{ display: 'inline-flex', padding: '9px 16px', fontSize: '13px' }}>Open Shopify billing ↗</a>
+              )}
+            </div>
           )}
         </SectionCard>
       </>
@@ -1587,7 +1568,7 @@ export default function DashboardPage() {
               <div style={{ fontSize: '14px', fontWeight: 600, color: '#0A0A0A' }}>{shopDomain}</div>
               <div style={{ display: 'flex', alignItems: 'center', gap: '5px', marginTop: '3px' }}>
                 <div style={{ width: '6px', height: '6px', borderRadius: '50%', background: '#22C55E' }}/>
-                <span style={{ fontSize: '11px', color: '#22C55E', fontWeight: 600 }}>Active · Connected 27 Jun 2026</span>
+                <span style={{ fontSize: '11px', color: '#22C55E', fontWeight: 600 }}>Connected</span>
               </div>
             </div>
           </div>
@@ -1596,36 +1577,24 @@ export default function DashboardPage() {
       </SectionCard>
       <SectionCard title="Email Notifications">
         {[
-          { key: 'orderReceived', label: 'Order received',  desc: 'When a new Shopify order arrives in No Limit Studio' },
-          { key: 'orderShipped',  label: 'Order shipped',   desc: 'When tracking is confirmed and pushed to Shopify' },
-          { key: 'orderDelivered',label: 'Order delivered', desc: 'When the carrier marks an order as delivered' },
-        ].map(({ key, label, desc }) => (
-          <div key={key} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '16px', padding: '14px 0', borderBottom: '1px solid #F4F4F0' }}>
-            <div>
-              <div style={{ fontSize: '13px', fontWeight: 500, color: '#0A0A0A', marginBottom: '2px' }}>{label}</div>
-              <div style={{ fontSize: '12px', color: '#999' }}>{desc}</div>
-            </div>
-            <Toggle on={notifs[key]} onChange={() => setNotifs(n => ({ ...n, [key]: !n[key] }))} />
+          ['Order confirmed', 'When you place an order from Create order or My files'],
+          ['Printing, shipped, delivered', 'As your order moves along, with courier and tracking number when it ships'],
+          ['Wallet top-up receipt', 'Every time money is added to your wallet'],
+          ['Low wallet', 'When a new Shopify order costs more than your wallet balance'],
+        ].map(([label, desc], i, list) => (
+          <div key={label} style={{ padding: '12px 0', borderBottom: i < list.length - 1 ? '1px solid #F4F4F0' : 'none' }}>
+            <div style={{ fontSize: '13px', fontWeight: 500, color: '#0A0A0A', marginBottom: '2px' }}>{label}</div>
+            <div style={{ fontSize: '12px', color: '#999' }}>{desc}</div>
           </div>
         ))}
         <div style={{ paddingTop: '14px' }}>
-          <p style={{ fontSize: '12px', color: '#BABAB6' }}>Sent to <strong style={{ color: '#555' }}>{currentUser?.email}</strong></p>
+          <p style={{ fontSize: '12px', color: '#BABAB6' }}>Sent to <strong style={{ color: '#555' }}>{currentUser?.email}</strong> from orders@nolimitstudio.in</p>
         </div>
       </SectionCard>
       <SectionCard title="Fulfillment">
-        <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: '16px', paddingBottom: '16px', borderBottom: '1px solid #F4F4F0', marginBottom: '16px' }}>
-          <div>
-            <div style={{ fontSize: '13px', fontWeight: 500, color: '#0A0A0A', marginBottom: '3px' }}>Auto-fulfillment</div>
-            <div style={{ fontSize: '12px', color: '#999', lineHeight: 1.5 }}>
-              Automatically send orders to the print factory when received.<br/>
-              <span style={{ color: '#F97316', fontWeight: 500 }}>Coming in Phase 3 — currently manual only.</span>
-            </div>
-          </div>
-          <Toggle on={autoFulfill} onChange={() => setAutoFulfill(v => !v)} />
-        </div>
         <div style={{ background: '#FAFAF8', border: '1px solid #E8E8E4', borderRadius: '10px', padding: '14px 16px' }}>
-          <div style={{ fontSize: '12px', fontWeight: 600, color: '#0A0A0A', marginBottom: '4px' }}>Current mode: Manual</div>
-          <div style={{ fontSize: '12px', color: '#999' }}>Open an order → click "Send to Print Factory" to fulfill manually.</div>
+          <div style={{ fontSize: '12px', fontWeight: 600, color: '#0A0A0A', marginBottom: '4px' }}>How fulfilment works</div>
+          <div style={{ fontSize: '12px', color: '#999' }}>New Shopify orders appear under Orders. Open one and click "Send to Print Factory": the printing cost is taken from your wallet and we take it from there.</div>
         </div>
       </SectionCard>
       <SectionCard title="Account">
@@ -1679,6 +1648,8 @@ export default function DashboardPage() {
           {/* Section 1: Start Here */}
           <div style={{ fontSize: '10.5px', fontWeight: 800, letterSpacing: '0.08em', textTransform: 'uppercase', color: '#7A7A70', padding: '0 18px 8px', marginBottom: '4px' }}>Start Here</div>
           {NAV_ITEMS.slice(0, 3).map(({ id, label, Icon }) => {
+            // Trends is hidden until it has real data behind it.
+            if (id === 'trends') return null
             const active = activeNav === id
             return (
               <button key={id} onClick={() => setActiveNav(id)} style={{ display: 'flex', alignItems: 'center', gap: '12px', width: '100%', padding: '12px 18px', border: 'none', background: active ? '#FFFFFF' : 'transparent', color: '#172B15', fontSize: '14.5px', fontWeight: active ? 800 : 600, cursor: 'pointer', textAlign: 'left', marginBottom: '6px', fontFamily: 'Inter, sans-serif', transition: 'all 0.2s', justifyContent: 'space-between', borderRadius: '12px', boxShadow: active ? '0 4px 12px rgba(23,43,21,0.04)' : 'none' }}
@@ -1835,98 +1806,8 @@ export default function DashboardPage() {
           {activeNav === 'settings' && <div style={{ position: 'relative', zIndex: 1 }}><SettingsView /></div>}
           
           {/* Notifications Panel View (With custom sender) */}
-          {activeNav === 'notifications' && (
-            <div style={{ position: 'relative', zIndex: 1 }}>
-              <div style={{ marginBottom: '28px' }}>
-                <h1 style={{ fontFamily: "'Fraunces', sans-serif", fontSize: '26px', fontWeight: 800, color: '#172B15', letterSpacing: '-0.5px', marginBottom: '4px' }}>Notifications</h1>
-                <p style={{ fontSize: '13px', color: '#889B8E', fontWeight: 500 }}>Broadcast center to test live system alerts and manage customer updates.</p>
-              </div>
+          {activeNav === 'notifications' && <div style={{ position: 'relative', zIndex: 1 }}><ActivityFeed onTopUp={() => { setActiveNav('wallet'); setShowTopup(true) }} /></div>}
 
-              <div style={{ display: 'grid', gridTemplateColumns: '1.2fr 1.8fr', gap: '28px', alignItems: 'start' }}>
-                {/* Left panel: Trigger custom message console */}
-                <div style={{ background: '#FFFFFF', border: '1px solid rgba(23,43,21,0.06)', borderRadius: '20px', padding: '24px', boxShadow: '0 8px 30px rgba(23,43,21,0.015)' }}>
-                  <h3 style={{ fontFamily: "'Fraunces', sans-serif", fontSize: '16px', fontWeight: 800, color: '#172B15', marginBottom: '16px' }}>Send Test System Alert</h3>
-                  
-                  <div style={{ marginBottom: '14px' }}>
-                    <label style={{ fontSize: '11px', fontWeight: 700, color: '#889B8E', textTransform: 'uppercase', display: 'block', marginBottom: '6px' }}>Alert Title</label>
-                    <input 
-                      type="text" placeholder="e.g. Printer maintenance"
-                      value={customNotifTitle} onChange={e=>setCustomNotifTitle(e.target.value)}
-                      style={{ width: '100%', padding: '10px 12px', boxSizing: 'border-box', border: '1px solid rgba(23,43,21,0.1)', borderRadius: '8px', fontSize: '13px', outline: 'none' }}
-                    />
-                  </div>
-
-                  <div style={{ marginBottom: '14px' }}>
-                    <label style={{ fontSize: '11px', fontWeight: 700, color: '#889B8E', textTransform: 'uppercase', display: 'block', marginBottom: '6px' }}>Description</label>
-                    <textarea 
-                      placeholder="Enter custom alert text message"
-                      value={customNotifDesc} onChange={e=>setCustomNotifDesc(e.target.value)}
-                      style={{ width: '100%', padding: '10px 12px', boxSizing: 'border-box', border: '1px solid rgba(23,43,21,0.1)', borderRadius: '8px', fontSize: '13px', height: '80px', fontFamily: 'Inter, sans-serif', outline: 'none', resize: 'none' }}
-                    />
-                  </div>
-
-                  <div style={{ marginBottom: '20px' }}>
-                    <label style={{ fontSize: '11px', fontWeight: 700, color: '#889B8E', textTransform: 'uppercase', display: 'block', marginBottom: '6px' }}>Alert Priority</label>
-                    <div style={{ display: 'flex', gap: '8px' }}>
-                      {['success', 'info', 'warning'].map(t => (
-                        <button key={t} onClick={() => setCustomNotifType(t)} style={{ flex: 1, padding: '8px', border: '1px solid', borderColor: customNotifType === t ? '#172B15' : 'rgba(23,43,21,0.1)', background: customNotifType === t ? '#172B15' : 'transparent', color: customNotifType === t ? '#FFFFFF' : '#71717A', borderRadius: '8px', fontSize: '12px', textTransform: 'capitalize', fontWeight: 600, cursor: 'pointer', transition: 'all 0.2s' }}>
-                          {t}
-                        </button>
-                      ))}
-                    </div>
-                  </div>
-
-                  <button 
-                    onClick={() => {
-                      if (!customNotifTitle.trim()) return
-                      const newNotif = {
-                        id: Date.now(),
-                        title: customNotifTitle,
-                        desc: customNotifDesc || 'Custom developer system broadcast.',
-                        type: customNotifType,
-                        time: 'Just now'
-                      }
-                      setActiveNotifs([newNotif, ...activeNotifs])
-                      setCustomNotifTitle('')
-                      setCustomNotifDesc('')
-                    }}
-                    style={{ width: '100%', padding: '12px', background: '#B9F95D', color: '#172B15', border: 'none', borderRadius: '10px', fontSize: '13px', fontWeight: 750, cursor: 'pointer', transition: 'all 0.2s', boxShadow: '0 4px 12px rgba(185,249,93,0.15)' }}
-                    onMouseOver={e => e.currentTarget.style.boxShadow = '0 6px 16px rgba(185,249,93,0.3)'}
-                    onMouseOut={e => e.currentTarget.style.boxShadow = '0 4px 12px rgba(185,249,93,0.15)'}
-                  >
-                    Broadcast System Alert
-                  </button>
-                </div>
-
-                {/* Right panel: Alerts feed */}
-                <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
-                  {activeNotifs.map(n => {
-                    let dotColor = '#22C55E'
-                    let bg = '#F0FDF4'
-                    if (n.type === 'info') { dotColor = '#3B82F6'; bg = '#EFF6FF' }
-                    if (n.type === 'warning') { dotColor = '#F97316'; bg = '#FFF7ED' }
-
-                    return (
-                      <div key={n.id} style={{ background: '#FFFFFF', border: '1px solid rgba(23,43,21,0.06)', borderRadius: '16px', padding: '16px 20px', display: 'flex', gap: '14px', alignItems: 'start', transition: 'transform 0.2s', boxShadow: '0 4px 14px rgba(23,43,21,0.008)' }} onMouseOver={e=>e.currentTarget.style.transform='translateX(2px)'} onMouseOut={e=>e.currentTarget.style.transform='translateX(0)'}>
-                        <div style={{ width: '28px', height: '28px', borderRadius: '50%', background: bg, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, marginTop: '2px' }}>
-                          <div style={{ width: '7px', height: '7px', borderRadius: '50%', background: dotColor }} />
-                        </div>
-                        <div style={{ flex: 1 }}>
-                          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '4px' }}>
-                            <h4 style={{ fontSize: '13.5px', fontWeight: 750, color: '#172B15', margin: 0 }}>{n.title}</h4>
-                            <span style={{ fontSize: '11px', color: '#A1A1AA', fontWeight: 500 }}>{n.time}</span>
-                          </div>
-                          <p style={{ fontSize: '12.5px', color: '#71717A', lineHeight: 1.5, margin: 0 }}>{n.desc}</p>
-                        </div>
-                      </div>
-                    )
-                  })}
-                </div>
-              </div>
-            </div>
-          )}
-
-          {/* Trends Dashboard View (Google Trends & Live Social Trends) */}
           {activeNav === 'trends' && (
             <div style={{ position: 'relative', zIndex: 1 }}>
               
@@ -2242,11 +2123,12 @@ export default function DashboardPage() {
                   <h3 style={{ fontFamily: "'Fraunces', sans-serif", fontSize: '16px', fontWeight: 800, color: '#172B15', marginBottom: '18px' }}>Frequently Asked Questions</h3>
                   
                   {[
-                    { q: 'How does No Limit Studio connect with Shopify?', a: 'When you paste your shopify domain, we request read/write access to sync your catalog inventory and download order payloads automatically.' },
-                    { q: 'What is the printing and fulfillment timeframe?', a: 'All print-on-demand files are processed instantly. Production takes 24-48 hours, followed by priority global delivery shipping.' },
-                    { q: 'How do I upload custom mockup designs?', a: 'Navigate to the Products view, click upload, and place your transparent PNG file onto the active apparel outline bounding box.' },
+                    { q: 'How do I connect my Shopify store?', a: 'Install No Limit Studio from the Shopify App Store, or open it from your Shopify admin while signed in here. The store is linked to your account and its new orders appear under Orders. A store is optional: you can also order your own designs from Create order.' },
+                    { q: 'How do I add my designs?', a: 'Upload them in My files. From there, click Order to print a design straight away, or Design product to place it on a product yourself. You can also start from the Catalogue and pick Design now.' },
+                    { q: 'How is printing paid for?', a: 'From your wallet. Top up with Razorpay under Wallet; each order you send to print deducts its cost. We email a receipt for every top-up, and warn you if a new order costs more than your balance.' },
+                    { q: 'How will I know where my order is?', a: 'We email you when your order is being printed, shipped (with courier and tracking number) and delivered. The same updates show under Orders and Notifications.' },
                   ].map((faq, idx) => (
-                    <div key={idx} style={{ padding: '14px 0', borderBottom: idx < 2 ? '1px solid #F4F4F0' : 'none' }}>
+                    <div key={idx} style={{ padding: '14px 0', borderBottom: idx < 3 ? '1px solid #F4F4F0' : 'none' }}>
                       <h4 style={{ fontSize: '13.5px', fontWeight: 750, color: '#172B15', marginBottom: '6px' }}>{faq.q}</h4>
                       <p style={{ fontSize: '12.5px', color: '#71717A', lineHeight: 1.5, margin: 0 }}>{faq.a}</p>
                     </div>
@@ -2255,17 +2137,14 @@ export default function DashboardPage() {
 
                 {/* Contact Card */}
                 <div style={{ background: '#111A13', border: '1px solid rgba(255,255,255,0.06)', borderRadius: '24px', padding: '24px', color: '#FFFFFF', boxShadow: '0 8px 30px rgba(9,26,14,0.1)' }}>
-                  <h3 style={{ fontFamily: "'Fraunces', sans-serif", fontSize: '16px', fontWeight: 800, color: '#B9F95D', marginBottom: '8px' }}>Open Support Ticket</h3>
-                  <p style={{ fontSize: '12.5px', color: '#A1A8A3', lineHeight: 1.5, marginBottom: '20px' }}>Our printing operations and catalog engineers are available 24/7 to solve setup bugs.</p>
-                  
-                  <button 
-                    onClick={() => alert('Support ticket created! Our team will email you shortly.')}
-                    style={{ width: '100%', padding: '12px', background: '#B9F95D', color: '#172B15', border: 'none', borderRadius: '10px', fontSize: '13px', fontWeight: 750, cursor: 'pointer', transition: 'all 0.2s', boxShadow: '0 4px 12px rgba(185,249,93,0.15)' }}
-                    onMouseOver={e => e.currentTarget.style.boxShadow = '0 6px 16px rgba(185,249,93,0.3)'}
-                    onMouseOut={e => e.currentTarget.style.boxShadow = '0 4px 12px rgba(185,249,93,0.15)'}
+                  <h3 style={{ fontFamily: "'Fraunces', sans-serif", fontSize: '16px', fontWeight: 800, color: '#B9F95D', marginBottom: '8px' }}>Contact support</h3>
+                  <p style={{ fontSize: '12.5px', color: '#A1A8A3', lineHeight: 1.5, marginBottom: '20px' }}>Email us with your order number or a screenshot and we'll get back to you by email.</p>
+                  <a
+                    href={`mailto:${SUPPORT_EMAIL}?subject=${encodeURIComponent('Support request' + (shopDomain ? ` · ${shopDomain}` : ''))}`}
+                    style={{ display: 'block', textAlign: 'center', textDecoration: 'none', width: '100%', boxSizing: 'border-box', padding: '12px', background: '#B9F95D', color: '#172B15', borderRadius: '10px', fontSize: '13px', fontWeight: 750 }}
                   >
-                    Open Live Chat Ticket
-                  </button>
+                    Email {SUPPORT_EMAIL}
+                  </a>
                 </div>
               </div>
             </div>
@@ -2401,8 +2280,7 @@ export default function DashboardPage() {
                     {fulfillLoading ? 'Sending...' : 'Send to Print Factory →'}
                   </button>
                 )}
-                {selectedOrder.status === 'printing' && <button style={{ width: '100%', padding: '13px', background: '#1D4ED8', color: 'white', border: 'none', borderRadius: '10px', fontSize: '13px', fontWeight: 600, cursor: 'pointer', fontFamily: 'Inter, sans-serif', marginBottom: '10px', marginTop: '16px', transition: 'opacity 0.15s' }} onMouseOver={e=>e.currentTarget.style.opacity='0.82'} onMouseOut={e=>e.currentTarget.style.opacity='1'}>Mark as Shipped</button>}
-                <a href={`https://${shopDomain}/admin/orders/${selectedOrder.shopifyId}`} target="_blank" rel="noopener noreferrer" className="pf-btn-outline" style={{ display: 'flex', padding: '12px', marginTop: selectedOrder.status === 'queued' || selectedOrder.status === 'printing' ? '0' : '16px' }}>View in Shopify Admin ↗</a>
+                <a href={`https://${shopDomain}/admin/orders/${selectedOrder.shopifyId}`} target="_blank" rel="noopener noreferrer" className="pf-btn-outline" style={{ display: 'flex', padding: '12px', marginTop: selectedOrder.status === 'queued' ? '0' : '16px' }}>View in Shopify Admin ↗</a>
               </div>
             </div>
           </div>
