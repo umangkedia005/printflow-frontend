@@ -2366,10 +2366,11 @@ export default function DashboardPage() {
                   </div>
                 ))}
               </InfoSection>
-              {selectedOrder.tracking && (
+              {(selectedOrder.tracking || selectedOrder.trackingUrl) && (
                 <InfoSection title="Shipment">
-                  <DetailRow label="Carrier" value={selectedOrder.carrier} />
-                  <DetailRow label="Tracking" value={selectedOrder.tracking} mono />
+                  {selectedOrder.carrier && <DetailRow label="Carrier" value={selectedOrder.carrier} />}
+                  {selectedOrder.tracking && <DetailRow label="Tracking" value={selectedOrder.tracking} mono />}
+                  {selectedOrder.trackingUrl && <a href={selectedOrder.trackingUrl} target="_blank" rel="noopener noreferrer" style={{ fontSize: '12px', fontWeight: 700, color: '#172B15' }}>Track parcel ↗</a>}
                 </InfoSection>
               )}
               <div style={{ paddingTop: '4px', borderTop: '1px solid #E8E8E4', marginTop: '8px' }}>

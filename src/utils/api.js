@@ -350,8 +350,10 @@ function formatOrder(o) {
     rawDate:   o.created_at,
     amount:    `${o.currency || 'INR'} ${parseFloat(o.total_price || 0).toFixed(2)}`,
     amountValue: parseFloat(o.total_price || 0),
-    tracking:  raw.fulfillments?.[0]?.tracking_number || null,
-    carrier:   raw.fulfillments?.[0]?.tracking_company || null,
+    // Ours (set when No Limit Studio ships it) first, then Shopify's.
+    tracking:  o.tracking?.number || raw.fulfillments?.[0]?.tracking_number || null,
+    carrier:   o.tracking?.courier || raw.fulfillments?.[0]?.tracking_company || null,
+    trackingUrl: o.tracking?.url || raw.fulfillments?.[0]?.tracking_url || null,
   }
 }
 

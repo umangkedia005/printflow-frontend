@@ -385,7 +385,15 @@ export default function ManualOrdersView({ walletBalance, onWalletChanged, onTop
                       </td>
                       <td style={{ padding: '14px 18px', fontSize: '12px', color: INK }}>{ship.name}<div style={{ fontSize: '11px', color: SAGE }}>{[ship.city, ship.zip].filter(Boolean).join(' ')}</div></td>
                       <td style={{ padding: '14px 18px', fontSize: '13px', fontWeight: 800, color: INK }}>{rupees(o.total_price)}</td>
-                      <td style={{ padding: '14px 18px' }}><span style={{ background: bg, color: fg, padding: '3px 10px', borderRadius: '100px', fontSize: '11px', fontWeight: 700 }}>{label}</span></td>
+                      <td style={{ padding: '14px 18px' }}>
+                        <span style={{ background: bg, color: fg, padding: '3px 10px', borderRadius: '100px', fontSize: '11px', fontWeight: 700 }}>{label}</span>
+                        {o.tracking && (o.tracking.number || o.tracking.url) && (
+                          <div style={{ fontSize: '11px', color: SAGE, marginTop: '5px' }}>
+                            {[o.tracking.courier, o.tracking.number].filter(Boolean).join(' · ')}
+                            {o.tracking.url && <> {o.tracking.number ? '· ' : ''}<a href={o.tracking.url} target="_blank" rel="noopener noreferrer" style={{ color: INK, fontWeight: 700 }}>Track ↗</a></>}
+                          </div>
+                        )}
+                      </td>
                       <td style={{ padding: '14px 18px', fontSize: '12px', color: SAGE }}>{o.created_at ? new Date(o.created_at).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' }) : '—'}</td>
                     </tr>
                   )
