@@ -393,6 +393,7 @@ export default function ManualOrdersView({ walletBalance, onWalletChanged, onTop
                             {o.tracking.url && <> {o.tracking.number ? '· ' : ''}<a href={o.tracking.url} target="_blank" rel="noopener noreferrer" style={{ color: INK, fontWeight: 700 }}>Track ↗</a></>}
                           </div>
                         )}
+                        {o.shipment_status && <div style={{ fontSize: '11px', color: INK, marginTop: '2px' }}>{o.shipment_status.replace(/([a-z])([A-Z])/g, '$1 $2')}</div>}
                       </td>
                       <td style={{ padding: '14px 18px', fontSize: '12px', color: SAGE }}>{o.created_at ? new Date(o.created_at).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' }) : '—'}</td>
                     </tr>
