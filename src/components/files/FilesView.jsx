@@ -7,7 +7,7 @@ import { printSizeAt } from '../../utils/artworkImage'
 
 const megabytes = b => `${(Number(b || 0) / 1024 / 1024).toFixed(1)} MB`
 const baseName = name => name.replace(/\.[a-z0-9]+$/i, '')
-const suggestedPrice = cost => Math.ceil((cost * 1.8) / 50) * 50 - 1
+const suggestedPrice = cost => Math.max(cost, Math.ceil((cost * 1.8) / 50) * 50 - 1)
 
 function BlankGrid({ blanks, onPick, selectedId }) {
   if (!blanks.length) return <div style={{ textAlign: 'center', padding: '32px', color: SAGE, fontSize: '13px' }}>The catalogue is empty.</div>

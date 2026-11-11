@@ -46,8 +46,11 @@ function printedSize(p, area, ratio) {
   }
 }
 
+// About 1.8× cost, ending in 49 or 99; never below the cost itself (a ₹0
+// cost, e.g. a garment the customer supplies with nothing printed yet, would
+// otherwise come out as -1).
 function suggestedPrice(cost) {
-  return Math.ceil((cost * 1.8) / 50) * 50 - 1
+  return Math.max(cost, Math.ceil((cost * 1.8) / 50) * 50 - 1)
 }
 
 function readImageSize(url) {
