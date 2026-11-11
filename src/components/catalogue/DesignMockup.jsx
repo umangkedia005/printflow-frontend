@@ -5,8 +5,9 @@ const FULL_PHOTO = { x: 0, y: 0, w: 1 }
 // A saved design as it will look printed: the product photo in the design's
 // first colour, on the first side it prints on, with the artwork placed
 // where it prints and cut to the print area (the part outside isn't printed).
-// Falls back to the bare artwork if the product isn't available.
-export default function DesignMockup({ design, blank }) {
+// Falls back to the bare artwork if the product isn't available. `compact`
+// (small thumbnails) leaves out the "+N sides" label.
+export default function DesignMockup({ design, blank, compact = false }) {
   const artwork = design.artwork || {}
   const areas = (blank?.print_areas || []).filter(a => artwork[a.id])
   if (!blank || !areas.length) {
@@ -39,7 +40,7 @@ export default function DesignMockup({ design, blank }) {
           )
         })}
       </GarmentMockup>
-      {sides > 1 && <span style={{ position: 'absolute', left: '8px', bottom: '8px', background: 'rgba(255,255,255,0.92)', color: '#172B15', fontSize: '10px', fontWeight: 700, padding: '3px 8px', borderRadius: '100px' }}>+{sides - 1} side{sides > 2 ? 's' : ''}</span>}
+      {sides > 1 && !compact && <span style={{ position: 'absolute', left: '8px', bottom: '8px', background: 'rgba(255,255,255,0.92)', color: '#172B15', fontSize: '10px', fontWeight: 700, padding: '3px 8px', borderRadius: '100px' }}>+{sides - 1} side{sides > 2 ? 's' : ''}</span>}
     </div>
   )
 }

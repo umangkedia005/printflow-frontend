@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useMemo, useState } from 'react'
 import { createPortal } from 'react-dom'
 import DesignMockup from '../catalogue/DesignMockup'
-import { fetchCatalogue, fetchMerchantProducts, quoteManualOrder, placeManualOrder, fetchManualOrders } from '../../utils/api'
+import { fetchDesignableProducts, fetchMerchantProducts, quoteManualOrder, placeManualOrder, fetchManualOrders } from '../../utils/api'
 
 const INK = '#172B15', SAGE = '#889B8E', LIME = '#B9F95D', LINE = 'rgba(23,43,21,0.08)'
 const CARD = { background: '#FFFFFF', border: '1px solid rgba(23,43,21,0.06)', borderRadius: '20px', boxShadow: '0 8px 30px rgba(23,43,21,0.015)' }
@@ -56,7 +56,7 @@ function ProductPicker({ designs, blanks, onPick, onClose }) {
   const blankName = id => blanks.find(b => b.blank_id === id)?.name || ''
   const items = tab === 'designs'
     ? designs.filter(d => !q || d.title.toLowerCase().includes(q))
-    : blanks.filter(b => !q || b.name.toLowerCase().includes(q))
+    : blanks.filter(b => !b.own && (!q || b.name.toLowerCase().includes(q)))
 
   return createPortal(
     <div onClick={e => { if (e.target === e.currentTarget) onClose() }} style={{ position: 'fixed', inset: 0, zIndex: 1000, background: 'rgba(0,0,0,0.45)', backdropFilter: 'blur(6px)', WebkitBackdropFilter: 'blur(6px)', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '16px' }}>
@@ -66,7 +66,7 @@ function ProductPicker({ designs, blanks, onPick, onClose }) {
           <button onClick={onClose} aria-label="Close" style={{ width: '32px', height: '32px', background: '#F4F5F0', border: 'none', borderRadius: '10px', fontSize: '14px', color: INK, cursor: 'pointer' }}>✕</button>
         </div>
         <div style={{ display: 'flex', gap: '22px', padding: '18px 28px 0', borderBottom: `1px solid ${LINE}` }}>
-          {[['designs', `My designs (${designs.length})`], ['blanks', `Blank products (${blanks.length})`]].map(([id, text]) => (
+          {[['designs', `My designs (${designs.length})`], ['blanks', `Blank products (${blanks.filter(b => !b.own).length})`]].map(([id, text]) => (
             <button key={id} onClick={() => setTab(id)} style={{ background: 'none', border: 'none', borderBottom: `2px solid ${tab === id ? INK : 'transparent'}`, padding: '0 2px 12px', fontSize: '14px', fontWeight: 700, color: tab === id ? INK : SAGE, cursor: 'pointer', fontFamily: 'Inter, sans-serif' }}>{text}</button>
           ))}
         </div>
@@ -123,7 +123,8 @@ function CreateOrder({ walletBalance, onTopUp, onPlaced, onCancel, initialDesign
       const start = initialDesignId && list.find(d => d.product_id === initialDesignId)
       if (start) addLine(start, 'design')
     }).catch(() => setDesigns([]))
-    fetchCatalogue().then(list => {
+    // Includes the account's approved own garments, so their designs preview.
+    fetchDesignableProducts().then(list => {
       setBlanks(list)
       const start = initialBlankId && list.find(b => b.blank_id === initialBlankId)
       if (start) addLine(start, 'blank')
@@ -158,6 +159,8 @@ function CreateOrder({ walletBalance, onTopUp, onPlaced, onCancel, initialDesign
     setLines(ls => [...ls, {
       key: `${Date.now()}-${Math.random()}`,
       kind, ref: kind === 'design' ? item.product_id : item.blank_id,
+      // Kept for the line's preview (designs are drawn on the product).
+      design: kind === 'design' ? item : null,
       name: kind === 'design' ? item.title : item.name,
       image, colors, sizes, color: colors[0], size: sizes[0], qty: 1,
     }])
@@ -216,9 +219,16 @@ function CreateOrder({ walletBalance, onTopUp, onPlaced, onCancel, initialDesign
               <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
                 {lines.map((l, i) => (
                   <div key={l.key} style={{ display: 'flex', gap: '14px', alignItems: 'center', border: `1px solid ${LINE}`, borderRadius: '16px', padding: '12px', flexWrap: 'wrap' }}>
+                    {l.design ? (
+                      <div style={{ width: '56px', flexShrink: 0 }}>
+                        {/* Follows the colour picked on this line. */}
+                        <DesignMockup compact design={{ ...l.design, colors: [l.color] }} blank={blanks.find(b => b.blank_id === l.design.blank_id)} />
+                      </div>
+                    ) : (
                     <div style={{ width: '60px', height: '60px', borderRadius: '12px', background: '#F4F5F0', overflow: 'hidden', flexShrink: 0, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                       {l.image && <img src={l.image} alt="" style={{ width: l.kind === 'design' ? '80%' : '100%', height: l.kind === 'design' ? '80%' : '100%', objectFit: l.kind === 'design' ? 'contain' : 'cover' }} />}
                     </div>
+                    )}
                     <div style={{ flex: '1 1 160px', minWidth: 0 }}>
                       <div style={{ fontSize: '14px', fontWeight: 700, color: INK, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{l.name}</div>
                       <div style={{ fontSize: '11px', color: SAGE, marginTop: '2px' }}>{l.kind === 'design' ? 'Your design' : 'Blank, no print'}{priceOf(i) != null ? ` · ${rupees(priceOf(i))} each` : ''}</div>
