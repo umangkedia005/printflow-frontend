@@ -41,9 +41,11 @@ function autoPlacement(file, area) {
 }
 
 function QuickOrder({ file, blanks, onClose, onReady }) {
-  const [blank, setBlank] = useState(null)
-  const [color, setColor] = useState('')
-  const [areaId, setAreaId] = useState('')
+  // With only one product to choose from, start with it picked.
+  const only = blanks.length === 1 ? blanks[0] : null
+  const [blank, setBlank] = useState(only)
+  const [color, setColor] = useState(only?.colors[0]?.name || '')
+  const [areaId, setAreaId] = useState(only?.print_areas[0]?.id || '')
   const [saving, setSaving] = useState(false)
   const [error, setError] = useState('')
 
@@ -82,7 +84,7 @@ function QuickOrder({ file, blanks, onClose, onReady }) {
 
   return (
     <Modal title="Order this design" subtitle={`${file.name} · choose what to print it on`} onClose={onClose} width={720}>
-      <span style={LABEL}>1. Product</span>
+      <span style={LABEL}>1. Product{!blank && blanks.length > 1 ? ' · click one to choose it' : ''}</span>
       <BlankGrid blanks={blanks} onPick={chooseBlank} selectedId={blank?.blank_id} />
 
       {blank && (
@@ -119,7 +121,7 @@ function QuickOrder({ file, blanks, onClose, onReady }) {
       {error && <div style={{ marginTop: '12px', fontSize: '12px', color: '#C53030' }}>⚠ {error}</div>}
 
       <div style={{ display: 'flex', justifyContent: 'flex-end', alignItems: 'center', gap: '12px', marginTop: '24px' }}>
-        <span style={{ fontSize: '11px', color: SAGE }}>Sizes and quantities are chosen on the next page.</span>
+        <span style={{ fontSize: '11px', color: SAGE }}>{blank ? 'Sizes and quantities are chosen on the next page.' : 'Choose a product above to continue.'}</span>
         <button disabled={!place || !sizes.length || saving} onClick={proceed} style={{ background: LIME, color: INK, border: 'none', borderRadius: '12px', padding: '12px 20px', fontSize: '13px', fontWeight: 800, cursor: !place || saving ? 'not-allowed' : 'pointer', opacity: !place || !sizes.length || saving ? 0.5 : 1, fontFamily: 'Inter, sans-serif' }}>
           {saving ? 'Preparing…' : 'Continue to order →'}
         </button>
