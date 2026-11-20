@@ -512,7 +512,7 @@ function UpgradeModal({ currentPlan, shopDomain, plans, onClose, onSuccess }) {
         </div>
 
         {/* Plan cards */}
-        <div style={{ padding: '28px 32px', display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '16px' }}>
+        <div className="pf-grid-stack" style={{ padding: '28px 32px', display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '16px' }}>
           {plans.length === 0 && (
             <div style={{ gridColumn: '1 / -1', textAlign: 'center', padding: '32px', color: '#999', fontSize: '13px' }}>
               Loading plans...
@@ -626,6 +626,9 @@ export default function DashboardPage() {
   const [searchParams, setSearchParams] = useSearchParams()
 
   const [activeNav, setActiveNav]           = useState('dashboard')
+  // Phones: the sidebar is a drawer behind the ☰ button (see .pf-sidebar in index.css).
+  const [menuOpen, setMenuOpen]             = useState(false)
+  useEffect(() => { setMenuOpen(false) }, [activeNav])
   const [ordersTab, setOrdersTab]           = useState('shopify')
   // Shown on the Manual orders tab after placing an order from Create order.
   const [orderNotice, setOrderNotice]       = useState('')
@@ -984,7 +987,7 @@ export default function DashboardPage() {
     return (
       <>
         {/* Stats */}
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(5, 1fr)', gap: '16px', marginBottom: '32px', position: 'relative', zIndex: 1 }}>
+        <div className="pf-grid-stats" style={{ display: 'grid', gridTemplateColumns: 'repeat(5, 1fr)', gap: '16px', marginBottom: '32px', position: 'relative', zIndex: 1 }}>
           {[
             { label: 'Total Orders', value: counts.total, bgGrad: 'linear-gradient(135deg, #172B15 0%, #39B54A 100%)', color: '#172B15', Icon: StatIconTotal, iconShadow: '0 6px 16px rgba(57,181,74,0.15)' },
             { label: 'Queued',       value: counts.queued, bgGrad: 'linear-gradient(135deg, #F97316 0%, #FF9E3D 100%)', color: '#C2410C', Icon: StatIconQueued, iconShadow: '0 6px 16px rgba(249,115,22,0.15)' },
@@ -1005,7 +1008,7 @@ export default function DashboardPage() {
         </div>
 
         {/* Analytics Section */}
-        <div style={{ display: 'grid', gridTemplateColumns: '1.8fr 1.2fr', gap: '28px', marginBottom: '32px', position: 'relative', zIndex: 1 }}>
+        <div className="pf-grid-stack" style={{ display: 'grid', gridTemplateColumns: '1.8fr 1.2fr', gap: '28px', marginBottom: '32px', position: 'relative', zIndex: 1 }}>
           
           {/* Sales chart */}
           <div style={{ background: '#FFFFFF', border: '1px solid rgba(23,43,21,0.06)', borderRadius: '24px', padding: '24px', boxShadow: '0 8px 30px rgba(23,43,21,0.015)' }}>
@@ -1632,7 +1635,8 @@ export default function DashboardPage() {
     <div style={{ display: 'flex', minHeight: '100vh', background: '#FAFAF8', fontFamily: 'Inter, -apple-system, sans-serif', color: '#0A0A0A' }}>
 
       {/* Sidebar (Warm Stone-Beige Sellers Club layout) */}
-      <aside style={{ width: '260px', flexShrink: 0, background: '#EAEAE2', borderRight: '1px solid rgba(23,43,21,0.08)', position: 'fixed', top: 0, left: 0, bottom: 0, display: 'flex', flexDirection: 'column', zIndex: 100 }}>
+      {menuOpen && <div className="pf-backdrop" onClick={() => setMenuOpen(false)} />}
+      <aside className={`pf-sidebar${menuOpen ? ' open' : ''}`} style={{ width: '260px', flexShrink: 0, background: '#EAEAE2', borderRight: '1px solid rgba(23,43,21,0.08)', position: 'fixed', top: 0, left: 0, bottom: 0, display: 'flex', flexDirection: 'column', zIndex: 100 }}>
         <div style={{ padding: '20px 24px', borderBottom: '1px solid rgba(23,43,21,0.06)' }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: '9px' }}>
             <img 
@@ -1723,11 +1727,16 @@ export default function DashboardPage() {
       </aside>
 
       {/* Main */}
-      <main style={{ marginLeft: '232px', flex: 1, minWidth: 0 }}>
-        <div style={{ position: 'sticky', top: 0, zIndex: 50, background: 'rgba(250,250,248,0.9)', backdropFilter: 'blur(16px)', WebkitBackdropFilter: 'blur(16px)', borderBottom: '1px solid #E8E8E4', padding: '0 32px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', height: '56px' }}>
-          <span style={{ fontSize: '14px', color: '#172B15', fontWeight: 550 }}>{greeting()}, <strong style={{ fontWeight: 700 }}>{firstName}</strong></span>
+      <main className="pf-main" style={{ marginLeft: '232px', flex: 1, minWidth: 0 }}>
+        <div className="pf-topbar" style={{ position: 'sticky', top: 0, zIndex: 50, background: 'rgba(250,250,248,0.9)', backdropFilter: 'blur(16px)', WebkitBackdropFilter: 'blur(16px)', borderBottom: '1px solid #E8E8E4', padding: '0 32px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', height: '56px' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '10px', minWidth: 0 }}>
+            <button className="pf-menu-btn" onClick={() => setMenuOpen(true)} aria-label="Open menu" style={{ width: '36px', height: '36px', borderRadius: '10px', border: '1px solid rgba(23,43,21,0.12)', background: '#FFFFFF', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', flexShrink: 0 }}>
+              <svg width="18" height="18" viewBox="0 0 18 18" fill="none"><path d="M3 5h12M3 9h12M3 13h12" stroke="#172B15" strokeWidth="1.8" strokeLinecap="round" /></svg>
+            </button>
+            <span style={{ fontSize: '14px', color: '#172B15', fontWeight: 550, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}><span className="pf-greeting-word">{greeting()}, </span><strong style={{ fontWeight: 700 }}>{firstName}</strong></span>
+          </div>
           <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-            <span style={{ fontSize: '12px', color: '#71717A' }}>{new Date().toLocaleDateString('en-IN', { weekday: 'short', day: 'numeric', month: 'short', year: 'numeric' })}</span>
+            <span className="pf-topbar-date" style={{ fontSize: '12px', color: '#71717A' }}>{new Date().toLocaleDateString('en-IN', { weekday: 'short', day: 'numeric', month: 'short', year: 'numeric' })}</span>
             {/* Only for accounts with no store yet; the sidebar shows the linked one. */}
             {!shopDomain && <button
               onClick={() => {
@@ -1756,7 +1765,7 @@ export default function DashboardPage() {
           </div>
         </div>
 
-        <div style={{ padding: '36px 40px', position: 'relative' }}>
+        <div className="pf-content" style={{ padding: '36px 40px', position: 'relative' }}>
           {/* Ambient light-green background radial glows */}
           <div style={{ position: 'absolute', top: '10%', right: '5%', width: '400px', height: '400px', background: 'radial-gradient(circle, rgba(185,249,93,0.03) 0%, transparent 70%)', pointerEvents: 'none', zIndex: 0 }} />
           <div style={{ position: 'absolute', bottom: '10%', left: '5%', width: '350px', height: '350px', background: 'radial-gradient(circle, rgba(57,181,74,0.02) 0%, transparent 70%)', pointerEvents: 'none', zIndex: 0 }} />
@@ -1774,7 +1783,7 @@ export default function DashboardPage() {
             <>
               <div style={{ marginBottom: '28px', position: 'relative', zIndex: 1 }}>
                 <h1 style={{ fontFamily: "'Fraunces', sans-serif", fontSize: '26px', fontWeight: 800, color: '#172B15', letterSpacing: '-0.5px', marginBottom: '4px' }}>Order Management</h1>
-                <p style={{ fontSize: '13px', color: '#889B8E', fontWeight: 500 }}>Orders from <span style={{ color: '#172B15', fontWeight: 600 }}>{shopDomain}</span>, and orders you place yourself.</p>
+                <p style={{ fontSize: '13px', color: '#889B8E', fontWeight: 500 }}>{shopDomain ? <>Orders from <span style={{ color: '#172B15', fontWeight: 600 }}>{shopDomain}</span>, and orders you place yourself.</> : 'Orders you place yourself, and your Shopify orders once a store is connected.'}</p>
                 <div style={{ display: 'inline-flex', background: 'rgba(23,43,21,0.05)', borderRadius: '14px', padding: '4px', marginTop: '18px' }}>
                   {[['shopify', 'Shopify orders'], ['manual', 'Manual orders']].map(([id, text]) => (
                     <button key={id} onClick={() => setOrdersTab(id)} style={{ padding: '9px 18px', border: 'none', borderRadius: '11px', background: ordersTab === id ? '#FFFFFF' : 'transparent', boxShadow: ordersTab === id ? '0 2px 8px rgba(23,43,21,0.06)' : 'none', fontSize: '13px', fontWeight: 700, color: ordersTab === id ? '#172B15' : '#889B8E', cursor: 'pointer', fontFamily: 'Inter, sans-serif' }}>{text}</button>
@@ -1847,7 +1856,7 @@ export default function DashboardPage() {
               {trendTab === 'social' && (
                 <>
                   {/* Social Buzz Inspiration Banner */}
-                  <div style={{ display: 'grid', gridTemplateColumns: '2fr 1fr', background: '#FFFFFF', border: '1px solid rgba(23,43,21,0.06)', borderRadius: '24px', padding: '32px', marginBottom: '28px', alignItems: 'center', boxShadow: '0 8px 30px rgba(23,43,21,0.01)' }}>
+                  <div className="pf-grid-stack" style={{ display: 'grid', gridTemplateColumns: '2fr 1fr', background: '#FFFFFF', border: '1px solid rgba(23,43,21,0.06)', borderRadius: '24px', padding: '32px', marginBottom: '28px', alignItems: 'center', boxShadow: '0 8px 30px rgba(23,43,21,0.01)' }}>
                     <div>
                       <h2 style={{ fontFamily: "'Fraunces', sans-serif", fontSize: '22px', fontWeight: 800, color: '#172B15', marginBottom: '10px', letterSpacing: '-0.3px' }}>
                         Turn social media buzz into inspiration
@@ -2029,7 +2038,7 @@ export default function DashboardPage() {
                     </div>
 
                     {/* Trending queries table */}
-                    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '16px' }}>
+                    <div className="pf-grid-stack" style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '16px' }}>
                       {generateTrendsData(searchQuery).map(q => (
                         <div key={q.title} style={{ padding: '16px', background: '#FAFAF9', border: '1px solid rgba(23,43,21,0.04)', borderRadius: '12px', display: 'flex', flexDirection: 'column' }}>
                           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
@@ -2064,7 +2073,7 @@ export default function DashboardPage() {
                       </div>
                     </div>
 
-                    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '20px' }}>
+                    <div className="pf-grid-stack" style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '20px' }}>
                       {MEDIUM_TRENDS.map(item => (
                         <a 
                           key={item.id}
@@ -2122,7 +2131,7 @@ export default function DashboardPage() {
                 <p style={{ fontSize: '13px', color: '#889B8E', fontWeight: 500 }}>Access guides, browse frequently asked questions, or chat with our operations team.</p>
               </div>
 
-              <div style={{ display: 'grid', gridTemplateColumns: '1.8fr 1.2fr', gap: '28px', alignItems: 'start' }}>
+              <div className="pf-grid-stack" style={{ display: 'grid', gridTemplateColumns: '1.8fr 1.2fr', gap: '28px', alignItems: 'start' }}>
                 {/* FAQs */}
                 <div style={{ background: '#FFFFFF', border: '1px solid rgba(23,43,21,0.06)', borderRadius: '24px', padding: '24px', boxShadow: '0 8px 30px rgba(23,43,21,0.015)' }}>
                   <h3 style={{ fontFamily: "'Fraunces', sans-serif", fontSize: '16px', fontWeight: 800, color: '#172B15', marginBottom: '18px' }}>Frequently Asked Questions</h3>

@@ -113,3 +113,20 @@ body {
   .pf-design-grid { grid-template-columns: 1fr; }
   .pf-design-sticky { position: static; }
 }
+
+/* Phones: the sidebar becomes a drawer opened from the ☰ button, the page
+   uses the full width, and the top bar gets compact. Desktop is unchanged. */
+.pf-menu-btn { display: none; }
+.pf-backdrop { display: none; }
+@media (max-width: 768px) {
+  .pf-sidebar { width: min(82vw, 300px) !important; transform: translateX(-100%); transition: transform 0.25s ease; box-shadow: none; }
+  .pf-sidebar.open { transform: translateX(0); box-shadow: 0 0 60px rgba(0, 0, 0, 0.25); }
+  .pf-backdrop { display: block; position: fixed; inset: 0; z-index: 99; background: rgba(0, 0, 0, 0.35); }
+  .pf-main { margin-left: 0 !important; }
+  .pf-topbar { padding: 0 12px !important; gap: 8px; }
+  .pf-topbar-date, .pf-greeting-word { display: none; }
+  .pf-menu-btn { display: inline-flex !important; }
+  .pf-content { padding: 20px 14px 32px !important; }
+  .pf-grid-stack { grid-template-columns: 1fr !important; }
+  .pf-grid-stats { grid-template-columns: repeat(2, 1fr) !important; }
+}
