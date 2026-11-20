@@ -142,6 +142,13 @@ body {
   .pf-modal-overlay { padding: 10px !important; }
   .pf-modal-overlay > div { max-height: calc(100vh - 20px); }
   .pf-modal-head { padding: 16px 18px !important; }
+  /* Card grids (files, designs, garments): two per row on phones. */
+  .pf-cards-2 { grid-template-columns: repeat(2, minmax(0, 1fr)) !important; gap: 10px !important; }
+  .pf-cards-2 > * { padding: 10px !important; border-radius: 16px !important; }
+  .pf-btn-stack { flex-direction: column; }
+  /* Card title + status badge: the title gets its own line(s), badge below. */
+  .pf-name-row { flex-wrap: wrap; row-gap: 6px !important; }
+  .pf-name-row > :first-child { white-space: normal !important; flex-basis: 100%; }
   .pf-plan-price { width: 100%; flex-direction: row !important; justify-content: space-between; align-items: center !important; text-align: left !important; }
   .pf-grid-stats { grid-template-columns: repeat(2, 1fr) !important; gap: 10px !important; margin-bottom: 20px !important; }
   .pf-grid-stats > :first-child { grid-column: 1 / -1; }

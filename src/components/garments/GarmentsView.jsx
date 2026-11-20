@@ -301,7 +301,7 @@ export default function GarmentsView({ onOrderPlain }) {
           <div style={{ fontSize: '13px', color: SAGE, marginTop: '6px' }}>Add the T-shirt, polo or hoodie you want us to print on.</div>
         </div>
       ) : (
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(230px, 1fr))', gap: '16px' }}>
+        <div className="pf-cards-2" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(230px, 1fr))', gap: '16px' }}>
           {garments.map(g => {
             const [label, bg, fg] = STATUS[g.status] || STATUS.pending
             const front = (g.areas || []).find(a => a.view_id === 'front')
@@ -311,7 +311,7 @@ export default function GarmentsView({ onOrderPlain }) {
                   <PhotoWithBox url={g.photo_urls?.front} box={front?.mockup_box} />
                   <button onClick={() => remove(g)} title="Remove" aria-label={`Remove ${g.name}`} style={{ position: 'absolute', top: '8px', right: '8px', width: '28px', height: '28px', background: '#FFFFFF', border: `1px solid ${LINE}`, borderRadius: '8px', fontSize: '12px', color: '#C53030', cursor: 'pointer' }}>✕</button>
                 </div>
-                <div style={{ display: 'flex', justifyContent: 'space-between', gap: '8px', alignItems: 'center', marginTop: '12px' }}>
+                <div className="pf-name-row" style={{ display: 'flex', justifyContent: 'space-between', gap: '8px', alignItems: 'center', marginTop: '12px' }}>
                   <div style={{ fontSize: '14px', fontWeight: 700, color: INK, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }} title={g.name}>{g.name}</div>
                   <span style={{ flexShrink: 0, background: bg, color: fg, padding: '3px 9px', borderRadius: '100px', fontSize: '10px', fontWeight: 700 }}>{label}</span>
                 </div>
@@ -328,7 +328,7 @@ export default function GarmentsView({ onOrderPlain }) {
                 {g.note && <div style={{ fontSize: '12px', color: g.status === 'rejected' ? '#C53030' : SAGE, marginTop: '6px' }}>Note: {g.note}</div>}
                 <div style={{ marginTop: 'auto', paddingTop: '14px' }}>
                   {g.status === 'approved' ? (
-                    <div style={{ display: 'flex', gap: '8px' }}>
+                    <div className="pf-btn-stack" style={{ display: 'flex', gap: '8px' }}>
                       <button disabled={!priceRange(g)} onClick={() => setDesigning(g.blank)} title={priceRange(g) ? undefined : 'Available once we set the price'} style={{ flex: 1, background: INK, color: '#FFFFFF', border: 'none', borderRadius: '12px', padding: '11px', fontSize: '13px', fontWeight: 800, cursor: priceRange(g) ? 'pointer' : 'not-allowed', opacity: priceRange(g) ? 1 : 0.4, fontFamily: 'Inter, sans-serif' }}>Design on it</button>
                       {onOrderPlain && priceRange(g) && <button className="pf-btn-outline" onClick={() => onOrderPlain(g.blank.blank_id)} style={{ flex: 1, padding: '10px', fontSize: '12px', whiteSpace: 'nowrap' }}>Order plain</button>}
                     </div>

@@ -390,7 +390,7 @@ export default function DesignEditor({ blank, onClose, onSaved, initialArtwork =
   const fromCost = Math.min(...sizesInStock.filter(sz => sizes.includes(sz)).map(costFor).filter(Number.isFinite))
 
   return (
-    <div ref={pageRef} style={{ scrollMarginTop: '16px' }}>
+    <div ref={pageRef} style={{ scrollMarginTop: '72px' }}>
       <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: '16px', flexWrap: 'wrap', marginBottom: '22px' }}>
         <div>
           <button onClick={onClose} style={{ background: 'none', border: 'none', padding: 0, color: '#889B8E', fontSize: '13px', fontWeight: 600, cursor: 'pointer', fontFamily: 'Inter, sans-serif', marginBottom: '8px' }}>← {backLabel}</button>

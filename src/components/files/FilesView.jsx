@@ -247,7 +247,7 @@ export default function FilesView({ onOrder }) {
       ) : files.length === 0 && !error ? (
         <div style={{ textAlign: 'center', padding: '48px', color: SAGE, fontSize: '13px' }}>No files yet. Upload your first design above.</div>
       ) : (
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(220px, 1fr))', gap: '16px' }}>
+        <div className="pf-cards-2" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(220px, 1fr))', gap: '16px' }}>
           {files.map(f => (
             <div key={f.file_id} style={{ ...CARD, padding: '14px', display: 'flex', flexDirection: 'column' }}>
               <div style={{ position: 'relative' }}>
@@ -257,7 +257,7 @@ export default function FilesView({ onOrder }) {
               <div style={{ fontSize: '14px', fontWeight: 700, color: INK, marginTop: '12px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }} title={f.name}>{f.name}</div>
               <div style={{ fontSize: '12px', color: SAGE, marginTop: '3px' }}>{f.px_w} × {f.px_h} px · {megabytes(f.bytes)}</div>
               <div style={{ fontSize: '12px', color: INK, marginTop: '3px', marginBottom: '14px' }}>Sharp up to {printSizeAt(f.px_w)}″ × {printSizeAt(f.px_h)}″</div>
-              <div style={{ display: 'flex', gap: '8px', marginTop: 'auto' }}>
+              <div className="pf-btn-stack" style={{ display: 'flex', gap: '8px', marginTop: 'auto' }}>
                 <button className="pf-btn-outline" onClick={() => setPickBlankFor(f)} style={{ flex: 1, padding: '10px 8px', fontSize: '12px', whiteSpace: 'nowrap' }}>Design product</button>
                 <button onClick={() => setOrderFile(f)} style={{ flex: 1, background: LIME, color: INK, border: 'none', borderRadius: '12px', padding: '10px 8px', fontSize: '12px', fontWeight: 800, cursor: 'pointer', fontFamily: 'Inter, sans-serif' }}>Order</button>
               </div>
