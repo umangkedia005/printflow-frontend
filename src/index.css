@@ -117,6 +117,8 @@ body {
 /* Phones: the sidebar becomes a drawer opened from the ☰ button, the page
    uses the full width, and the top bar gets compact. Desktop is unchanged. */
 .pf-menu-btn { display: none; }
+/* Shown only on phones / only on bigger screens. */
+.pf-mobile-only { display: none; }
 .pf-backdrop { display: none; }
 @media (max-width: 768px) {
   .pf-sidebar { width: min(82vw, 300px) !important; transform: translateX(-100%); transition: transform 0.25s ease; box-shadow: none; }
@@ -128,5 +130,12 @@ body {
   .pf-menu-btn { display: inline-flex !important; }
   .pf-content { padding: 20px 14px 32px !important; }
   .pf-grid-stack { grid-template-columns: 1fr !important; }
+  .pf-mobile-only { display: block !important; }
+  .pf-desktop-only { display: none !important; }
+  /* A row of tabs/pills that swipes sideways inside itself, not the page. */
+  .pf-scroll-x { flex-wrap: nowrap !important; overflow-x: auto; max-width: 100%; scrollbar-width: none; -webkit-overflow-scrolling: touch; }
+  .pf-scroll-x::-webkit-scrollbar { display: none; }
+  .pf-scroll-x > * { flex-shrink: 0; white-space: nowrap; }
+  .pf-full { max-width: none !important; flex-basis: 100% !important; }
   .pf-grid-stats { grid-template-columns: repeat(2, 1fr) !important; }
 }

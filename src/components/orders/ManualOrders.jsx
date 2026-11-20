@@ -374,7 +374,43 @@ export default function ManualOrdersView({ walletBalance, onWalletChanged, onTop
             <div style={{ fontSize: '13px', color: SAGE, marginTop: '6px' }}>Order your designs or blanks for anyone, paid from your wallet.</div>
           </div>
         ) : (
-          <div style={{ overflowX: 'auto' }}>
+          <>
+          {/* Phones: one card per order (the table below is desktop only). */}
+          <div className="pf-mobile-only">
+            {orders.map((o, i) => {
+              const ship = o.raw?.shipping_address || {}
+              const [label, bg, fg] = STATUS[o.status] || STATUS.queued
+              const items = o.items || []
+              const qty = items.reduce((n, it) => n + Number(it.quantity || 0), 0)
+              return (
+                <div key={o.order_id} style={{ padding: '14px 16px', borderBottom: i < orders.length - 1 ? `1px solid ${LINE}` : 'none' }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: '10px' }}>
+                    <span style={{ fontWeight: 700, color: INK, fontSize: '13px' }}>{o.order_id}</span>
+                    <span style={{ background: bg, color: fg, padding: '3px 10px', borderRadius: '100px', fontSize: '11px', fontWeight: 700, flexShrink: 0 }}>{label}</span>
+                  </div>
+                  <div style={{ display: 'flex', gap: '10px', alignItems: 'center', marginTop: '10px' }}>
+                    <div style={{ width: '40px', height: '40px', borderRadius: '10px', background: '#F4F5F0', overflow: 'hidden', flexShrink: 0 }}>
+                      {items[0]?.image_url && <img src={items[0].image_url} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />}
+                    </div>
+                    <div style={{ flex: 1, minWidth: 0 }}>
+                      <div style={{ fontSize: '13px', color: INK, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{qty} item{qty === 1 ? '' : 's'} · {items[0]?.name}{items.length > 1 ? ` +${items.length - 1}` : ''}</div>
+                      <div style={{ fontSize: '12px', color: SAGE, marginTop: '2px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>To {[ship.name, ship.city].filter(Boolean).join(', ')}{o.reference ? ` · Ref ${o.reference}` : ''}</div>
+                    </div>
+                    <div style={{ fontSize: '13px', fontWeight: 800, color: INK, flexShrink: 0 }}>{rupees(o.total_price)}</div>
+                  </div>
+                  {o.tracking && (o.tracking.number || o.tracking.url) && (
+                    <div style={{ fontSize: '12px', color: SAGE, marginTop: '8px' }}>
+                      {[o.tracking.courier, o.tracking.number].filter(Boolean).join(' · ')}
+                      {o.tracking.url && <> {o.tracking.number ? '· ' : ''}<a href={o.tracking.url} target="_blank" rel="noopener noreferrer" style={{ color: INK, fontWeight: 700 }}>Track ↗</a></>}
+                      {o.shipment_status && <span> · {o.shipment_status.replace(/([a-z])([A-Z])/g, '$1 $2')}</span>}
+                    </div>
+                  )}
+                  <div style={{ fontSize: '11px', color: SAGE, marginTop: '6px' }}>{o.created_at ? new Date(o.created_at).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' }) : ''}</div>
+                </div>
+              )
+            })}
+          </div>
+          <div className="pf-desktop-only" style={{ overflowX: 'auto' }}>
             <table style={{ width: '100%', borderCollapse: 'collapse', minWidth: '720px' }}>
               <thead>
                 <tr>{['Order', 'Items', 'Ship to', 'Total', 'Status', 'Placed'].map(h => <th key={h} style={{ padding: '12px 18px', textAlign: 'left', fontSize: '11px', fontWeight: 700, color: SAGE, textTransform: 'uppercase', letterSpacing: '0.05em', borderBottom: `1px solid ${LINE}` }}>{h}</th>)}</tr>
@@ -421,6 +457,7 @@ export default function ManualOrdersView({ walletBalance, onWalletChanged, onTop
               </tbody>
             </table>
           </div>
+          </>
         )}
       </div>
     </div>

@@ -423,6 +423,9 @@ function mapStatus(status) {
     partially_refunded:'shipped',
     voided:            'delivered',
   }
+  // Our own fulfilment statuses (set when printing starts, by the admin and by
+  // courier updates) are shown as they are; Shopify's payment statuses map.
+  if (['queued', 'printing', 'shipped', 'delivered'].includes(status)) return status
   return map[status] || 'queued'
 }
 

@@ -1182,7 +1182,7 @@ export default function DashboardPage() {
 
         {/* Filter bar and search panel */}
         <div style={{ display: 'flex', gap: '16px', marginBottom: '20px', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', position: 'relative', zIndex: 1 }}>
-          <div style={{ display: 'flex', gap: '6px', background: '#FFFFFF', border: '1px solid rgba(23,43,21,0.06)', borderRadius: '14px', padding: '4px', boxShadow: '0 4px 14px rgba(23,43,21,0.008)' }}>
+          <div className="pf-scroll-x" style={{ display: 'flex', gap: '6px', background: '#FFFFFF', border: '1px solid rgba(23,43,21,0.06)', borderRadius: '14px', padding: '4px', boxShadow: '0 4px 14px rgba(23,43,21,0.008)' }}>
             {['all', 'queued', 'printing', 'shipped', 'delivered'].map(f => (
               <button key={f} onClick={() => setStatusFilter(f)} style={{ padding: '6px 14px', borderRadius: '10px', border: 'none', background: statusFilter === f ? '#172B15' : 'transparent', color: statusFilter === f ? '#FFFFFF' : '#71717A', fontSize: '12.5px', fontWeight: statusFilter === f ? 700 : 500, cursor: 'pointer', fontFamily: 'Inter, sans-serif', textTransform: 'capitalize', transition: 'all 0.15s' }}>
                 {f === 'all' ? 'All orders' : f}
@@ -1191,7 +1191,7 @@ export default function DashboardPage() {
             ))}
           </div>
 
-          <div style={{ display: 'flex', gap: '10px', flex: 1, maxWidth: '380px' }}>
+          <div className="pf-full" style={{ display: 'flex', gap: '10px', flex: 1, maxWidth: '380px' }}>
             <input 
               type="text" 
               placeholder="Search by Order ID or Customer Name..."
@@ -1223,7 +1223,28 @@ export default function DashboardPage() {
               <button onClick={loadOrders} className="pf-btn" style={{ padding: '9px 20px', fontSize: '13px' }}>Retry</button>
             </div>
           ) : filteredOrders.length > 0 ? (
-            <table style={{ width: '100%', borderCollapse: 'collapse' }}>
+            <>
+            {/* Phones: one card per order (the table below is desktop only). */}
+            <div className="pf-mobile-only">
+              {filteredOrders.map((order, i) => {
+                const qty = order.items.reduce((a, b) => a + b.qty, 0)
+                return (
+                  <button key={order.id} onClick={() => { setSelectedOrder(order); setFulfillError('') }} style={{ display: 'block', width: '100%', textAlign: 'left', background: 'none', border: 'none', borderBottom: i < filteredOrders.length - 1 ? '1px solid #F4F4F0' : 'none', padding: '14px 16px', cursor: 'pointer', fontFamily: 'Inter, sans-serif' }}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: '10px' }}>
+                      <span style={{ fontSize: '14px', fontWeight: 700, color: '#172B15', fontFamily: 'monospace' }}>{order.id}</span>
+                      <StatusBadge status={order.status} />
+                    </div>
+                    <div style={{ fontSize: '13px', color: '#0A0A0A', marginTop: '6px' }}>{order.customer.name}</div>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', gap: '10px', marginTop: '4px', fontSize: '12px', color: '#8A8A85' }}>
+                      <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{qty} item{qty > 1 ? 's' : ''} · {order.items[0]?.name || order.items[0]?.sku}{order.items.length > 1 ? ` +${order.items.length - 1}` : ''}</span>
+                      <span style={{ flexShrink: 0, fontWeight: 600, color: '#0A0A0A' }}>{order.amount}</span>
+                    </div>
+                    <div style={{ fontSize: '11px', color: '#BABAB6', marginTop: '3px' }}>{order.date}</div>
+                  </button>
+                )
+              })}
+            </div>
+            <table className="pf-desktop-only" style={{ width: '100%', borderCollapse: 'collapse' }}>
               <thead>
                 <tr>{['Order','Customer','Items','Status','Date','Amount',''].map(h => <th key={h} style={{ padding: '10px 20px', textAlign: 'left', fontSize: '10px', fontWeight: 600, color: '#C8C8C4', textTransform: 'uppercase', letterSpacing: '0.08em', borderBottom: '1px solid #E8E8E4', background: '#FCFCFB' }}>{h}</th>)}</tr>
               </thead>
@@ -1249,6 +1270,7 @@ export default function DashboardPage() {
                 ))}
               </tbody>
             </table>
+            </>
           ) : (
             <div style={{ padding: '64px 32px', textAlign: 'center' }}>
               <svg width="140" height="110" viewBox="0 0 140 110" fill="none" style={{ margin: '0 auto 20px' }}>
@@ -2169,7 +2191,7 @@ export default function DashboardPage() {
       {/* Order detail panel */}
       {selectedOrder && (
         <div onClick={e => { if (e.target === e.currentTarget) setSelectedOrder(null) }} style={{ position: 'fixed', inset: 0, zIndex: 200, background: 'rgba(0,0,0,0.2)', backdropFilter: 'blur(3px)', WebkitBackdropFilter: 'blur(3px)' }}>
-          <div style={{ position: 'absolute', top: 0, right: 0, bottom: 0, width: '500px', background: '#FFFFFF', borderLeft: '1px solid #E8E8E4', overflowY: 'auto', animation: 'pf-slide-in 0.22s cubic-bezier(0.22,1,0.36,1)' }}>
+          <div style={{ position: 'absolute', top: 0, right: 0, bottom: 0, width: 'min(500px, 100vw)', background: '#FFFFFF', borderLeft: '1px solid #E8E8E4', overflowY: 'auto', animation: 'pf-slide-in 0.22s cubic-bezier(0.22,1,0.36,1)' }}>
             <div style={{ position: 'sticky', top: 0, background: '#FFFFFF', zIndex: 10, padding: '18px 24px', borderBottom: '1px solid #E8E8E4', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
               <div>
                 <div style={{ fontFamily: "'Fraunces', sans-serif", fontSize: '16px', fontWeight: 700, color: '#0A0A0A', marginBottom: '2px' }}>Order {selectedOrder.id}</div>
@@ -2225,7 +2247,7 @@ export default function DashboardPage() {
                           <div style={{ width: '28px', height: '28px', background: '#DCFCE7', border: '1px solid #BBF7D0', borderRadius: '6px', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '13px' }}>🖼</div>
                           <div>
                             <div style={{ fontSize: '11px', fontWeight: 600, color: '#166534' }}>Print file ready</div>
-                            <div style={{ fontSize: '10px', color: '#86EFAC', fontFamily: 'monospace', marginTop: '1px' }}>{item.printFile}</div>
+                            <a href={item.printFile} target="_blank" rel="noopener noreferrer" style={{ fontSize: '11px', color: '#166534', marginTop: '2px', display: 'inline-block' }}>Open print file ↗</a>
                           </div>
                         </div>
                       ) : (
