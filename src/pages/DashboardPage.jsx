@@ -1534,20 +1534,20 @@ export default function DashboardPage() {
               <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
                 <div style={{
                   width: '32px', height: '32px', borderRadius: '8px', flexShrink: 0,
-                  background: tx.type === 'topup' ? '#F0FDF4' : '#FFF7ED',
+                  background: ['topup', 'credit', 'refund'].includes(tx.type) ? '#F0FDF4' : '#FFF7ED',
                   display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '14px',
-                }}>{tx.type === 'topup' ? '↓' : '↑'}</div>
+                }}>{['topup', 'credit', 'refund'].includes(tx.type) ? '↓' : '↑'}</div>
                 <div>
                   <div style={{ fontSize: '13px', fontWeight: 600, color: '#0A0A0A' }}>
-                    {tx.type === 'topup' ? 'Wallet top-up' : `Order fulfillment${tx.order_id ? ` — ${tx.order_id}` : ''}`}
+                    {tx.type === 'topup' ? 'Wallet top-up' : tx.type === 'credit' ? `Credit from No Limit Studio${tx.note ? ` — ${tx.note}` : ''}` : tx.type === 'refund' ? `Refund${tx.order_id ? ` — ${tx.order_id}` : ''}` : `Order payment${tx.order_id ? ` — ${tx.order_id}` : ''}`}
                   </div>
                   <div style={{ fontSize: '11px', color: '#BABAB6' }}>
                     {tx.created_at ? new Date(tx.created_at).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' }) : '—'}
                   </div>
                 </div>
               </div>
-              <div style={{ fontSize: '13px', fontWeight: 700, color: tx.type === 'topup' ? '#166534' : '#C2410C' }}>
-                {tx.type === 'topup' ? '+' : '−'}₹{Number(tx.amount).toLocaleString('en-IN')}
+              <div style={{ fontSize: '13px', fontWeight: 700, color: ['topup', 'credit', 'refund'].includes(tx.type) ? '#166534' : '#C2410C' }}>
+                {['topup', 'credit', 'refund'].includes(tx.type) ? '+' : '−'}₹{Number(tx.amount).toLocaleString('en-IN')}
               </div>
             </div>
           ))
