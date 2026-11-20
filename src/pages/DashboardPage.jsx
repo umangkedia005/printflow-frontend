@@ -1319,7 +1319,7 @@ export default function DashboardPage() {
           </div>
         )}
 
-        <div style={{ display: 'flex', gap: '12px', marginBottom: '24px' }}>
+        <div className="pf-stats-row" style={{ display: 'flex', gap: '12px', marginBottom: '24px', flexWrap: 'wrap' }}>
           {[{ label: 'Total products', value: products.length, color: '#0A0A0A' }, { label: 'Ready to print', value: ready, color: '#166534' }, { label: 'Needs setup', value: missing, color: '#C2410C' }].map(s => (
             <div key={s.label} style={{ background: '#FFFFFF', border: '1px solid #E8E8E4', borderRadius: '10px', padding: '14px 18px', display: 'flex', alignItems: 'center', gap: '10px' }}>
               <span style={{ fontSize: '20px', fontWeight: 800, color: s.color, fontFamily: "'Fraunces', sans-serif" }}>{s.value}</span>
@@ -1334,7 +1334,35 @@ export default function DashboardPage() {
           <div style={{ textAlign: 'center', padding: '48px', color: '#999', fontSize: '13px' }}>No products found in this store yet.</div>
         ) : (
         <div style={{ background: '#FFFFFF', border: '1px solid #E8E8E4', borderRadius: '16px', overflow: 'hidden' }}>
-          <table style={{ width: '100%', borderCollapse: 'collapse' }}>
+          <div className="pf-mobile-only">
+            {products.map((p, i) => (
+              <div key={p.id} style={{ padding: '14px 16px', borderBottom: i < products.length - 1 ? '1px solid #F4F4F0' : 'none' }}>
+                <div style={{ display: 'flex', gap: '12px', alignItems: 'flex-start' }}>
+                  {p.image
+                    ? <img src={p.image} alt="" style={{ width: '44px', height: '44px', borderRadius: '10px', flexShrink: 0, objectFit: 'cover' }} />
+                    : <div style={{ width: '44px', height: '44px', borderRadius: '10px', flexShrink: 0, background: PRODUCT_GRADIENTS[i % PRODUCT_GRADIENTS.length], display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '18px' }}>{productEmoji(p.name)}</div>}
+                  <div style={{ flex: 1, minWidth: 0 }}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', gap: '8px', alignItems: 'flex-start' }}>
+                      <div style={{ fontSize: '14px', fontWeight: 600, color: '#0A0A0A' }}>{p.name}</div>
+                      {p.status === 'ready'
+                        ? <span style={{ flexShrink: 0, background: '#F0FDF4', color: '#166534', padding: '3px 9px', borderRadius: '100px', fontSize: '11px', fontWeight: 600 }}>Ready</span>
+                        : <span style={{ flexShrink: 0, background: '#FFF7ED', color: '#C2410C', padding: '3px 9px', borderRadius: '100px', fontSize: '11px', fontWeight: 600 }}>Needs setup</span>}
+                    </div>
+                    <div style={{ fontSize: '12px', color: '#999', marginTop: '3px' }}>Sizes: {p.variants.join(', ')}{p.factorySku ? ` · ${p.factorySku}` : ''}</div>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginTop: '10px' }}>
+                      {p.printFileUrl ? (
+                        <>
+                          <a href={p.printFileUrl} target="_blank" rel="noopener noreferrer" style={{ fontSize: '12px', color: '#166534', fontWeight: 600 }}>Print file ✓</a>
+                          <button onClick={() => setEditingProduct(p)} style={{ background: 'none', border: 'none', color: '#666', fontSize: '12px', cursor: 'pointer', padding: 0, textDecoration: 'underline', fontFamily: 'Inter, sans-serif' }}>Change</button>
+                        </>
+                      ) : <button onClick={() => setEditingProduct(p)} className="pf-btn" style={{ padding: '7px 14px', fontSize: '12px', borderRadius: '8px' }}>Set print file</button>}
+                    </div>
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+          <table className="pf-desktop-only" style={{ width: '100%', borderCollapse: 'collapse' }}>
             <thead><tr>{['Product','Variants','Print File','Factory SKU','Status'].map(h=><th key={h} style={{ padding: '10px 20px', textAlign: 'left', fontSize: '10px', fontWeight: 600, color: '#C8C8C4', textTransform: 'uppercase', letterSpacing: '0.08em', borderBottom: '1px solid #E8E8E4', background: '#FCFCFB' }}>{h}</th>)}</tr></thead>
             <tbody>
               {products.map((p, i) => (
@@ -1364,7 +1392,7 @@ export default function DashboardPage() {
                     {p.printFileUrl ? (
                       <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
                         <div style={{ width: '28px', height: '28px', background: '#F0FDF4', border: '1px solid #BBF7D0', borderRadius: '6px', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '12px', flexShrink: 0 }}>🖼</div>
-                        <span style={{ fontSize: '11px', color: '#166534', fontWeight: 500, fontFamily: 'monospace', maxWidth: '120px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{p.printFileUrl}</span>
+                        <a href={p.printFileUrl} target="_blank" rel="noopener noreferrer" style={{ fontSize: '12px', color: '#166534', fontWeight: 600 }}>Print file ✓</a>
                         <button onClick={() => setEditingProduct(p)} style={{ background: 'none', border: 'none', color: '#666', fontSize: '11px', fontWeight: 500, cursor: 'pointer', padding: 0, fontFamily: 'Inter, sans-serif', textDecoration: 'underline', flexShrink: 0 }}>Change</button>
                       </div>
                     ) : <button onClick={() => setEditingProduct(p)} className="pf-btn" style={{ padding: '5px 12px', fontSize: '11px', borderRadius: '7px' }}>Set print file</button>}
@@ -2147,7 +2175,7 @@ export default function DashboardPage() {
             <div style={{ position: 'relative', zIndex: 1 }}>
               <div style={{ marginBottom: '28px' }}>
                 <h1 style={{ fontFamily: "'Fraunces', sans-serif", fontSize: '26px', fontWeight: 800, color: '#172B15', letterSpacing: '-0.5px', marginBottom: '4px' }}>Help Center</h1>
-                <p style={{ fontSize: '13px', color: '#889B8E', fontWeight: 500 }}>Access guides, browse frequently asked questions, or chat with our operations team.</p>
+                <p style={{ fontSize: '13px', color: '#889B8E', fontWeight: 500 }}>Answers to common questions, or email our team.</p>
               </div>
 
               <div className="pf-grid-stack" style={{ display: 'grid', gridTemplateColumns: '1.8fr 1.2fr', gap: '28px', alignItems: 'start' }}>

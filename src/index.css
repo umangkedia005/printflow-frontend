@@ -130,7 +130,7 @@ body {
   .pf-topbar { padding: 0 12px !important; gap: 8px; }
   .pf-topbar-date, .pf-greeting-word { display: none; }
   .pf-menu-btn { display: inline-flex !important; }
-  .pf-content { padding: 20px 14px 32px !important; }
+  .pf-content { padding: 20px 14px 32px !important; overflow-x: clip; } /* clip decorative glows */
   .pf-grid-stack { grid-template-columns: 1fr !important; }
   .pf-mobile-only { display: block !important; }
   .pf-desktop-only { display: none !important; }
@@ -146,6 +146,7 @@ body {
   .pf-cards-2 { grid-template-columns: repeat(2, minmax(0, 1fr)) !important; gap: 10px !important; }
   .pf-cards-2 > * { padding: 10px !important; border-radius: 16px !important; }
   .pf-btn-stack { flex-direction: column; }
+  .pf-stats-row > * { flex: 1 1 calc(50% - 12px); padding: 12px 14px !important; }
   /* Card title + status badge: the title gets its own line(s), badge below. */
   .pf-name-row { flex-wrap: wrap; row-gap: 6px !important; }
   .pf-name-row > :first-child { white-space: normal !important; flex-basis: 100%; }

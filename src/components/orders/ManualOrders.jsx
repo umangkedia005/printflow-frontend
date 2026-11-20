@@ -240,8 +240,11 @@ function CreateOrder({ walletBalance, onTopUp, onPlaced, onCancel, initialDesign
                       <input value={l.qty} onChange={e => setLine(l.key, { qty: e.target.value.replace(/\D/g, '').slice(0, 3) })} aria-label="Quantity" style={{ width: '38px', border: 'none', textAlign: 'center', fontSize: '13px', fontWeight: 700, color: INK, outline: 'none' }} />
                       <button onClick={() => setLine(l.key, { qty: Math.min(500, Number(l.qty || 0) + 1) })} aria-label="More" style={{ width: '32px', height: '36px', border: 'none', background: 'none', cursor: 'pointer', fontSize: '16px', color: INK }}>+</button>
                     </div>
-                    <div style={{ width: '90px', textAlign: 'right', fontSize: '14px', fontWeight: 800, color: INK }}>{priceOf(i) != null ? rupees(priceOf(i) * Number(l.qty || 0)) : '—'}</div>
-                    <button onClick={() => removeLine(l.key)} aria-label="Remove" style={{ border: 'none', background: 'none', color: '#C53030', cursor: 'pointer', fontSize: '15px' }}>✕</button>
+                    {/* Line total and remove stay together at the end of the row. */}
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '6px', marginLeft: 'auto' }}>
+                      <div style={{ minWidth: '70px', textAlign: 'right', fontSize: '14px', fontWeight: 800, color: INK, whiteSpace: 'nowrap' }}>{priceOf(i) != null ? rupees(priceOf(i) * Number(l.qty || 0)) : '—'}</div>
+                      <button onClick={() => removeLine(l.key)} aria-label="Remove" style={{ border: 'none', background: 'none', color: '#C53030', cursor: 'pointer', fontSize: '15px', padding: '6px' }}>✕</button>
+                    </div>
                   </div>
                 ))}
               </div>
