@@ -308,7 +308,7 @@ function TopupModal({ onClose, onSuccess }) {
   return (
     <div
       onClick={e => { if (e.target === e.currentTarget) onClose() }}
-      style={{ position: 'fixed', inset: 0, zIndex: 300, background: 'rgba(0,0,0,0.45)', backdropFilter: 'blur(6px)', WebkitBackdropFilter: 'blur(6px)', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '24px' }}
+      className="pf-modal-overlay" style={{ position: 'fixed', inset: 0, zIndex: 300, background: 'rgba(0,0,0,0.45)', backdropFilter: 'blur(6px)', WebkitBackdropFilter: 'blur(6px)', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '24px' }}
     >
       <div style={{ background: '#FFFFFF', borderRadius: '20px', width: '100%', maxWidth: '420px', overflow: 'hidden', boxShadow: '0 24px 80px rgba(0,0,0,0.2)', animation: 'pf-fade-up 0.25s ease' }}>
         <div style={{ padding: '24px 28px', borderBottom: '1px solid #E8E8E4', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
@@ -380,7 +380,7 @@ function ProductEditModal({ shopDomain, product, onClose, onSuccess }) {
   return (
     <div
       onClick={e => { if (e.target === e.currentTarget) onClose() }}
-      style={{ position: 'fixed', inset: 0, zIndex: 300, background: 'rgba(0,0,0,0.45)', backdropFilter: 'blur(6px)', WebkitBackdropFilter: 'blur(6px)', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '24px' }}
+      className="pf-modal-overlay" style={{ position: 'fixed', inset: 0, zIndex: 300, background: 'rgba(0,0,0,0.45)', backdropFilter: 'blur(6px)', WebkitBackdropFilter: 'blur(6px)', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '24px' }}
     >
       <div style={{ background: '#FFFFFF', borderRadius: '20px', width: '100%', maxWidth: '440px', overflow: 'hidden', boxShadow: '0 24px 80px rgba(0,0,0,0.2)', animation: 'pf-fade-up 0.25s ease' }}>
         <div style={{ padding: '24px 28px', borderBottom: '1px solid #E8E8E4', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
@@ -467,12 +467,12 @@ function UpgradeModal({ currentPlan, shopDomain, plans, onClose, onSuccess }) {
   return (
     <div
       onClick={e => { if (e.target === e.currentTarget) onClose() }}
-      style={{ position: 'fixed', inset: 0, zIndex: 300, background: 'rgba(0,0,0,0.45)', backdropFilter: 'blur(6px)', WebkitBackdropFilter: 'blur(6px)', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '24px' }}
+      className="pf-modal-overlay" style={{ position: 'fixed', inset: 0, zIndex: 300, background: 'rgba(0,0,0,0.45)', backdropFilter: 'blur(6px)', WebkitBackdropFilter: 'blur(6px)', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '24px' }}
     >
       <div style={{ background: '#FFFFFF', borderRadius: '20px', width: '100%', maxWidth: '880px', overflow: 'hidden', boxShadow: '0 24px 80px rgba(0,0,0,0.2)', animation: 'pf-fade-up 0.25s ease' }}>
 
         {/* Modal header */}
-        <div style={{ padding: '24px 32px', borderBottom: '1px solid #E8E8E4', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+        <div className="pf-modal-head" style={{ padding: '24px 32px', borderBottom: '1px solid #E8E8E4', display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '12px', flexWrap: 'wrap' }}>
           <div>
             <h2 style={{ fontFamily: "'Fraunces', sans-serif", fontSize: '20px', fontWeight: 800, color: '#0A0A0A', letterSpacing: '-0.3px', marginBottom: '3px' }}>
               Choose your plan
@@ -996,9 +996,9 @@ export default function DashboardPage() {
             { label: 'Delivered',    value: counts.delivered, bgGrad: 'linear-gradient(135deg, #10B981 0%, #34D399 100%)', color: '#137333', Icon: StatIconDelivered, iconShadow: '0 6px 16px rgba(16,185,129,0.15)' },
           ].map(s => (
             <div key={s.label} style={{ background: '#FFFFFF', border: '1px solid rgba(23,43,21,0.06)', borderRadius: '20px', padding: '20px', transition: 'all 0.25s cubic-bezier(0.16, 1, 0.3, 1)', boxShadow: '0 8px 30px rgba(23,43,21,0.015)' }}
-              className="pf-dashboard-card"
+              className="pf-dashboard-card pf-stat-card"
             >
-              <div style={{ width: '42px', height: '42px', borderRadius: '12px', background: s.bgGrad, color: '#FFFFFF', display: 'flex', alignItems: 'center', justifyContent: 'center', marginBottom: '16px', boxShadow: s.iconShadow }}>
+              <div className="pf-stat-icon" style={{ width: '42px', height: '42px', borderRadius: '12px', background: s.bgGrad, color: '#FFFFFF', display: 'flex', alignItems: 'center', justifyContent: 'center', marginBottom: '16px', boxShadow: s.iconShadow }}>
                 <s.Icon />
               </div>
               <div style={{ fontSize: '26px', fontWeight: 800, color: s.color, fontFamily: "'Fraunces', sans-serif", lineHeight: 1, marginBottom: '5px' }}>{s.value}</div>
@@ -1414,7 +1414,7 @@ export default function DashboardPage() {
 
         {/* Current plan card */}
         <SectionCard title="Current Plan">
-          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '16px', paddingBottom: isPaid ? '16px' : '0', borderBottom: isPaid ? '1px solid #F4F4F0' : 'none', marginBottom: isPaid ? '16px' : '0' }}>
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '16px', flexWrap: 'wrap', paddingBottom: isPaid ? '16px' : '0', borderBottom: isPaid ? '1px solid #F4F4F0' : 'none', marginBottom: isPaid ? '16px' : '0' }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: '14px' }}>
               <div style={{ width: '44px', height: '44px', background: '#0A0A0A', borderRadius: '12px', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '18px', color: 'white', flexShrink: 0 }}>✦</div>
               <div>
@@ -1430,12 +1430,12 @@ export default function DashboardPage() {
               </button>
             )}
             {isPaid && (
-              <div style={{ textAlign: 'right', display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: '8px' }}>
+              <div className="pf-plan-price" style={{ textAlign: 'right', display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: '8px' }}>
                 <div>
                   <div style={{ fontSize: '18px', fontWeight: 800, color: '#0A0A0A', fontFamily: "'Fraunces', sans-serif" }}>
                     ₹{planInfo?.monthlyPrice.toLocaleString('en-IN')}<span style={{ fontSize: '12px', fontWeight: 400, color: '#999' }}>/mo</span>
                   </div>
-                  <div style={{ fontSize: '11px', color: '#BABAB6', marginTop: '2px' }}>Next charge: 1 Jul 2026</div>
+                  <div style={{ fontSize: '11px', color: '#BABAB6', marginTop: '2px' }}>Billed monthly by Shopify</div>
                 </div>
                 <button onClick={() => setShowUpgrade(true)} style={{ background: 'transparent', border: '1px solid #E8E8E4', borderRadius: '8px', padding: '6px 14px', fontSize: '12px', fontWeight: 500, color: '#555', cursor: 'pointer', fontFamily: 'Inter, sans-serif', transition: 'border-color 0.15s, color 0.15s', whiteSpace: 'nowrap' }} onMouseOver={e=>{e.currentTarget.style.borderColor='#0A0A0A';e.currentTarget.style.color='#0A0A0A'}} onMouseOut={e=>{e.currentTarget.style.borderColor='#E8E8E4';e.currentTarget.style.color='#555'}}>
                   Change Plan
@@ -1444,12 +1444,9 @@ export default function DashboardPage() {
             )}
           </div>
           {isPaid && (
-            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '12px', flexWrap: 'wrap' }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: '10px', fontSize: '13px', color: '#555' }}>
-                <div style={{ width: '30px', height: '20px', background: '#1a1a2e', borderRadius: '4px', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '8px', color: 'white', fontWeight: 700 }}>VISA</div>
-                <span>Visa ending in 4242</span>
-                <span style={{ color: '#BABAB6' }}>·</span>
-                <button style={{ background: 'none', border: 'none', color: '#3B1F6B', fontSize: '13px', fontWeight: 500, cursor: 'pointer', padding: 0, fontFamily: 'Inter, sans-serif' }}>Update card</button>
+                <span>Paid through your Shopify bill</span>
               </div>
               <button onClick={handleCancelSubscription} style={{ background: 'none', border: 'none', color: '#C8C8C4', fontSize: '12px', cursor: 'pointer', fontFamily: 'Inter, sans-serif', padding: 0 }} onMouseOver={e=>e.currentTarget.style.color='#C53030'} onMouseOut={e=>e.currentTarget.style.color='#C8C8C4'}>Cancel subscription</button>
             </div>
@@ -1571,8 +1568,8 @@ export default function DashboardPage() {
                   </div>
                 </div>
               </div>
-              <div style={{ fontSize: '13px', fontWeight: 700, color: ['topup', 'credit', 'refund'].includes(tx.type) ? '#166534' : '#C2410C' }}>
-                {['topup', 'credit', 'refund'].includes(tx.type) ? '+' : '−'}₹{Number(tx.amount).toLocaleString('en-IN')}
+              <div style={{ fontSize: '13px', fontWeight: 700, whiteSpace: 'nowrap', flexShrink: 0, color: ['topup', 'credit', 'refund'].includes(tx.type) ? '#166534' : '#C2410C' }}>
+                {['topup', 'credit', 'refund'].includes(tx.type) ? '+' : '−'}₹{Number(tx.amount).toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
               </div>
             </div>
           ))
