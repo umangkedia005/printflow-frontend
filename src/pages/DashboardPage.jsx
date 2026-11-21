@@ -304,6 +304,10 @@ const NAV_ITEMS = [
   { id: 'help',          label: 'Help Center',   Icon: IconHelp },
 ]
 
+// Sidebar order, like Unitee's. Trends stays out until it has real data.
+const MENU_ORDER = ['dashboard', 'catalogue', 'files', 'garments', 'products', 'sample', 'branding', 'create-order', 'orders',
+  'stock', 'order-management', 'wallet', 'billing', 'notifications', 'settings', 'help']
+
 // ── Upgrade Modal ─────────────────────────────────────────────────────────────
 
 // ── Wallet Top-up Modal ───────────────────────────────────────────────────────
@@ -1682,71 +1686,43 @@ export default function DashboardPage() {
         </div>
         <nav style={{ flex: 1, padding: '24px 16px', overflowY: 'auto' }}>
           
-          {/* Section 1: Start Here */}
-          <div style={{ fontSize: '10.5px', fontWeight: 800, letterSpacing: '0.08em', textTransform: 'uppercase', color: '#7A7A70', padding: '0 18px 8px', marginBottom: '4px' }}>Start Here</div>
-          {NAV_ITEMS.slice(0, 3).map(({ id, label, Icon }) => {
-            // Trends is hidden until it has real data behind it.
-            if (id === 'trends') return null
-            const active = activeNav === id
-            return (
-              <button key={id} onClick={() => setActiveNav(id)} style={{ display: 'flex', alignItems: 'center', gap: '12px', width: '100%', padding: '12px 18px', border: 'none', background: active ? '#FFFFFF' : 'transparent', color: '#172B15', fontSize: '14.5px', fontWeight: active ? 800 : 600, cursor: 'pointer', textAlign: 'left', marginBottom: '6px', fontFamily: 'Inter, sans-serif', transition: 'all 0.2s', justifyContent: 'space-between', borderRadius: '12px', boxShadow: active ? '0 4px 12px rgba(23,43,21,0.04)' : 'none' }}
-                onMouseOver={e => { if (!active) { e.currentTarget.style.background = 'rgba(255,255,255,0.45)' } }}
-                onMouseOut={e => { if (!active) { e.currentTarget.style.background = 'transparent' } }}
-              >
-                <span style={{ display: 'flex', alignItems: 'center', gap: '12px' }}><Icon />{label}</span>
-              </button>
-            )
-          })}
-
-          {/* Section 2: Store Hub */}
-          <div style={{ fontSize: '10.5px', fontWeight: 800, letterSpacing: '0.08em', textTransform: 'uppercase', color: '#7A7A70', padding: '20px 18px 8px', marginBottom: '4px' }}>Store Hub</div>
-          {NAV_ITEMS.slice(3, 12).map(({ id, label, Icon }) => {
+          {/* One menu in Unitee's order: make products, brand them, order,
+              track, then money and settings. Branding opens to its pages. */}
+          {MENU_ORDER.map(id => {
+            if (id === 'branding') {
+              if (!catalogueOn) return null
+              const inBranding = activeNav.startsWith('branding-')
+              const open = brandingOpen || inBranding
+              return (
+                <React.Fragment key="branding">
+                  <button onClick={() => setBrandingOpen(o => !(o || inBranding))} aria-expanded={open}
+                    style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', width: '100%', padding: '12px 18px', border: 'none', background: 'transparent', color: '#172B15', fontSize: '14.5px', fontWeight: inBranding ? 800 : 600, cursor: 'pointer', textAlign: 'left', marginBottom: '6px', fontFamily: 'Inter, sans-serif', borderRadius: '12px', transition: 'all 0.2s' }}
+                    onMouseOver={e => { e.currentTarget.style.background = 'rgba(255,255,255,0.45)' }}
+                    onMouseOut={e => { e.currentTarget.style.background = 'transparent' }}
+                  >
+                    <span style={{ display: 'flex', alignItems: 'center', gap: '12px' }}><IconBranding />Branding</span>
+                    <svg width="12" height="12" viewBox="0 0 12 12" fill="none" style={{ transform: open ? 'rotate(180deg)' : 'none', transition: 'transform 0.2s' }}><path d="M3 4.5 6 7.5l3-3" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round"/></svg>
+                  </button>
+                  {open && [['branding-tags', 'Hang Tags', IconTag], ['branding-packaging', 'Packaging', IconBag], ['branding-cards', 'Thank You Cards', IconCard]].map(([bid, text, Ic]) => {
+                    const active = activeNav === bid
+                    return (
+                      <button key={bid} onClick={() => setActiveNav(bid)}
+                        style={{ display: 'flex', alignItems: 'center', gap: '10px', width: 'calc(100% - 24px)', marginLeft: '24px', padding: '10px 14px', border: 'none', background: active ? '#FFFFFF' : 'transparent', color: '#172B15', fontSize: '13.5px', fontWeight: active ? 800 : 600, cursor: 'pointer', textAlign: 'left', marginBottom: '4px', fontFamily: 'Inter, sans-serif', borderRadius: '11px', boxShadow: active ? '0 4px 12px rgba(23,43,21,0.04)' : 'none' }}
+                        onMouseOver={e => { if (!active) e.currentTarget.style.background = 'rgba(255,255,255,0.45)' }}
+                        onMouseOut={e => { if (!active) e.currentTarget.style.background = 'transparent' }}
+                      ><Ic />{text}</button>
+                    )
+                  })}
+                </React.Fragment>
+              )
+            }
+            const item = NAV_ITEMS.find(n => n.id === id)
+            if (!item) return null
             if ((id === 'catalogue' || id === 'files' || id === 'garments') && !catalogueOn) return null
+            const { label, Icon } = item
             const active = activeNav === id
             return (
               <button key={id} onClick={() => { setActiveNav(id); setOrderNotice(''); setOrderDesignId(null); setOrderBlankId(null) }} style={{ display: 'flex', alignItems: 'center', gap: '12px', width: '100%', padding: '12px 18px', border: 'none', background: active ? '#FFFFFF' : 'transparent', color: '#172B15', fontSize: '14.5px', fontWeight: active ? 800 : 600, cursor: 'pointer', textAlign: 'left', marginBottom: '6px', fontFamily: 'Inter, sans-serif', transition: 'all 0.2s', justifyContent: 'space-between', borderRadius: '12px', boxShadow: active ? '0 4px 12px rgba(23,43,21,0.04)' : 'none' }}
-                onMouseOver={e => { if (!active) { e.currentTarget.style.background = 'rgba(255,255,255,0.45)' } }}
-                onMouseOut={e => { if (!active) { e.currentTarget.style.background = 'transparent' } }}
-              >
-                <span style={{ display: 'flex', alignItems: 'center', gap: '12px' }}><Icon />{label}</span>
-              </button>
-            )
-          })}
-
-          {/* Branding: hang tags and packaging, bought in bulk. */}
-          {catalogueOn && (() => {
-            const inBranding = activeNav.startsWith('branding-')
-            const open = brandingOpen || inBranding
-            return (
-              <>
-                <button onClick={() => setBrandingOpen(o => !(o || inBranding))} aria-expanded={open}
-                  style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', width: '100%', padding: '12px 18px', border: 'none', background: 'transparent', color: '#172B15', fontSize: '14.5px', fontWeight: inBranding ? 800 : 600, cursor: 'pointer', textAlign: 'left', marginBottom: '6px', fontFamily: 'Inter, sans-serif', borderRadius: '12px', transition: 'all 0.2s' }}
-                  onMouseOver={e => { e.currentTarget.style.background = 'rgba(255,255,255,0.45)' }}
-                  onMouseOut={e => { e.currentTarget.style.background = 'transparent' }}
-                >
-                  <span style={{ display: 'flex', alignItems: 'center', gap: '12px' }}><IconBranding />Branding</span>
-                  <svg width="12" height="12" viewBox="0 0 12 12" fill="none" style={{ transform: open ? 'rotate(180deg)' : 'none', transition: 'transform 0.2s' }}><path d="M3 4.5 6 7.5l3-3" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round"/></svg>
-                </button>
-                {open && [['branding-tags', 'Hang Tags', IconTag], ['branding-packaging', 'Packaging', IconBag], ['branding-cards', 'Thank You Cards', IconCard]].map(([id, text, Ic]) => {
-                  const active = activeNav === id
-                  return (
-                    <button key={id} onClick={() => setActiveNav(id)}
-                      style={{ display: 'flex', alignItems: 'center', gap: '10px', width: 'calc(100% - 24px)', marginLeft: '24px', padding: '10px 14px', border: 'none', background: active ? '#FFFFFF' : 'transparent', color: '#172B15', fontSize: '13.5px', fontWeight: active ? 800 : 600, cursor: 'pointer', textAlign: 'left', marginBottom: '4px', fontFamily: 'Inter, sans-serif', borderRadius: '11px', boxShadow: active ? '0 4px 12px rgba(23,43,21,0.04)' : 'none' }}
-                      onMouseOver={e => { if (!active) e.currentTarget.style.background = 'rgba(255,255,255,0.45)' }}
-                      onMouseOut={e => { if (!active) e.currentTarget.style.background = 'transparent' }}
-                    ><Ic />{text}</button>
-                  )
-                })}
-              </>
-            )
-          })()}
-
-          {/* Section 3: Settings & Support */}
-          <div style={{ fontSize: '10.5px', fontWeight: 800, letterSpacing: '0.08em', textTransform: 'uppercase', color: '#7A7A70', padding: '20px 18px 8px', marginBottom: '4px' }}>Settings & Support</div>
-          {NAV_ITEMS.slice(12).map(({ id, label, Icon }) => {
-            const active = activeNav === id
-            return (
-              <button key={id} onClick={() => setActiveNav(id)} style={{ display: 'flex', alignItems: 'center', gap: '12px', width: '100%', padding: '12px 18px', border: 'none', background: active ? '#FFFFFF' : 'transparent', color: '#172B15', fontSize: '14.5px', fontWeight: active ? 800 : 600, cursor: 'pointer', textAlign: 'left', marginBottom: '6px', fontFamily: 'Inter, sans-serif', transition: 'all 0.2s', justifyContent: 'space-between', borderRadius: '12px', boxShadow: active ? '0 4px 12px rgba(23,43,21,0.04)' : 'none' }}
                 onMouseOver={e => { if (!active) { e.currentTarget.style.background = 'rgba(255,255,255,0.45)' } }}
                 onMouseOut={e => { if (!active) { e.currentTarget.style.background = 'transparent' } }}
               >
@@ -1886,7 +1862,7 @@ export default function DashboardPage() {
           {activeNav === 'orders' && (
             <>
               <div style={{ marginBottom: '28px', position: 'relative', zIndex: 1 }}>
-                <h1 style={{ fontFamily: "'Fraunces', sans-serif", fontSize: '26px', fontWeight: 800, color: '#172B15', letterSpacing: '-0.5px', marginBottom: '4px' }}>Order Management</h1>
+                <h1 style={{ fontFamily: "'Fraunces', sans-serif", fontSize: '26px', fontWeight: 800, color: '#172B15', letterSpacing: '-0.5px', marginBottom: '4px' }}>Orders</h1>
                 <p style={{ fontSize: '13px', color: '#889B8E', fontWeight: 500 }}>{shopDomain ? <>Orders from <span style={{ color: '#172B15', fontWeight: 600 }}>{shopDomain}</span>, and orders you place yourself.</> : 'Orders you place yourself, and your Shopify orders once a store is connected.'}</p>
                 <div style={{ display: 'inline-flex', background: 'rgba(23,43,21,0.05)', borderRadius: '14px', padding: '4px', marginTop: '18px' }}>
                   {[['shopify', 'Shopify orders'], ['manual', 'Manual orders']].map(([id, text]) => (
