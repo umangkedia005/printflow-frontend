@@ -489,6 +489,24 @@ export async function placeManualOrder(order) {
   return data
 }
 
+// Branding: hang tags and courier bags bought in bulk, with the brand's
+// stock and "use on my orders" switches.
+async function brandingCall(path, body) {
+  const res = await fetch(`${BASE_URL}${path}`, body === undefined
+    ? { headers: await shopAuthHeaders() }
+    : { method: 'POST', headers: { 'Content-Type': 'application/json', ...(await shopAuthHeaders()) }, body: JSON.stringify(body) })
+  const data = await res.json()
+  if (!res.ok) {
+    const err = new Error(data.error || 'Something went wrong')
+    err.balance = data.balance
+    throw err
+  }
+  return data
+}
+export const fetchBranding = () => brandingCall('/branding')
+export const placeBrandingOrder = order => brandingCall('/branding/orders', order)
+export const setBrandingUse = (product, on) => brandingCall('/branding/use', { product, on })
+
 // Order Management: every order of the account (manual, sample, Shopify)
 // with what each cost from the wallet (`paid`; null = not sent to print).
 export async function fetchOrderManagement() {

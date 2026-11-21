@@ -3,6 +3,7 @@ import { useNavigate, useSearchParams } from 'react-router-dom'
 import { useAuth } from '../contexts/AuthContext'
 import { openWalletTopup } from '../utils/razorpay'
 import OrderManagement from '../components/orders/OrderManagement'
+import BrandingView from '../components/branding/BrandingView'
 import StockLevel from '../components/stock/StockLevel'
 import AccountSettings from '../components/settings/AccountSettings'
 import { SUPPORT_EMAIL, SUPPORT_PHONES, fetchOrders, fetchSubscription, fetchMyStores, linkStore, updateSubscription, fetchPlans, fetchWallet, fulfillOrder, fetchProductMappings, updateProductMapping, createShopifySubscription, fetchCatalogue } from '../utils/api'
@@ -91,6 +92,9 @@ const IconCreateOrder = () => <svg width="15" height="15" viewBox="0 0 16 16" fi
 const IconSample   = () => <svg width="15" height="15" viewBox="0 0 16 16" fill="none"><circle cx="7" cy="7" r="4.75" stroke="currentColor" strokeWidth="1.5"/><path d="M10.5 10.5 14 14" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/></svg>
 const IconStock    = () => <svg width="15" height="15" viewBox="0 0 16 16" fill="none"><path d="M3 14V9M6.5 14V5M10 14V7.5M13.5 14V3" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round"/></svg>
 const IconManage   = () => <svg width="15" height="15" viewBox="0 0 16 16" fill="none"><rect x="2" y="2" width="12" height="12" rx="2" stroke="currentColor" strokeWidth="1.5"/><path d="M5 10.5V8M8 10.5V5.5M11 10.5V7" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/></svg>
+const IconBranding = () => <svg width="15" height="15" viewBox="0 0 16 16" fill="none"><path d="M8.5 1.75h5.75V7.5L7.5 14.25 1.75 8.5z" stroke="currentColor" strokeWidth="1.5" strokeLinejoin="round"/><circle cx="11" cy="5" r="1.1" fill="currentColor"/></svg>
+const IconTag      = () => <svg width="14" height="14" viewBox="0 0 16 16" fill="none"><rect x="4" y="3.5" width="8" height="11" rx="1.5" stroke="currentColor" strokeWidth="1.5"/><circle cx="8" cy="6.5" r="1" fill="currentColor"/><path d="M8 3.5V1.5" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/></svg>
+const IconBag      = () => <svg width="14" height="14" viewBox="0 0 16 16" fill="none"><path d="M2.5 5h11l-1 9.25h-9z" stroke="currentColor" strokeWidth="1.5" strokeLinejoin="round"/><path d="M5.5 5V4a2.5 2.5 0 015 0v1" stroke="currentColor" strokeWidth="1.5"/></svg>
 const IconProducts = () => <svg width="15" height="15" viewBox="0 0 16 16" fill="none"><path d="M8 1.5L14 4.5V11.5L8 14.5L2 11.5V4.5L8 1.5Z" stroke="currentColor" strokeWidth="1.5" strokeLinejoin="round"/><path d="M8 1.5V14.5M2 4.5L8 7.5L14 4.5" stroke="currentColor" strokeWidth="1.5"/></svg>
 const IconSettings = () => <svg width="15" height="15" viewBox="0 0 16 16" fill="none"><circle cx="8" cy="8" r="2.5" stroke="currentColor" strokeWidth="1.5"/><path d="M8 1.5V3M8 13v1.5M1.5 8H3M13 8h1.5M3.4 3.4l1.06 1.06M11.54 11.54l1.06 1.06M3.4 12.6l1.06-1.06M11.54 4.46l1.06-1.06" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/></svg>
 const IconBilling  = () => <svg width="15" height="15" viewBox="0 0 16 16" fill="none"><rect x="1" y="3.5" width="14" height="9" rx="1.5" stroke="currentColor" strokeWidth="1.5"/><path d="M1 6.5h14" stroke="currentColor" strokeWidth="1.5"/><path d="M4 10h2" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/></svg>
@@ -651,6 +655,7 @@ export default function DashboardPage() {
   // Phones: the sidebar is a drawer behind the ☰ button (see .pf-sidebar in index.css).
   const [menuOpen, setMenuOpen]             = useState(false)
   const [contactOpen, setContactOpen]       = useState(false)
+  const [brandingOpen, setBrandingOpen]     = useState(false)
   const [policyOpen, setPolicyOpen]         = useState(false)
   const policyRef = useRef(null)
   useEffect(() => { if (policyOpen) policyRef.current?.scrollIntoView({ block: 'nearest', behavior: 'smooth' }) }, [policyOpen])
@@ -1618,7 +1623,7 @@ export default function DashboardPage() {
                 }}>{['topup', 'credit', 'refund'].includes(tx.type) ? '↓' : '↑'}</div>
                 <div>
                   <div style={{ fontSize: '13px', fontWeight: 600, color: '#0A0A0A' }}>
-                    {tx.type === 'topup' ? 'Wallet top-up' : tx.type === 'credit' ? `Credit from No Limit Studio${tx.note ? ` — ${tx.note}` : ''}` : tx.type === 'refund' ? `Refund${tx.order_id ? ` — ${tx.order_id}` : ''}` : `Order payment${tx.order_id ? ` — ${tx.order_id}` : ''}`}
+                    {tx.type === 'topup' ? 'Wallet top-up' : tx.type === 'credit' ? `Credit from No Limit Studio${tx.note ? ` — ${tx.note}` : ''}` : tx.type === 'refund' ? `Refund${tx.order_id ? ` — ${tx.order_id}` : ''}` : String(tx.order_id || '').startsWith('B-') ? `Branding order — ${tx.note || tx.order_id}` : `Order payment${tx.order_id ? ` — ${tx.order_id}` : ''}`}
                   </div>
                   <div style={{ fontSize: '11px', color: '#BABAB6' }}>
                     {tx.created_at ? new Date(tx.created_at).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' }) : '—'}
@@ -1704,6 +1709,34 @@ export default function DashboardPage() {
               </button>
             )
           })}
+
+          {/* Branding: hang tags and packaging, bought in bulk. */}
+          {catalogueOn && (() => {
+            const inBranding = activeNav === 'branding-tags' || activeNav === 'branding-packaging'
+            const open = brandingOpen || inBranding
+            return (
+              <>
+                <button onClick={() => setBrandingOpen(o => !(o || inBranding))} aria-expanded={open}
+                  style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', width: '100%', padding: '12px 18px', border: 'none', background: 'transparent', color: '#172B15', fontSize: '14.5px', fontWeight: inBranding ? 800 : 600, cursor: 'pointer', textAlign: 'left', marginBottom: '6px', fontFamily: 'Inter, sans-serif', borderRadius: '12px', transition: 'all 0.2s' }}
+                  onMouseOver={e => { e.currentTarget.style.background = 'rgba(255,255,255,0.45)' }}
+                  onMouseOut={e => { e.currentTarget.style.background = 'transparent' }}
+                >
+                  <span style={{ display: 'flex', alignItems: 'center', gap: '12px' }}><IconBranding />Branding</span>
+                  <svg width="12" height="12" viewBox="0 0 12 12" fill="none" style={{ transform: open ? 'rotate(180deg)' : 'none', transition: 'transform 0.2s' }}><path d="M3 4.5 6 7.5l3-3" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round"/></svg>
+                </button>
+                {open && [['branding-tags', 'Hang Tags', IconTag], ['branding-packaging', 'Packaging', IconBag]].map(([id, text, Ic]) => {
+                  const active = activeNav === id
+                  return (
+                    <button key={id} onClick={() => setActiveNav(id)}
+                      style={{ display: 'flex', alignItems: 'center', gap: '10px', width: 'calc(100% - 24px)', marginLeft: '24px', padding: '10px 14px', border: 'none', background: active ? '#FFFFFF' : 'transparent', color: '#172B15', fontSize: '13.5px', fontWeight: active ? 800 : 600, cursor: 'pointer', textAlign: 'left', marginBottom: '4px', fontFamily: 'Inter, sans-serif', borderRadius: '11px', boxShadow: active ? '0 4px 12px rgba(23,43,21,0.04)' : 'none' }}
+                      onMouseOver={e => { if (!active) e.currentTarget.style.background = 'rgba(255,255,255,0.45)' }}
+                      onMouseOut={e => { if (!active) e.currentTarget.style.background = 'transparent' }}
+                    ><Ic />{text}</button>
+                  )
+                })}
+              </>
+            )
+          })()}
 
           {/* Section 3: Settings & Support */}
           <div style={{ fontSize: '10.5px', fontWeight: 800, letterSpacing: '0.08em', textTransform: 'uppercase', color: '#7A7A70', padding: '20px 18px 8px', marginBottom: '4px' }}>Settings & Support</div>
@@ -1894,6 +1927,11 @@ export default function DashboardPage() {
             </div>
           )}
           {activeNav === 'order-management' && <div style={{ position: 'relative', zIndex: 1 }}><OrderManagement onOpenOrders={() => { setOrdersTab('shopify'); setActiveNav('orders') }} /></div>}
+          {(activeNav === 'branding-tags' || activeNav === 'branding-packaging') && (
+            <div style={{ position: 'relative', zIndex: 1 }}>
+              <BrandingView key={activeNav} product={activeNav === 'branding-tags' ? 'hang_tag' : 'poly_bag'} walletBalance={walletBalance} onWalletChanged={loadWallet} onTopUp={() => setShowTopup(true)} />
+            </div>
+          )}
           {activeNav === 'stock' && <div style={{ position: 'relative', zIndex: 1 }}><StockLevel /></div>}
           {activeNav === 'garments' && catalogueOn && <div style={{ position: 'relative', zIndex: 1 }}><GarmentsView onOrderPlain={id => { setOrderDesignId(null); setOrderBlankId(id); setActiveNav('create-order') }} /></div>}
           {activeNav === 'files' && catalogueOn && <div style={{ position: 'relative', zIndex: 1 }}><FilesView onOrder={id => { setOrderBlankId(null); setOrderDesignId(id); setActiveNav('create-order') }} /></div>}
