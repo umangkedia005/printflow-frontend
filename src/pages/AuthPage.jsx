@@ -257,7 +257,7 @@ export default function AuthPage() {
             Design your products and sell anywhere. We print, pack and ship every order for you.
           </p>
           <div style={{ display: 'flex', flexWrap: 'wrap', gap: '10px' }}>
-            {['No minimum order', 'Dispatched in ~48 hours', 'Shipping across India'].map(t => (
+            {['No minimum order', 'Dispatched in ~48 hours', 'Ship wherever you want'].map(t => (
               <span key={t} style={{ display: 'inline-flex', alignItems: 'center', gap: '7px', background: 'rgba(255,255,255,0.12)', border: '1px solid rgba(255,255,255,0.22)', borderRadius: '100px', padding: '7px 13px', fontSize: '13px', fontWeight: 600, backdropFilter: 'blur(6px)', WebkitBackdropFilter: 'blur(6px)' }}>
                 <span style={{ color: '#B9F95D', fontWeight: 900 }}>✓</span>{t}
               </span>
