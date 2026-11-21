@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom'
-import { AuthProvider } from './contexts/AuthContext'
+import { AuthProvider, useAuth } from './contexts/AuthContext'
 import HomePage from './pages/HomePage'
 import SuccessPage from './pages/SuccessPage'
 import AuthPage from './pages/AuthPage'
@@ -93,6 +93,14 @@ function useEmbeddedTokenExchange(enabled) {
   return { done, error }
 }
 
+// Signed in already? The homepage is for new visitors; go to the dashboard.
+// (AuthProvider only renders once the sign-in check has finished, so this
+// never flashes the homepage first.)
+function HomeOrDashboard() {
+  const { currentUser } = useAuth()
+  return currentUser ? <Navigate to="/dashboard" replace /> : <HomePage />
+}
+
 function App() {
   const embedded = isEmbeddedLoad()
   const { done, error } = useEmbeddedTokenExchange(embedded)
@@ -108,7 +116,7 @@ function App() {
           <Route path="/auth" element={<AuthPage />} />
           {/* Embedded in the admin, the marketing homepage is never the right
               landing page — send the merchant to their dashboard instead. */}
-          <Route path="/" element={embedded ? <Navigate to="/dashboard" replace /> : <HomePage />} />
+          <Route path="/" element={embedded ? <Navigate to="/dashboard" replace /> : <HomeOrDashboard />} />
           <Route path="/privacy" element={<PrivacyPage />} />
           <Route path="/terms" element={<TermsPage />} />
           <Route path="/cancellation" element={<CancellationPage />} />
