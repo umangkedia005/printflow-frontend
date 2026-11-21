@@ -18,6 +18,7 @@ const COPY = {
     sides: [['front', 'Front artwork'], ['back', 'Back artwork (optional)']],
     left: 'Tags left', unit: 'tags',
     useHint: "We'll attach your tag to every garment in your orders.",
+    examples: [['/images/branding/tag-black.jpg', 'Classic black tag'], ['/images/branding/tags-colours.jpg', 'Four colour styles']],
   },
   poly_bag: {
     title: 'Packaging',
@@ -25,6 +26,15 @@ const COPY = {
     sides: [['front', 'Bag artwork']],
     left: 'Bags left', unit: 'bags',
     useHint: "We'll pack your orders in your own courier bags.",
+    examples: [['/images/branding/bag-black.jpg', 'Bold logo on black'], ['/images/branding/bags-colours.jpg', 'Four colour styles']],
+  },
+  thank_you_card: {
+    title: 'Thank You Cards',
+    intro: 'A printed thank-you card in every parcel, so your customers remember your brand.',
+    sides: [['front', 'Front artwork'], ['back', 'Back artwork (optional)']],
+    left: 'Cards left', unit: 'cards',
+    useHint: "We'll put your card in every parcel we ship for you.",
+    examples: [['/images/branding/card-black.jpg', 'Simple black card'], ['/images/branding/cards-styles.jpg', 'Three styles']],
   },
 }
 const STATUS = {
@@ -91,6 +101,7 @@ export default function BrandingView({ product, walletBalance, onWalletChanged, 
   const [placeError, setPlaceError] = useState('')
   const [notice, setNotice] = useState('')
   const [useError, setUseError] = useState('')
+  const [zoom, setZoom] = useState(null)
 
   useEffect(() => {
     fetchBranding().then(d => {
@@ -141,6 +152,26 @@ export default function BrandingView({ product, walletBalance, onWalletChanged, 
         <h1 style={{ fontFamily: "'Fraunces', sans-serif", fontSize: '26px', fontWeight: 800, color: INK, letterSpacing: '-0.5px', margin: '2px 0 4px' }}>{copy.title}</h1>
         <p style={{ fontSize: '13px', color: SAGE, fontWeight: 500 }}>{copy.intro}</p>
       </div>
+      {/* Examples: ideas for what theirs could look like. */}
+      <div style={{ ...card, marginBottom: '16px', padding: '18px' }}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', gap: '10px', flexWrap: 'wrap', marginBottom: '12px' }}>
+          <h2 style={{ fontFamily: "'Fraunces', sans-serif", fontSize: '16px', fontWeight: 800, color: INK }}>Examples</h2>
+          <span style={{ fontSize: '12px', color: SAGE }}>Ideas only: we print the artwork you upload. Tap to enlarge.</span>
+        </div>
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(min(100%, 220px), 1fr))', gap: '12px' }}>
+          {copy.examples.map(([src, caption]) => (
+            <button key={src} onClick={() => setZoom(src)} style={{ padding: 0, border: `1px solid ${LINE}`, borderRadius: '14px', overflow: 'hidden', background: '#F4F4F0', cursor: 'zoom-in', textAlign: 'left', fontFamily: 'Inter, sans-serif' }}>
+              <img src={src} alt={caption} loading="lazy" style={{ display: 'block', width: '100%', aspectRatio: '4 / 3', objectFit: 'cover' }} />
+              <span style={{ display: 'block', padding: '8px 12px', fontSize: '12px', fontWeight: 600, color: INK, background: '#FFFFFF' }}>{caption}</span>
+            </button>
+          ))}
+        </div>
+      </div>
+      {zoom && (
+        <div onClick={() => setZoom(null)} style={{ position: 'fixed', inset: 0, zIndex: 1000, background: 'rgba(0,0,0,0.75)', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '16px', cursor: 'zoom-out' }}>
+          <img src={zoom} alt="" style={{ maxWidth: '100%', maxHeight: '100%', borderRadius: '12px', boxShadow: '0 20px 60px rgba(0,0,0,0.4)' }} />
+        </div>
+      )}
       {notice && <div style={{ background: '#F0FDF4', border: '1px solid #BBF7D0', borderRadius: '10px', padding: '10px 14px', marginBottom: '16px', fontSize: '13px', color: '#166534' }}>{notice}</div>}
 
       {/* Stock + use on orders */}

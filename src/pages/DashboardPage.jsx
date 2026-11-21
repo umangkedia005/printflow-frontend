@@ -95,6 +95,8 @@ const IconManage   = () => <svg width="15" height="15" viewBox="0 0 16 16" fill=
 const IconBranding = () => <svg width="15" height="15" viewBox="0 0 16 16" fill="none"><path d="M8.5 1.75h5.75V7.5L7.5 14.25 1.75 8.5z" stroke="currentColor" strokeWidth="1.5" strokeLinejoin="round"/><circle cx="11" cy="5" r="1.1" fill="currentColor"/></svg>
 const IconTag      = () => <svg width="14" height="14" viewBox="0 0 16 16" fill="none"><rect x="4" y="3.5" width="8" height="11" rx="1.5" stroke="currentColor" strokeWidth="1.5"/><circle cx="8" cy="6.5" r="1" fill="currentColor"/><path d="M8 3.5V1.5" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/></svg>
 const IconBag      = () => <svg width="14" height="14" viewBox="0 0 16 16" fill="none"><path d="M2.5 5h11l-1 9.25h-9z" stroke="currentColor" strokeWidth="1.5" strokeLinejoin="round"/><path d="M5.5 5V4a2.5 2.5 0 015 0v1" stroke="currentColor" strokeWidth="1.5"/></svg>
+const IconCard     = () => <svg width="14" height="14" viewBox="0 0 16 16" fill="none"><rect x="1.75" y="3.5" width="12.5" height="9" rx="1.5" stroke="currentColor" strokeWidth="1.5"/><path d="M5 7.25l3 2 3-2" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/></svg>
+const BRANDING_PAGES = { 'branding-tags': 'hang_tag', 'branding-packaging': 'poly_bag', 'branding-cards': 'thank_you_card' }
 const IconProducts = () => <svg width="15" height="15" viewBox="0 0 16 16" fill="none"><path d="M8 1.5L14 4.5V11.5L8 14.5L2 11.5V4.5L8 1.5Z" stroke="currentColor" strokeWidth="1.5" strokeLinejoin="round"/><path d="M8 1.5V14.5M2 4.5L8 7.5L14 4.5" stroke="currentColor" strokeWidth="1.5"/></svg>
 const IconSettings = () => <svg width="15" height="15" viewBox="0 0 16 16" fill="none"><circle cx="8" cy="8" r="2.5" stroke="currentColor" strokeWidth="1.5"/><path d="M8 1.5V3M8 13v1.5M1.5 8H3M13 8h1.5M3.4 3.4l1.06 1.06M11.54 11.54l1.06 1.06M3.4 12.6l1.06-1.06M11.54 4.46l1.06-1.06" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/></svg>
 const IconBilling  = () => <svg width="15" height="15" viewBox="0 0 16 16" fill="none"><rect x="1" y="3.5" width="14" height="9" rx="1.5" stroke="currentColor" strokeWidth="1.5"/><path d="M1 6.5h14" stroke="currentColor" strokeWidth="1.5"/><path d="M4 10h2" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/></svg>
@@ -1713,7 +1715,7 @@ export default function DashboardPage() {
 
           {/* Branding: hang tags and packaging, bought in bulk. */}
           {catalogueOn && (() => {
-            const inBranding = activeNav === 'branding-tags' || activeNav === 'branding-packaging'
+            const inBranding = activeNav.startsWith('branding-')
             const open = brandingOpen || inBranding
             return (
               <>
@@ -1725,7 +1727,7 @@ export default function DashboardPage() {
                   <span style={{ display: 'flex', alignItems: 'center', gap: '12px' }}><IconBranding />Branding</span>
                   <svg width="12" height="12" viewBox="0 0 12 12" fill="none" style={{ transform: open ? 'rotate(180deg)' : 'none', transition: 'transform 0.2s' }}><path d="M3 4.5 6 7.5l3-3" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round"/></svg>
                 </button>
-                {open && [['branding-tags', 'Hang Tags', IconTag], ['branding-packaging', 'Packaging', IconBag]].map(([id, text, Ic]) => {
+                {open && [['branding-tags', 'Hang Tags', IconTag], ['branding-packaging', 'Packaging', IconBag], ['branding-cards', 'Thank You Cards', IconCard]].map(([id, text, Ic]) => {
                   const active = activeNav === id
                   return (
                     <button key={id} onClick={() => setActiveNav(id)}
@@ -1928,9 +1930,9 @@ export default function DashboardPage() {
             </div>
           )}
           {activeNav === 'order-management' && <div style={{ position: 'relative', zIndex: 1 }}><OrderManagement onOpenOrders={() => { setOrdersTab('shopify'); setActiveNav('orders') }} /></div>}
-          {(activeNav === 'branding-tags' || activeNav === 'branding-packaging') && (
+          {BRANDING_PAGES[activeNav] && (
             <div style={{ position: 'relative', zIndex: 1 }}>
-              <BrandingView key={activeNav} product={activeNav === 'branding-tags' ? 'hang_tag' : 'poly_bag'} walletBalance={walletBalance} onWalletChanged={loadWallet} onTopUp={() => setShowTopup(true)} />
+              <BrandingView key={activeNav} product={BRANDING_PAGES[activeNav]} walletBalance={walletBalance} onWalletChanged={loadWallet} onTopUp={() => setShowTopup(true)} />
             </div>
           )}
           {activeNav === 'stock' && <div style={{ position: 'relative', zIndex: 1 }}><StockLevel /></div>}
