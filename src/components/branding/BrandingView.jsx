@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react'
+import { createPortal } from 'react-dom'
 import { fetchBranding, placeBrandingOrder, setBrandingUse, uploadArtwork, openInvoice } from '../../utils/api'
 import { ARTWORK_TYPES, MAX_ARTWORK_BYTES } from '../../utils/artworkImage'
 
@@ -45,6 +46,29 @@ const STATUS = {
 }
 const rupees = n => `₹${Number(n || 0).toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`
 const card = { background: '#FFFFFF', border: `1px solid ${LINE}`, borderRadius: '20px', padding: '22px', boxShadow: '0 8px 30px rgba(23,43,21,0.015)' }
+
+// Full-screen view of an example, above the top bar and sidebar (rendered on
+// <body>, outside the page's own layers). ✕, Esc or the background close it.
+function ImageViewer({ src, caption, onClose }) {
+  useEffect(() => {
+    const onKey = e => { if (e.key === 'Escape') onClose() }
+    const overflow = document.body.style.overflow
+    document.body.style.overflow = 'hidden'
+    window.addEventListener('keydown', onKey)
+    return () => { window.removeEventListener('keydown', onKey); document.body.style.overflow = overflow }
+  }, [onClose])
+  return createPortal(
+    <div role="dialog" aria-modal="true" aria-label={caption} onClick={e => { if (e.target === e.currentTarget) onClose() }}
+      style={{ position: 'fixed', inset: 0, zIndex: 5000, background: 'rgba(10,14,10,0.88)', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: '56px 16px 24px' }}>
+      <button onClick={onClose} aria-label="Close" autoFocus
+        style={{ position: 'absolute', top: '14px', right: '14px', width: '40px', height: '40px', borderRadius: '50%', border: 'none', background: '#FFFFFF', color: INK, fontSize: '18px', fontWeight: 700, cursor: 'pointer', boxShadow: '0 4px 14px rgba(0,0,0,0.25)' }}>✕</button>
+      <img src={src} alt={caption} onClick={onClose}
+        style={{ maxWidth: 'min(92vw, 900px)', maxHeight: 'calc(100vh - 130px)', objectFit: 'contain', borderRadius: '14px', boxShadow: '0 20px 60px rgba(0,0,0,0.45)', cursor: 'zoom-out', background: '#F4F4F0' }} />
+      {caption && <div style={{ color: '#FFFFFF', fontSize: '14px', fontWeight: 600, marginTop: '14px', textAlign: 'center' }}>{caption}</div>}
+    </div>,
+    document.body,
+  )
+}
 
 function Toggle({ on, disabled, onChange }) {
   return (
@@ -160,18 +184,14 @@ export default function BrandingView({ product, walletBalance, onWalletChanged, 
         </div>
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(min(100%, 220px), 1fr))', gap: '12px' }}>
           {copy.examples.map(([src, caption]) => (
-            <button key={src} onClick={() => setZoom(src)} style={{ padding: 0, border: `1px solid ${LINE}`, borderRadius: '14px', overflow: 'hidden', background: '#F4F4F0', cursor: 'zoom-in', textAlign: 'left', fontFamily: 'Inter, sans-serif' }}>
+            <button key={src} onClick={() => setZoom({ src, caption })} style={{ padding: 0, border: `1px solid ${LINE}`, borderRadius: '14px', overflow: 'hidden', background: '#F4F4F0', cursor: 'zoom-in', textAlign: 'left', fontFamily: 'Inter, sans-serif' }}>
               <img src={src} alt={caption} loading="lazy" style={{ display: 'block', width: '100%', aspectRatio: '4 / 3', objectFit: 'cover' }} />
               <span style={{ display: 'block', padding: '8px 12px', fontSize: '12px', fontWeight: 600, color: INK, background: '#FFFFFF' }}>{caption}</span>
             </button>
           ))}
         </div>
       </div>
-      {zoom && (
-        <div onClick={() => setZoom(null)} style={{ position: 'fixed', inset: 0, zIndex: 1000, background: 'rgba(0,0,0,0.75)', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '16px', cursor: 'zoom-out' }}>
-          <img src={zoom} alt="" style={{ maxWidth: '100%', maxHeight: '100%', borderRadius: '12px', boxShadow: '0 20px 60px rgba(0,0,0,0.4)' }} />
-        </div>
-      )}
+      {zoom && <ImageViewer src={zoom.src} caption={zoom.caption} onClose={() => setZoom(null)} />}
       {notice && <div style={{ background: '#F0FDF4', border: '1px solid #BBF7D0', borderRadius: '10px', padding: '10px 14px', marginBottom: '16px', fontSize: '13px', color: '#166534' }}>{notice}</div>}
 
       {/* Stock + use on orders */}
