@@ -489,6 +489,22 @@ export async function placeManualOrder(order) {
   return data
 }
 
+// Tax invoices (orders) and receipts (wallet top-ups). Opens in a new tab,
+// opened before the request so pop-up blockers allow it; the page has a
+// Download / Print PDF button.
+export async function openInvoice(kind, id) {
+  const win = window.open('', '_blank')
+  try {
+    const res = await fetch(`${BASE_URL}/invoice?kind=${encodeURIComponent(kind)}&id=${encodeURIComponent(id)}`, { headers: await shopAuthHeaders() })
+    const data = await res.json()
+    if (!res.ok) throw new Error(data.error || 'Could not open the invoice')
+    win.document.open(); win.document.write(data.html); win.document.close()
+  } catch (e) {
+    win?.close()
+    throw e
+  }
+}
+
 // Branding: hang tags and courier bags bought in bulk, with the brand's
 // stock and "use on my orders" switches.
 async function brandingCall(path, body) {

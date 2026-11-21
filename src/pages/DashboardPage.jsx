@@ -6,7 +6,7 @@ import OrderManagement from '../components/orders/OrderManagement'
 import BrandingView from '../components/branding/BrandingView'
 import StockLevel from '../components/stock/StockLevel'
 import AccountSettings from '../components/settings/AccountSettings'
-import { SUPPORT_EMAIL, SUPPORT_PHONES, fetchOrders, fetchSubscription, fetchMyStores, linkStore, updateSubscription, fetchPlans, fetchWallet, fulfillOrder, fetchProductMappings, updateProductMapping, createShopifySubscription, fetchCatalogue } from '../utils/api'
+import { SUPPORT_EMAIL, SUPPORT_PHONES, openInvoice, fetchOrders, fetchSubscription, fetchMyStores, linkStore, updateSubscription, fetchPlans, fetchWallet, fulfillOrder, fetchProductMappings, updateProductMapping, createShopifySubscription, fetchCatalogue } from '../utils/api'
 import { SHOPIFY_INSTALL_URL } from '../utils/shopify'
 import CatalogueView from '../components/catalogue/CatalogueView'
 import ManualOrdersView from '../components/orders/ManualOrders'
@@ -1627,6 +1627,7 @@ export default function DashboardPage() {
                   </div>
                   <div style={{ fontSize: '11px', color: '#BABAB6' }}>
                     {tx.created_at ? new Date(tx.created_at).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' }) : '—'}
+                    {tx.type === 'topup' && <button onClick={() => openInvoice('topup', tx.transaction_id).catch(e => alert(e.message))} style={{ marginLeft: '8px', background: 'none', border: 'none', padding: 0, color: '#172B15', fontWeight: 700, fontSize: '11px', textDecoration: 'underline', cursor: 'pointer', fontFamily: 'Inter, sans-serif' }}>Receipt</button>}
                   </div>
                 </div>
               </div>

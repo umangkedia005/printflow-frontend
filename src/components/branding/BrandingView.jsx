@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import { fetchBranding, placeBrandingOrder, setBrandingUse, uploadArtwork } from '../../utils/api'
+import { fetchBranding, placeBrandingOrder, setBrandingUse, uploadArtwork, openInvoice } from '../../utils/api'
 import { ARTWORK_TYPES, MAX_ARTWORK_BYTES } from '../../utils/artworkImage'
 
 // Branding → Hang Tags / Packaging. Bought in bulk: pick a size and a
@@ -243,6 +243,7 @@ export default function BrandingView({ product, walletBalance, onWalletChanged, 
                 <div style={{ fontSize: '13.5px', fontWeight: 700, color: INK }}>{o.size_label} × {Number(o.qty).toLocaleString('en-IN')} · {rupees(o.price)}</div>
                 <div style={{ fontSize: '11.5px', color: SAGE }}>{o.order_id} · {new Date(o.created_at).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' })}</div>
                 {o.status === 'rejected' && o.reason && <div style={{ fontSize: '12px', color: '#C53030', marginTop: '2px' }}>What to change: {o.reason}</div>}
+                {(o.status === 'production' || o.status === 'ready') && <button onClick={() => openInvoice('branding', o.order_id).catch(e => setPlaceError(e.message))} style={{ marginTop: '4px', background: 'none', border: 'none', padding: 0, color: INK, fontWeight: 700, fontSize: '12px', textDecoration: 'underline', cursor: 'pointer', fontFamily: 'Inter, sans-serif' }}>⬇ Tax invoice</button>}
               </div>
               <span style={{ background: bg, color: fg, padding: '3px 10px', borderRadius: '100px', fontSize: '11px', fontWeight: 700 }}>{label}</span>
             </div>

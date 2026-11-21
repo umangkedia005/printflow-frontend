@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from 'react'
-import { fetchOrderManagement } from '../../utils/api'
+import { fetchOrderManagement, openInvoice } from '../../utils/api'
 
 // Order Management: all of a brand's orders in one place (manual, sample and
 // Shopify), with how much they've ordered and spent for any period.
@@ -42,10 +42,10 @@ function toCsv(rows) {
     const s = v == null ? '' : String(v)
     return /[",\n]/.test(s) ? `"${s.replace(/"/g, '""')}"` : s
   }
-  const head = ['Order', 'Type', 'Store', 'Date', 'Customer', 'City', 'Pieces', 'Products', 'Status', 'Order total (your customer)', 'Paid from wallet', 'Courier', 'Tracking number', 'Reference']
+  const head = ['Order', 'Type', 'Store', 'Date', 'Customer', 'City', 'Pieces', 'Products', 'Status', 'Order total (your customer)', 'Paid from wallet', 'Invoice number', 'Courier', 'Tracking number', 'Reference']
   const body = rows.map(r => [
     r.order_name, TYPES[r.type], r.shop || '', localDay(r.created_at), r.customer, r.city || '', r.pieces, r.products.join('; '),
-    STATUS[r.status]?.[0] || r.status, r.type === 'shopify' ? r.order_total : '', r.paid ?? '', r.tracking?.courier || '', r.tracking?.number || '', r.reference || '',
+    STATUS[r.status]?.[0] || r.status, r.type === 'shopify' ? r.order_total : '', r.paid ?? '', r.invoice_number || '', r.tracking?.courier || '', r.tracking?.number || '', r.reference || '',
   ])
   return [head, ...body].map(line => line.map(cell).join(',')).join('\r\n')
 }
@@ -70,6 +70,8 @@ export default function OrderManagement({ onOpenOrders }) {
   const [to, setTo] = useState('')
   const [type, setType] = useState('all')
   const [tab, setTab] = useState('all')
+  const [invoiceError, setInvoiceError] = useState('')
+  const invoice = id => { setInvoiceError(''); openInvoice('order', id).catch(e => setInvoiceError(e.message)) }
 
   useEffect(() => {
     fetchOrderManagement().then(setData).catch(e => setError(e.message))
@@ -152,6 +154,7 @@ export default function OrderManagement({ onOpenOrders }) {
       </div>
 
       {error && <div style={{ background: '#FFF5F5', border: '1px solid #FED7D7', borderRadius: '10px', padding: '10px 14px', marginBottom: '16px', fontSize: '13px', color: '#C53030' }}>⚠ {error}</div>}
+      {invoiceError && <div style={{ background: '#FFF5F5', border: '1px solid #FED7D7', borderRadius: '10px', padding: '10px 14px', marginBottom: '12px', fontSize: '13px', color: '#C53030' }}>⚠ {invoiceError}</div>}
       {tab === 'awaiting' && rows.length > 0 && (
         <div style={{ background: '#FFF7ED', border: '1px solid #FED7AA', borderRadius: '12px', padding: '10px 14px', marginBottom: '12px', fontSize: '12.5px', color: '#9A3412', display: 'flex', justifyContent: 'space-between', gap: '10px', flexWrap: 'wrap', alignItems: 'center' }}>
           These Shopify orders haven't been sent to print yet. Open one under Orders and click "Send to Print Factory".
@@ -180,15 +183,16 @@ export default function OrderManagement({ onOpenOrders }) {
                       <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{r.customer}{r.city ? `, ${r.city}` : ''} · {day(r.created_at)}</span>
                       <span style={{ flexShrink: 0, fontWeight: 800, color: r.paid == null ? SAGE : INK }}>{r.paid == null ? 'Not paid yet' : rupees(r.paid)}</span>
                     </div>
+                    {r.invoiceable && <button onClick={() => invoice(r.order_id)} style={{ marginTop: '8px', background: 'none', border: `1px solid ${LINE}`, borderRadius: '8px', padding: '5px 10px', fontSize: '12px', fontWeight: 700, color: INK, cursor: 'pointer', fontFamily: 'Inter, sans-serif' }}>⬇ Invoice</button>}
                   </div>
                 )
               })}
             </div>
             <div className="pf-desktop-only" style={{ overflowX: 'auto' }}>
-              <table style={{ width: '100%', borderCollapse: 'collapse', minWidth: '860px' }}>
+              <table style={{ width: '100%', borderCollapse: 'collapse', minWidth: '940px' }}>
                 <thead>
                   <tr style={{ background: '#FAFBF7' }}>
-                    {['Order', 'Date', 'Customer', 'Products', 'Pieces', 'Order total', 'Paid from wallet', 'Status'].map(h => (
+                    {['Order', 'Date', 'Customer', 'Products', 'Pieces', 'Order total', 'Paid from wallet', 'Status', 'Invoice'].map(h => (
                       <th key={h} style={{ textAlign: 'left', padding: '11px 14px', fontSize: '10.5px', fontWeight: 800, letterSpacing: '0.06em', textTransform: 'uppercase', color: SAGE, borderBottom: `1px solid ${LINE}`, whiteSpace: 'nowrap' }}>{h}</th>
                     ))}
                   </tr>
@@ -208,6 +212,11 @@ export default function OrderManagement({ onOpenOrders }) {
                         <td style={{ padding: '12px 14px' }}>
                           <span style={{ background: bg, color: fg, padding: '3px 10px', borderRadius: '100px', fontSize: '11px', fontWeight: 700, whiteSpace: 'nowrap' }}>{label}</span>
                           {r.tracking?.url && <a href={r.tracking.url} target="_blank" rel="noopener noreferrer" style={{ display: 'block', marginTop: '4px', fontSize: '11px', color: INK, fontWeight: 700 }}>Track ↗</a>}
+                        </td>
+                        <td style={{ padding: '12px 14px' }}>
+                          {r.invoiceable
+                            ? <button onClick={() => invoice(r.order_id)} title={r.invoice_number || 'Tax invoice'} style={{ background: 'none', border: `1px solid ${LINE}`, borderRadius: '8px', padding: '5px 10px', fontSize: '12px', fontWeight: 700, color: INK, cursor: 'pointer', fontFamily: 'Inter, sans-serif', whiteSpace: 'nowrap' }}>⬇ Download</button>
+                            : <span style={{ fontSize: '11px', color: SAGE }}>After printing</span>}
                         </td>
                       </tr>
                     )
