@@ -5,6 +5,10 @@ const BASE_URL = import.meta.env.VITE_API_URL
 
 // Where customers reach the team (Help Center, My garments).
 export const SUPPORT_EMAIL = 'talktonolimitstudios@gmail.com'
+// Shown under Contact Us in the sidebar; `tel` is the number dialled.
+export const SUPPORT_PHONES = [
+  { label: 'Customer Support', display: '+91 74285 49837', tel: '+917428549837' },
+]
 
 async function getToken() {
   const user = auth.currentUser

@@ -1,8 +1,8 @@
-import React, { useState, useEffect, useCallback } from 'react'
+import React, { useState, useEffect, useCallback, useRef } from 'react'
 import { useNavigate, useSearchParams } from 'react-router-dom'
 import { useAuth } from '../contexts/AuthContext'
 import { openWalletTopup } from '../utils/razorpay'
-import { SUPPORT_EMAIL, fetchOrders, fetchSubscription, fetchMyStores, linkStore, updateSubscription, fetchPlans, fetchWallet, fulfillOrder, fetchProductMappings, updateProductMapping, createShopifySubscription, fetchCatalogue } from '../utils/api'
+import { SUPPORT_EMAIL, SUPPORT_PHONES, fetchOrders, fetchSubscription, fetchMyStores, linkStore, updateSubscription, fetchPlans, fetchWallet, fulfillOrder, fetchProductMappings, updateProductMapping, createShopifySubscription, fetchCatalogue } from '../utils/api'
 import { SHOPIFY_INSTALL_URL } from '../utils/shopify'
 import CatalogueView from '../components/catalogue/CatalogueView'
 import ManualOrdersView from '../components/orders/ManualOrders'
@@ -89,6 +89,8 @@ const IconProducts = () => <svg width="15" height="15" viewBox="0 0 16 16" fill=
 const IconSettings = () => <svg width="15" height="15" viewBox="0 0 16 16" fill="none"><circle cx="8" cy="8" r="2.5" stroke="currentColor" strokeWidth="1.5"/><path d="M8 1.5V3M8 13v1.5M1.5 8H3M13 8h1.5M3.4 3.4l1.06 1.06M11.54 11.54l1.06 1.06M3.4 12.6l1.06-1.06M11.54 4.46l1.06-1.06" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/></svg>
 const IconBilling  = () => <svg width="15" height="15" viewBox="0 0 16 16" fill="none"><rect x="1" y="3.5" width="14" height="9" rx="1.5" stroke="currentColor" strokeWidth="1.5"/><path d="M1 6.5h14" stroke="currentColor" strokeWidth="1.5"/><path d="M4 10h2" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/></svg>
 const IconWallet   = () => <svg width="15" height="15" viewBox="0 0 16 16" fill="none"><path d="M2 4.5A1.5 1.5 0 013.5 3h9A1.5 1.5 0 0114 4.5v7A1.5 1.5 0 0112.5 13h-9A1.5 1.5 0 012 11.5v-7Z" stroke="currentColor" strokeWidth="1.5"/><path d="M10.5 8a1 1 0 102 0 1 1 0 00-2 0Z" fill="currentColor"/><path d="M2 6.5h12" stroke="currentColor" strokeWidth="1.5"/></svg>
+const IconMail     = () => <svg width="15" height="15" viewBox="0 0 16 16" fill="none"><rect x="1.75" y="3.25" width="12.5" height="9.5" rx="1.5" stroke="currentColor" strokeWidth="1.5"/><path d="M2.5 4.5 8 8.75l5.5-4.25" stroke="currentColor" strokeWidth="1.5" strokeLinejoin="round"/></svg>
+const IconPhone    = () => <svg width="15" height="15" viewBox="0 0 24 24" fill="currentColor"><path d="M6.6 10.8a15.1 15.1 0 0 0 6.6 6.6l2.2-2.2a1 1 0 0 1 1-.25 11.4 11.4 0 0 0 3.6.57 1 1 0 0 1 1 1V20a1 1 0 0 1-1 1A17 17 0 0 1 3 4a1 1 0 0 1 1-1h3.5a1 1 0 0 1 1 1c0 1.25.2 2.45.57 3.57a1 1 0 0 1-.25 1z"/></svg>
 const IconHelp     = () => <svg width="15" height="15" viewBox="0 0 16 16" fill="none"><circle cx="8" cy="8" r="6.5" stroke="currentColor" strokeWidth="1.5"/><path d="M8 10.5v-.5M8 8a1.5 1.5 0 10-1.5-1.5" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/></svg>
 
 // ── Stat icons ────────────────────────────────────────────────────────────────
@@ -628,6 +630,10 @@ export default function DashboardPage() {
   const [activeNav, setActiveNav]           = useState('dashboard')
   // Phones: the sidebar is a drawer behind the ☰ button (see .pf-sidebar in index.css).
   const [menuOpen, setMenuOpen]             = useState(false)
+  const [contactOpen, setContactOpen]       = useState(false)
+  const contactRef = useRef(null)
+  // Opening Contact Us near the bottom of the sidebar scrolls the numbers into view.
+  useEffect(() => { if (contactOpen) contactRef.current?.scrollIntoView({ block: 'nearest', behavior: 'smooth' }) }, [contactOpen])
   useEffect(() => { setMenuOpen(false) }, [activeNav])
   const [ordersTab, setOrdersTab]           = useState('shopify')
   // Shown on the Manual orders tab after placing an order from Create order.
@@ -1748,6 +1754,31 @@ export default function DashboardPage() {
               </button>
             )
           })}
+
+          {/* Raise a query (email) and Contact Us (phone numbers that open). */}
+          <a href={`mailto:${SUPPORT_EMAIL}?subject=${encodeURIComponent('Query' + (shopDomain ? ` · ${shopDomain}` : ''))}`}
+            style={{ display: 'flex', alignItems: 'center', gap: '12px', width: '100%', boxSizing: 'border-box', padding: '12px 18px', color: '#172B15', fontSize: '14.5px', fontWeight: 600, textDecoration: 'none', marginBottom: '6px', borderRadius: '12px', transition: 'all 0.2s' }}
+            onMouseOver={e => { e.currentTarget.style.background = 'rgba(255,255,255,0.45)' }}
+            onMouseOut={e => { e.currentTarget.style.background = 'transparent' }}
+          ><IconMail />Raise a query</a>
+          <button onClick={() => setContactOpen(o => !o)} aria-expanded={contactOpen}
+            style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', width: '100%', padding: '12px 18px', border: 'none', background: contactOpen ? 'rgba(255,255,255,0.45)' : 'transparent', color: '#172B15', fontSize: '14.5px', fontWeight: 600, cursor: 'pointer', textAlign: 'left', marginBottom: '6px', fontFamily: 'Inter, sans-serif', borderRadius: '12px', transition: 'all 0.2s' }}
+            onMouseOver={e => { e.currentTarget.style.background = 'rgba(255,255,255,0.45)' }}
+            onMouseOut={e => { if (!contactOpen) e.currentTarget.style.background = 'transparent' }}
+          >
+            <span style={{ display: 'flex', alignItems: 'center', gap: '12px' }}><IconPhone />Contact Us</span>
+            <svg width="12" height="12" viewBox="0 0 12 12" fill="none" style={{ transform: contactOpen ? 'rotate(180deg)' : 'none', transition: 'transform 0.2s' }}><path d="M3 4.5 6 7.5l3-3" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round"/></svg>
+          </button>
+          {contactOpen && (
+            <div ref={contactRef} style={{ padding: '2px 18px 8px 45px' }}>
+              {SUPPORT_PHONES.map(p => (
+                <div key={p.label} style={{ marginBottom: '10px' }}>
+                  <div style={{ fontSize: '12.5px', fontWeight: 750, color: '#7A7A70' }}>{p.label}</div>
+                  <a href={`tel:${p.tel}`} style={{ display: 'inline-block', marginTop: '3px', fontSize: '13.5px', fontWeight: 600, color: '#172B15', textDecoration: 'none' }}>{p.display}</a>
+                </div>
+              ))}
+            </div>
+          )}
         </nav>
         <div style={{ padding: '12px 14px 16px', borderTop: '1px solid rgba(23,43,21,0.06)' }}>
           <div style={{ background: '#FFFFFF', border: '1px solid rgba(23,43,21,0.06)', borderRadius: '12px', padding: '11px 13px', marginBottom: '10px', boxShadow: '0 4px 12px rgba(23,43,21,0.015)' }}>
@@ -2206,6 +2237,14 @@ export default function DashboardPage() {
                   >
                     Email {SUPPORT_EMAIL}
                   </a>
+                  <div style={{ marginTop: '18px', display: 'grid', gap: '12px' }}>
+                    {SUPPORT_PHONES.map(p => (
+                      <div key={p.label}>
+                        <div style={{ fontSize: '11.5px', fontWeight: 700, color: '#A1A8A3' }}>{p.label}</div>
+                        <a href={`tel:${p.tel}`} style={{ fontSize: '14px', fontWeight: 700, color: '#FFFFFF', textDecoration: 'none' }}>{p.display}</a>
+                      </div>
+                    ))}
+                  </div>
                 </div>
               </div>
             </div>
