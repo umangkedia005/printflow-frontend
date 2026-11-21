@@ -75,7 +75,7 @@ function Card({ n, title, children }) {
 }
 
 // initialArtwork: a My files entry to start with on the first print area.
-export default function DesignEditor({ blank, onClose, onSaved, initialArtwork = null, backLabel = 'Back to catalogue' }) {
+export default function DesignEditor({ blank, onClose, onSaved, initialArtwork = null, backLabel = 'Back to catalogue', initialColor = null }) {
   const areas = blank.print_areas
   const views = blank.views?.length ? blank.views : [{ id: 'main', label: 'Main' }]
   const viewOf = a => a.view_id || views[0].id
@@ -83,8 +83,10 @@ export default function DesignEditor({ blank, onClose, onSaved, initialArtwork =
     ? blank.sizes.filter(s => blank.variants.some(v => v.size === s && v.in_stock))
     : [...new Set(blank.variants.filter(v => v.in_stock).map(v => v.size))]
 
-  const [previewColor, setPreviewColor] = useState(blank.colors[0].name)
-  const [colors, setColors] = useState([blank.colors[0].name])
+  // Starts on the colour picked in the catalogue, if any.
+  const startColor = blank.colors.some(c => c.name === initialColor) ? initialColor : blank.colors[0].name
+  const [previewColor, setPreviewColor] = useState(startColor)
+  const [colors, setColors] = useState([startColor])
   const [sizes, setSizes] = useState(sizesInStock)
   const [title, setTitle] = useState(blank.name)
   const [description, setDescription] = useState('')

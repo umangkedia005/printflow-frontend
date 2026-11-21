@@ -677,6 +677,7 @@ export default function DashboardPage() {
   const [catalogueOn, setCatalogueOn]       = useState(false)
   const [orderDesignId, setOrderDesignId]   = useState(null)
   const [orderBlankId, setOrderBlankId]     = useState(null)
+  const [orderBlankColor, setOrderBlankColor] = useState(null)
 
   useEffect(() => {
     fetchCatalogue().then(blanks => setCatalogueOn(blanks.length > 0)).catch(() => setCatalogueOn(false))
@@ -1878,10 +1879,11 @@ export default function DashboardPage() {
           {activeNav === 'create-order' && (
             <div style={{ position: 'relative', zIndex: 1 }}>
               <ManualOrdersView
-                key={`create-${orderDesignId || ''}-${orderBlankId || ''}`}
+                key={`create-${orderDesignId || ''}-${orderBlankId || ''}-${orderBlankColor || ''}`}
                 startInCreate
                 initialDesignId={orderDesignId}
                 initialBlankId={orderBlankId}
+                initialBlankColor={orderBlankColor}
 
                 walletBalance={walletBalance}
                 onWalletChanged={loadWallet}
@@ -1914,7 +1916,7 @@ export default function DashboardPage() {
           {activeNav === 'stock' && <div style={{ position: 'relative', zIndex: 1 }}><StockLevel /></div>}
           {activeNav === 'garments' && catalogueOn && <div style={{ position: 'relative', zIndex: 1 }}><GarmentsView onOrderPlain={id => { setOrderDesignId(null); setOrderBlankId(id); setActiveNav('create-order') }} /></div>}
           {activeNav === 'files' && catalogueOn && <div style={{ position: 'relative', zIndex: 1 }}><FilesView onOrder={id => { setOrderBlankId(null); setOrderDesignId(id); setActiveNav('create-order') }} /></div>}
-          {activeNav === 'catalogue' && catalogueOn && <div style={{ position: 'relative', zIndex: 1 }}><CatalogueView onOrderPlain={id => { setOrderDesignId(null); setOrderBlankId(id); setActiveNav('create-order') }} onOrderDesign={id => { setOrderBlankId(null); setOrderDesignId(id); setActiveNav('create-order') }} /></div>}
+          {activeNav === 'catalogue' && catalogueOn && <div style={{ position: 'relative', zIndex: 1 }}><CatalogueView onOrderPlain={(id, color) => { setOrderDesignId(null); setOrderBlankId(id); setOrderBlankColor(color || null); setActiveNav('create-order') }} onOrderDesign={id => { setOrderBlankId(null); setOrderDesignId(id); setActiveNav('create-order') }} /></div>}
           {activeNav === 'products' && <div style={{ position: 'relative', zIndex: 1 }}><ProductsView /></div>}
           {activeNav === 'billing'  && <div style={{ position: 'relative', zIndex: 1 }}><BillingView /></div>}
           {activeNav === 'wallet'   && <div style={{ position: 'relative', zIndex: 1 }}><WalletView /></div>}

@@ -37,56 +37,72 @@ function SizeChartModal({ blank, onClose }) {
   , document.body)
 }
 
-function BlankCard({ blank, onDesign, onSizeChart, onOrderPlain }) {
-  const sizes = [...new Set(blank.variants.map(v => v.size))]
-  // Lowest price among sizes that can be ordered; null when none can be
-  // (an own garment we haven't priced yet).
-  const orderable = blank.variants.filter(v => v.in_stock !== false && Number(v.base_cost) > 0).map(v => Number(v.base_cost))
-  const fromCost = orderable.length ? Math.min(...orderable) : null
-  // With several colours the photo cycles through them; hovering pauses it,
-  // and clicking a colour dot shows that colour.
-  const colors = blank.colors
-  const [shown, setShown] = useState(0)
-  const [paused, setPaused] = useState(false)
-  useEffect(() => {
-    if (colors.length < 2 || paused) return
-    const t = setInterval(() => setShown(i => (i + 1) % colors.length), 2500)
-    return () => clearInterval(t)
-  }, [colors.length, paused])
-  const photoOf = c => c.image_urls?.[blank.views?.[0]?.id] || c.image_url
+// Like Unitee: one section per product, one card per colour ("Black
+// Fleece Pullover Hoodie"), each with its own Design / Order plain.
+const priceOf = variants => {
+  const ok = variants.filter(v => v.in_stock !== false && Number(v.base_cost) > 0).map(v => Number(v.base_cost))
+  return ok.length ? Math.min(...ok) : null
+}
+
+function ColourCard({ blank, color, onDesign, onOrderPlain }) {
+  const variants = blank.variants.filter(v => v.color === color.name)
+  const price = priceOf(variants)
+  const out = variants.length > 0 && variants.every(v => v.in_stock === false)
+  const photo = color.image_urls?.[blank.views?.[0]?.id] || color.image_url
+  // "Black Fleece Pullover Hoodie", unless the name already says the colour.
+  const fullName = blank.name.toLowerCase().includes(color.name.toLowerCase()) ? blank.name : `${color.name} ${blank.name}`
   return (
-    <div onMouseEnter={() => setPaused(true)} onMouseLeave={() => setPaused(false)} style={{ background: '#FFFFFF', border: '1px solid rgba(23,43,21,0.06)', borderRadius: '20px', boxShadow: '0 8px 30px rgba(23,43,21,0.015)', padding: '14px', display: 'flex', flexDirection: 'column' }}>
-      <div style={{ position: 'relative' }}>
-        {/* Every colour is stacked (so the photos are loaded) and the shown one fades in. */}
-        {colors.map((c, i) => (
-          <div key={c.name} aria-hidden={i !== shown} style={{ position: i === 0 ? 'relative' : 'absolute', inset: 0, opacity: i === shown ? 1 : 0, transition: 'opacity 0.6s ease' }}>
-            <GarmentMockup type={blank.mockup} color={c.hex} photoUrl={photoOf(c)} />
-          </div>
-        ))}
-        {blank.size_chart && (
-          <button onClick={onSizeChart} style={{ position: 'absolute', top: '10px', right: '10px', background: '#FFFFFF', border: '1px solid rgba(23,43,21,0.08)', borderRadius: '8px', padding: '5px 10px', fontSize: '11px', fontWeight: 600, color: '#172B15', cursor: 'pointer', fontFamily: 'Inter, sans-serif' }}>Size chart</button>
-        )}
+    <div style={{ background: '#FFFFFF', border: '1px solid rgba(23,43,21,0.07)', borderRadius: '18px', padding: '10px', display: 'flex', flexDirection: 'column', boxShadow: '0 6px 20px rgba(23,43,21,0.02)', minWidth: 0 }}>
+      <div style={{ position: 'relative', opacity: out ? 0.55 : 1 }}>
+        <GarmentMockup type={blank.mockup} color={color.hex} photoUrl={photo} />
+        {out && <span style={{ position: 'absolute', top: '8px', left: '8px', background: '#FFFFFF', color: '#C53030', fontSize: '10.5px', fontWeight: 800, padding: '3px 8px', borderRadius: '100px' }}>Out of stock</span>}
       </div>
-      <div style={{ padding: '14px 4px 0', flex: 1, display: 'flex', flexDirection: 'column' }}>
-        <div style={{ fontFamily: "'Fraunces', sans-serif", fontSize: '17px', fontWeight: 800, color: '#172B15', letterSpacing: '-0.2px' }}>{blank.name}</div>
-        <div style={{ fontSize: '12px', color: '#889B8E', marginTop: '4px' }}>{blank.own ? `Your garment · ${blank.category} | ${sizes[0]}–${sizes[sizes.length - 1]}` : `${blank.gsm} GSM | ${sizes[0]}–${sizes[sizes.length - 1]} | ${blank.fabric}`}</div>
-        <div style={{ display: 'flex', gap: '5px', marginTop: '10px' }}>
-          {colors.map((c, i) => (
-            <button key={c.name} type="button" title={c.name} aria-label={`Show ${c.name}`} onClick={() => { setShown(i); setPaused(true) }}
-              style={{ width: '16px', height: '16px', padding: 0, borderRadius: '50%', background: c.hex, border: '1px solid #D8D8D4', cursor: 'pointer', boxShadow: i === shown && colors.length > 1 ? '0 0 0 2px #FFFFFF, 0 0 0 3.5px #172B15' : 'none', transition: 'box-shadow 0.2s' }} />
-          ))}
-          {colors.length > 1 && <span style={{ fontSize: '11px', color: '#889B8E', marginLeft: '4px', alignSelf: 'center' }}>{colors[shown]?.name}</span>}
+      <div style={{ padding: '10px 4px 0', flex: 1, display: 'flex', flexDirection: 'column' }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '7px' }}>
+          <span style={{ width: '12px', height: '12px', borderRadius: '50%', background: color.hex, border: '1px solid #D8D8D4', flexShrink: 0 }} />
+          <span style={{ fontSize: '14px', fontWeight: 800, color: '#172B15', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{color.name}</span>
         </div>
-        <div style={{ fontSize: '12px', color: '#172B15', marginTop: '10px', marginBottom: '14px' }}>{fromCost == null ? 'Price coming soon: we\'ll email you when it\'s set' : <>{blank.own ? 'Your garment · from' : 'Base cost from'} <strong style={{ color: '#172B15' }}>₹{fromCost}</strong> + tax</>}</div>
-        <button className="pf-btn" onClick={onDesign} style={{ marginTop: 'auto', width: '100%', padding: '12px', fontSize: '13px', fontWeight: 800, background: '#172B15', color: '#FFFFFF', borderRadius: '12px' }}>Design now</button>
-        {/* Plain, unprinted pieces. */}
-        {onOrderPlain && fromCost != null && <button className="pf-btn-outline" onClick={onOrderPlain} style={{ width: '100%', padding: '10px', fontSize: '12px', marginTop: '8px' }}>Order plain (no print)</button>}
+        <div style={{ fontSize: '11.5px', color: '#889B8E', marginTop: '2px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }} title={fullName}>{fullName}</div>
+        <div style={{ fontSize: '12px', color: '#172B15', margin: '8px 0 10px' }}>{price == null ? (out ? 'Back soon' : 'Price coming soon') : <>From <strong>₹{price}</strong> + tax</>}</div>
+        <div style={{ display: 'flex', gap: '6px', marginTop: 'auto' }}>
+          {/* No print areas set up yet: it can only be ordered plain. */}
+          <button className="pf-btn" onClick={onDesign} disabled={out || !blank.print_areas?.length} title={blank.print_areas?.length ? 'Design' : 'Print positions not set up yet'} style={{ flex: 1, padding: '9px 6px', fontSize: '12px', fontWeight: 800, background: '#172B15', color: '#FFFFFF', borderRadius: '10px' }}>{blank.print_areas?.length ? 'Design' : 'Plain only'}</button>
+          {onOrderPlain && price != null && <button className="pf-btn-outline" onClick={onOrderPlain} disabled={out} title="Order plain (no print)" style={{ flex: 1, padding: '9px 6px', fontSize: '12px', borderRadius: '10px' }}>Plain</button>}
+        </div>
       </div>
     </div>
   )
 }
 
-// onOrderPlain(blankId): open Create order with this product as a plain line.
+function ProductSection({ blank, onDesign, onSizeChart, onOrderPlain }) {
+  const sizes = [...new Set(blank.variants.map(v => v.size))]
+  const fromCost = priceOf(blank.variants)
+  const meta = blank.own ? ['Your garment', blank.category] : [blank.gsm && `${blank.gsm} GSM`, blank.fabric, blank.fit]
+  return (
+    <section style={{ marginBottom: '28px' }}>
+      <div style={{ display: 'flex', alignItems: 'flex-end', justifyContent: 'space-between', gap: '12px', flexWrap: 'wrap', marginBottom: '12px', paddingBottom: '10px', borderBottom: '1px solid rgba(23,43,21,0.08)' }}>
+        <div style={{ minWidth: 0 }}>
+          <h2 style={{ fontFamily: "'Fraunces', sans-serif", fontSize: '20px', fontWeight: 800, color: '#172B15', letterSpacing: '-0.3px' }}>{blank.name}</h2>
+          <div style={{ fontSize: '12.5px', color: '#889B8E', marginTop: '3px' }}>
+            {[...meta, sizes.length ? `${sizes[0]}–${sizes[sizes.length - 1]}` : null, `${blank.colors.length} colour${blank.colors.length === 1 ? '' : 's'}`].filter(Boolean).join(' · ')}
+            {fromCost != null && <> · from <strong style={{ color: '#172B15' }}>₹{fromCost}</strong> + tax</>}
+          </div>
+        </div>
+        {blank.size_chart && <button onClick={onSizeChart} style={{ background: '#FFFFFF', border: '1px solid rgba(23,43,21,0.12)', borderRadius: '9px', padding: '7px 12px', fontSize: '12px', fontWeight: 700, color: '#172B15', cursor: 'pointer', fontFamily: 'Inter, sans-serif' }}>Size chart</button>}
+      </div>
+      <div className="pf-cards-2" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(min(100%, 170px), 1fr))', gap: '12px' }}>
+        {blank.colors.map(c => (
+          <ColourCard key={c.name} blank={blank} color={c} onDesign={() => onDesign(c.name)} onOrderPlain={onOrderPlain && (() => onOrderPlain(c.name))} />
+        ))}
+      </div>
+    </section>
+  )
+}
+
+const KIND = { tee: 'T-shirts', hoodie: 'Hoodies', polo: 'Polos' }
+const kindOf = b => (b.own ? 'My garments' : b.category || (/pet/i.test(b.name) ? 'Pet wear' : KIND[b.mockup] || 'Other'))
+
+// onOrderPlain(blankId, color): open Create order with this product/colour as a plain line.
 // onOrderDesign(productId): open Create order with this saved design.
 export default function CatalogueView({ onOrderPlain, onOrderDesign }) {
   const [tab, setTab] = useState('catalogue')
@@ -99,6 +115,7 @@ export default function CatalogueView({ onOrderPlain, onOrderDesign }) {
   const [designs, setDesigns] = useState([])
   const [designsError, setDesignsError] = useState('')
   const [notice, setNotice] = useState('')
+  const [kind, setKind] = useState('all')
 
   useEffect(() => {
     fetchDesignableProducts()
@@ -118,7 +135,8 @@ export default function CatalogueView({ onOrderPlain, onOrderDesign }) {
   if (designing) {
     return (
       <DesignEditor
-        blank={designing}
+        blank={designing.blank}
+        initialColor={designing.color}
         onClose={() => setDesigning(null)}
         onSaved={() => {
           setDesigning(null)
@@ -131,7 +149,9 @@ export default function CatalogueView({ onOrderPlain, onOrderDesign }) {
   }
 
   const q = query.trim().toLowerCase()
-  const visible = blanks.filter(b => !q || [b.name, b.category, b.fabric].some(s => s?.toLowerCase().includes(q)))
+  const kinds = [...new Set(blanks.map(kindOf))]
+  const visible = blanks.filter(b => (kind === 'all' || kindOf(b) === kind)
+    && (!q || [b.name, b.category, b.fabric, ...b.colors.map(c => c.name)].some(s => s?.toLowerCase().includes(q))))
   const blankName = id => blanks.find(b => b.blank_id === id)?.name || id
 
   return (
@@ -157,15 +177,24 @@ export default function CatalogueView({ onOrderPlain, onOrderDesign }) {
 
       {tab === 'catalogue' && (
         <>
-          <input value={query} onChange={e => setQuery(e.target.value)} placeholder="Search products…" style={{ width: '100%', maxWidth: '360px', padding: '11px 14px', boxSizing: 'border-box', border: '1px solid rgba(23,43,21,0.1)', borderRadius: '12px', fontSize: '13px', outline: 'none', marginBottom: '20px', fontFamily: 'Inter, sans-serif' }} />
+          <input value={query} onChange={e => setQuery(e.target.value)} placeholder="Search products or colours…" style={{ width: '100%', maxWidth: '360px', padding: '11px 14px', boxSizing: 'border-box', border: '1px solid rgba(23,43,21,0.1)', borderRadius: '12px', fontSize: '13px', outline: 'none', marginBottom: '12px', fontFamily: 'Inter, sans-serif' }} />
+          {kinds.length > 1 && (
+            <div className="pf-scroll-x" style={{ display: 'flex', gap: '6px', flexWrap: 'wrap', marginBottom: '20px' }}>
+              {['all', ...kinds].map(k => (
+                <button key={k} onClick={() => setKind(k)} style={{ padding: '7px 14px', borderRadius: '100px', border: `1px solid ${kind === k ? '#172B15' : 'rgba(23,43,21,0.12)'}`, background: kind === k ? '#172B15' : '#FFFFFF', color: kind === k ? '#FFFFFF' : '#172B15', fontSize: '12.5px', fontWeight: 700, cursor: 'pointer', fontFamily: 'Inter, sans-serif' }}>
+                  {k === 'all' ? `All (${blanks.reduce((n, b) => n + b.colors.length, 0)})` : `${k} (${blanks.filter(b => kindOf(b) === k).reduce((n, b) => n + b.colors.length, 0)})`}
+                </button>
+              ))}
+            </div>
+          )}
           {error && <div style={{ background: '#FFF5F5', border: '1px solid #FED7D7', borderRadius: '8px', padding: '10px 14px', marginBottom: '20px', fontSize: '13px', color: '#C53030' }}>⚠ {error}</div>}
           {loading ? (
             <div style={{ textAlign: 'center', padding: '48px', color: '#889B8E', fontSize: '13px' }}>Loading catalogue…</div>
           ) : visible.length === 0 && !error ? (
             <div style={{ textAlign: 'center', padding: '48px', color: '#889B8E', fontSize: '13px' }}>{q ? 'No products match your search.' : 'The catalogue is empty.'}</div>
           ) : (
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(230px, 1fr))', gap: '16px' }}>
-              {visible.map(b => <BlankCard key={b.blank_id} blank={b} onDesign={() => setDesigning(b)} onSizeChart={() => setSizeChartFor(b)} onOrderPlain={onOrderPlain && (() => onOrderPlain(b.blank_id))} />)}
+            <div>
+              {visible.map(b => <ProductSection key={b.blank_id} blank={b} onDesign={color => setDesigning({ blank: b, color })} onSizeChart={() => setSizeChartFor(b)} onOrderPlain={onOrderPlain && (color => onOrderPlain(b.blank_id, color))} />)}
             </div>
           )}
         </>

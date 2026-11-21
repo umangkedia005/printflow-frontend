@@ -105,7 +105,7 @@ function ProductPicker({ designs, blanks, onPick, onClose }) {
 
 // initialDesignId: a design to start the order with (from My files → Order);
 // initialBlankId: a catalogue product to start with, plain (Catalogue → Order plain).
-function CreateOrder({ walletBalance, onTopUp, onPlaced, onCancel, initialDesignId = null, initialBlankId = null, sample = false }) {
+function CreateOrder({ walletBalance, onTopUp, onPlaced, onCancel, initialDesignId = null, initialBlankId = null, initialBlankColor = null, sample = false }) {
   const [designs, setDesigns] = useState([])
   const [blanks, setBlanks] = useState([])
   const [picking, setPicking] = useState(false)
@@ -140,7 +140,7 @@ function CreateOrder({ walletBalance, onTopUp, onPlaced, onCancel, initialDesign
     fetchDesignableProducts().then(list => {
       setBlanks(list)
       const start = initialBlankId && list.find(b => b.blank_id === initialBlankId)
-      if (start) addLine(start, 'blank')
+      if (start) addLine(start, 'blank', initialBlankColor)
     }).catch(() => setBlanks([]))
     // Load once; addLine only appends.
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -164,18 +164,19 @@ function CreateOrder({ walletBalance, onTopUp, onPlaced, onCancel, initialDesign
     return () => { stale = true; clearTimeout(t) }
   }, [payload, method, sample])
 
-  function addLine(item, kind) {
+  function addLine(item, kind, preferColor = null) {
     const { colors, sizes } = optionsFor(item, kind)
+    const pick = item.colors?.find(c => c.name === preferColor) || item.colors?.[0]
     const image = kind === 'design'
       ? Object.values(item.artwork || {})[0]?.preview_url
-      : item.colors[0]?.image_urls?.[item.views?.[0]?.id] || item.colors[0]?.image_url
+      : pick?.image_urls?.[item.views?.[0]?.id] || pick?.image_url
     setLines(ls => [...ls, {
       key: `${Date.now()}-${Math.random()}`,
       kind, ref: kind === 'design' ? item.product_id : item.blank_id,
       // Kept for the line's preview (designs are drawn on the product).
       design: kind === 'design' ? item : null,
       name: kind === 'design' ? item.title : item.name,
-      image, colors, sizes, color: colors[0], size: sizes[0], qty: 1,
+      image, colors, sizes, color: colors.includes(preferColor) ? preferColor : colors[0], size: sizes[0], qty: 1,
     }])
     setPicking(false)
   }
@@ -346,7 +347,7 @@ function CreateOrder({ walletBalance, onTopUp, onPlaced, onCancel, initialDesign
 
 // The Manual orders tab, or (startInCreate, from the sidebar's Create order)
 // straight into the create page, handing back to the parent when done.
-export default function ManualOrdersView({ walletBalance, onWalletChanged, onTopUp, startInCreate = false, onCancelCreate, onPlaced, initialNotice = '', initialDesignId = null, initialBlankId = null, sample = false }) {
+export default function ManualOrdersView({ walletBalance, onWalletChanged, onTopUp, startInCreate = false, onCancelCreate, onPlaced, initialNotice = '', initialDesignId = null, initialBlankId = null, initialBlankColor = null, sample = false }) {
   const [creating, setCreating] = useState(startInCreate)
   const [orders, setOrders] = useState([])
   const [loading, setLoading] = useState(true)
@@ -366,6 +367,7 @@ export default function ManualOrdersView({ walletBalance, onWalletChanged, onTop
       <CreateOrder
         initialDesignId={initialDesignId}
         initialBlankId={initialBlankId}
+        initialBlankColor={initialBlankColor}
         sample={sample}
         walletBalance={walletBalance}
         onTopUp={onTopUp}
