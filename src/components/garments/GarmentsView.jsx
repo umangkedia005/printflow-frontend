@@ -322,7 +322,7 @@ export default function GarmentsView({ onOrderPlain }) {
                 {g.status === 'approved' && (
                   <div style={{ fontSize: '12px', color: INK, marginTop: '4px', lineHeight: 1.5 }}>
                     {priceRange(g) ? <div><strong>{priceRange(g)}</strong> per piece</div> : <div style={{ color: '#C2410C' }}>Price coming soon: we'll email you when it's set</div>}
-                    <div>Prints on {(g.areas || []).map(a => `${a.label} (+₹${Number(a.print_cost)})`).join(', ')}</div>
+                    <div>Prints on {(g.areas || []).map(a => a.label).join(', ')} · printing priced by design size</div>
                   </div>
                 )}
                 {g.note && <div style={{ fontSize: '12px', color: g.status === 'rejected' ? '#C53030' : SAGE, marginTop: '6px' }}>Note: {g.note}</div>}

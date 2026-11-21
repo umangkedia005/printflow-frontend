@@ -1,3 +1,4 @@
+import { sidePrice, areaRates } from '../../utils/printPricing'
 import { useEffect, useRef, useState } from 'react'
 import GarmentMockup from './GarmentMockup'
 import { uploadArtworkFile, saveMerchantProduct } from '../../utils/api'
@@ -127,7 +128,10 @@ export default function DesignEditor({ blank, onClose, onSaved, initialArtwork =
   const photoFor = viewId => previewEntry?.image_urls?.[viewId] || (viewId === views[0].id ? previewEntry?.image_url : undefined)
 
   const placedAreas = areas.filter(a => artworks[a.id])
-  const printCost = placedAreas.reduce((sum, a) => sum + Number(a.print_cost || 0), 0)
+  // Each printed side: base + rate x the design's printed size (like the order).
+  const sideSize = a => (artworks[a.id] && placements[a.id] ? printedSize(placements[a.id], a, artworks[a.id].px_h / artworks[a.id].px_w) : null)
+  const sideCost = a => { const ps = sideSize(a); return ps ? sidePrice(a, ps.w, ps.h) : 0 }
+  const printCost = placedAreas.reduce((sum, a) => sum + sideCost(a), 0)
 
   // Cost per size: the dearest of the chosen colors plus every printed area,
   // so a price that clears it is profitable for every variant.
@@ -470,7 +474,7 @@ export default function DesignEditor({ blank, onClose, onSaved, initialArtwork =
                   return (
                     <div key={a.id} style={{ display: 'flex', justifyContent: 'space-between', gap: '8px', fontSize: '12px', padding: '6px 0', borderBottom: '1px solid rgba(23,43,21,0.08)' }}>
                       <span style={{ fontWeight: 600, color: art ? '#172B15' : '#A9B6AC' }}>{a.label}</span>
-                      <span style={{ color: '#889B8E' }}>{art && p ? (ps => `${ps.w.toFixed(1)}″ × ${ps.h.toFixed(1)}″${Number(a.print_cost) ? ` · +₹${a.print_cost}` : ''}`)(printedSize(p, a, art.px_h / art.px_w)) : 'Not printed'}</span>
+                      <span style={{ color: '#889B8E' }}>{art && p ? (ps => `${ps.w.toFixed(2)}″ × ${ps.h.toFixed(2)}″ · +₹${sidePrice(a, ps.w, ps.h)}`)(printedSize(p, a, art.px_h / art.px_w)) : 'Not printed'}</span>
                     </div>
                   )
                 })}
@@ -487,7 +491,7 @@ export default function DesignEditor({ blank, onClose, onSaved, initialArtwork =
                 {pickingFile && <FilePicker onPick={pickFile} onClose={() => setPickingFile(false)} />}
                 <p style={{ fontSize: '11px', color: '#889B8E', marginTop: '6px' }}>
                   {areas.length > 1 && !artwork ? 'Optional. Leave it empty to print nothing here. ' : ''}
-                  {Number(area.print_cost) ? `Printing here adds ₹${area.print_cost} to the cost.` : ''}
+                  {(r => `Printing here costs ₹${r.base} + ₹${r.rate} per square inch of your design${artwork ? ` (now ₹${sideCost(area)})` : ''}.`)(areaRates(area))}
                 </p>
                 {uploadError && <div style={{ fontSize: '12px', color: '#C53030', marginTop: '8px' }}>⚠ {uploadError}</div>}
                 {artwork && placement && (
@@ -570,15 +574,15 @@ export default function DesignEditor({ blank, onClose, onSaved, initialArtwork =
               </p>
             </Card>
 
-          <Card title="Print details">
+          <Card title="Print details · DTF">
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(140px, 1fr))', gap: '8px' }}>
               {areas.map(a => {
                 const art = artworks[a.id], p = placements[a.id]
                 return (
                   <div key={a.id} style={{ border: '1px solid rgba(23,43,21,0.08)', borderRadius: '10px', padding: '10px 12px', background: art ? '#FFFFFF' : '#FAFAF8' }}>
                     <div style={{ fontSize: '12px', fontWeight: 700, color: art ? '#172B15' : '#A9B6AC' }}>{a.label}</div>
-                    <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '11px', color: '#889B8E', marginTop: '6px' }}><span>Size</span><span>{art && p ? (ps => `${ps.w.toFixed(1)}″ × ${ps.h.toFixed(1)}″`)(printedSize(p, a, art.px_h / art.px_w)) : '—'}</span></div>
-                    <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '11px', color: '#889B8E', marginTop: '2px' }}><span>Cost</span><span>{art ? `+₹${Number(a.print_cost || 0)}` : '—'}</span></div>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '11px', color: '#889B8E', marginTop: '6px' }}><span>Size</span><span>{art && p ? (ps => `${ps.w.toFixed(2)}″ × ${ps.h.toFixed(2)}″`)(printedSize(p, a, art.px_h / art.px_w)) : '—'}</span></div>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '11px', color: '#889B8E', marginTop: '2px' }}><span>Cost</span><span>{art ? `+₹${sideCost(a)}` : '—'}</span></div>
                   </div>
                 )
               })}

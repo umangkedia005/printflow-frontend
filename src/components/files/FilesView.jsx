@@ -1,3 +1,4 @@
+import { sidePrice } from '../../utils/printPricing'
 import { useCallback, useEffect, useRef, useState } from 'react'
 import DesignEditor from '../catalogue/DesignEditor'
 import { Modal, Thumb } from './FilePicker'
@@ -67,7 +68,9 @@ function QuickOrder({ file, blanks, onClose, onReady }) {
   const toggleArea = id => setAreaIds(ids => (ids.includes(id) ? ids.filter(x => x !== id) : [...ids, id]))
   // In the catalogue's order, each with where the file lands on it.
   const placed = (blank?.print_areas || []).filter(a => areaIds.includes(a.id)).map(a => ({ area: a, place: autoPlacement(file, a) }))
-  const printCost = placed.reduce((sum, p) => sum + Number(p.area.print_cost || 0), 0)
+  // Each side: base + rate x the file's printed size there (same as the order).
+  const placedCost = p => sidePrice(p.area, p.place.w, Math.min(p.place.w * file.px_h / file.px_w, p.area.height_in))
+  const printCost = placed.reduce((sum, p) => sum + placedCost(p), 0)
   const sizes = blank ? (blank.sizes?.length ? blank.sizes : [...new Set(blank.variants.map(v => v.size))])
     .filter(s => blank.variants.some(v => v.size === s && v.color === color && v.in_stock)) : []
 
@@ -114,7 +117,7 @@ function QuickOrder({ file, blanks, onClose, onReady }) {
                 const on = areaIds.includes(a.id)
                 return (
                   <button key={a.id} onClick={() => toggleArea(a.id)} aria-pressed={on} style={{ padding: '8px 14px', borderRadius: '10px', border: on ? `1px solid ${INK}` : `1px solid ${LINE}`, background: on ? INK : '#FFFFFF', color: on ? '#FFFFFF' : INK, fontSize: '12px', fontWeight: 700, cursor: 'pointer', fontFamily: 'Inter, sans-serif' }}>
-                    {on ? '✓ ' : ''}{a.label}{Number(a.print_cost) ? ` · +₹${a.print_cost}` : ''}
+                    {on ? '✓ ' : ''}{a.label} · +₹{sidePrice(a, autoPlacement(file, a).w, Math.min(autoPlacement(file, a).w * file.px_h / file.px_w, a.height_in))}
                   </button>
                 )
               })}
