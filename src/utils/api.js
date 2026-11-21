@@ -489,6 +489,15 @@ export async function placeManualOrder(order) {
   return data
 }
 
+// Order Management: every order of the account (manual, sample, Shopify)
+// with what each cost from the wallet (`paid`; null = not sent to print).
+export async function fetchOrderManagement() {
+  const res = await fetch(`${BASE_URL}/order-management`, { headers: await shopAuthHeaders() })
+  const data = await res.json()
+  if (!res.ok) throw new Error(data.error || 'Could not load your orders')
+  return data
+}
+
 export async function fetchManualOrders() {
   const res = await fetch(`${BASE_URL}/manual-orders`, { headers: await shopAuthHeaders() })
   const data = await res.json()

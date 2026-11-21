@@ -2,6 +2,7 @@ import React, { useState, useEffect, useCallback, useRef } from 'react'
 import { useNavigate, useSearchParams } from 'react-router-dom'
 import { useAuth } from '../contexts/AuthContext'
 import { openWalletTopup } from '../utils/razorpay'
+import OrderManagement from '../components/orders/OrderManagement'
 import StockLevel from '../components/stock/StockLevel'
 import AccountSettings from '../components/settings/AccountSettings'
 import { SUPPORT_EMAIL, SUPPORT_PHONES, fetchOrders, fetchSubscription, fetchMyStores, linkStore, updateSubscription, fetchPlans, fetchWallet, fulfillOrder, fetchProductMappings, updateProductMapping, createShopifySubscription, fetchCatalogue } from '../utils/api'
@@ -89,6 +90,7 @@ const IconGarments = () => <svg width="15" height="15" viewBox="0 0 16 16" fill=
 const IconCreateOrder = () => <svg width="15" height="15" viewBox="0 0 16 16" fill="none"><path d="M1.5 2h2l1.6 7.5h7.4L14 4.5H4.4" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/><circle cx="6" cy="13" r="1.2" fill="currentColor"/><circle cx="11.5" cy="13" r="1.2" fill="currentColor"/></svg>
 const IconSample   = () => <svg width="15" height="15" viewBox="0 0 16 16" fill="none"><circle cx="7" cy="7" r="4.75" stroke="currentColor" strokeWidth="1.5"/><path d="M10.5 10.5 14 14" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/></svg>
 const IconStock    = () => <svg width="15" height="15" viewBox="0 0 16 16" fill="none"><path d="M3 14V9M6.5 14V5M10 14V7.5M13.5 14V3" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round"/></svg>
+const IconManage   = () => <svg width="15" height="15" viewBox="0 0 16 16" fill="none"><rect x="2" y="2" width="12" height="12" rx="2" stroke="currentColor" strokeWidth="1.5"/><path d="M5 10.5V8M8 10.5V5.5M11 10.5V7" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/></svg>
 const IconProducts = () => <svg width="15" height="15" viewBox="0 0 16 16" fill="none"><path d="M8 1.5L14 4.5V11.5L8 14.5L2 11.5V4.5L8 1.5Z" stroke="currentColor" strokeWidth="1.5" strokeLinejoin="round"/><path d="M8 1.5V14.5M2 4.5L8 7.5L14 4.5" stroke="currentColor" strokeWidth="1.5"/></svg>
 const IconSettings = () => <svg width="15" height="15" viewBox="0 0 16 16" fill="none"><circle cx="8" cy="8" r="2.5" stroke="currentColor" strokeWidth="1.5"/><path d="M8 1.5V3M8 13v1.5M1.5 8H3M13 8h1.5M3.4 3.4l1.06 1.06M11.54 11.54l1.06 1.06M3.4 12.6l1.06-1.06M11.54 4.46l1.06-1.06" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/></svg>
 const IconBilling  = () => <svg width="15" height="15" viewBox="0 0 16 16" fill="none"><rect x="1" y="3.5" width="14" height="9" rx="1.5" stroke="currentColor" strokeWidth="1.5"/><path d="M1 6.5h14" stroke="currentColor" strokeWidth="1.5"/><path d="M4 10h2" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/></svg>
@@ -285,6 +287,7 @@ const NAV_ITEMS = [
   { id: 'files',         label: 'My files',      Icon: IconFiles },
   { id: 'garments',      label: 'My garments',   Icon: IconGarments },
   { id: 'orders',        label: 'Orders',        Icon: IconOrders },
+  { id: 'order-management', label: 'Order Management', Icon: IconManage },
   { id: 'create-order',  label: 'Create order',  Icon: IconCreateOrder },
   { id: 'sample',        label: 'Book a Sample', Icon: IconSample },
   { id: 'stock',         label: 'Stock Level',   Icon: IconStock },
@@ -1689,7 +1692,7 @@ export default function DashboardPage() {
 
           {/* Section 2: Store Hub */}
           <div style={{ fontSize: '10.5px', fontWeight: 800, letterSpacing: '0.08em', textTransform: 'uppercase', color: '#7A7A70', padding: '20px 18px 8px', marginBottom: '4px' }}>Store Hub</div>
-          {NAV_ITEMS.slice(3, 11).map(({ id, label, Icon }) => {
+          {NAV_ITEMS.slice(3, 12).map(({ id, label, Icon }) => {
             if ((id === 'catalogue' || id === 'files' || id === 'garments') && !catalogueOn) return null
             const active = activeNav === id
             return (
@@ -1704,7 +1707,7 @@ export default function DashboardPage() {
 
           {/* Section 3: Settings & Support */}
           <div style={{ fontSize: '10.5px', fontWeight: 800, letterSpacing: '0.08em', textTransform: 'uppercase', color: '#7A7A70', padding: '20px 18px 8px', marginBottom: '4px' }}>Settings & Support</div>
-          {NAV_ITEMS.slice(11).map(({ id, label, Icon }) => {
+          {NAV_ITEMS.slice(12).map(({ id, label, Icon }) => {
             const active = activeNav === id
             return (
               <button key={id} onClick={() => setActiveNav(id)} style={{ display: 'flex', alignItems: 'center', gap: '12px', width: '100%', padding: '12px 18px', border: 'none', background: active ? '#FFFFFF' : 'transparent', color: '#172B15', fontSize: '14.5px', fontWeight: active ? 800 : 600, cursor: 'pointer', textAlign: 'left', marginBottom: '6px', fontFamily: 'Inter, sans-serif', transition: 'all 0.2s', justifyContent: 'space-between', borderRadius: '12px', boxShadow: active ? '0 4px 12px rgba(23,43,21,0.04)' : 'none' }}
@@ -1890,6 +1893,7 @@ export default function DashboardPage() {
               />
             </div>
           )}
+          {activeNav === 'order-management' && <div style={{ position: 'relative', zIndex: 1 }}><OrderManagement onOpenOrders={() => { setOrdersTab('shopify'); setActiveNav('orders') }} /></div>}
           {activeNav === 'stock' && <div style={{ position: 'relative', zIndex: 1 }}><StockLevel /></div>}
           {activeNav === 'garments' && catalogueOn && <div style={{ position: 'relative', zIndex: 1 }}><GarmentsView onOrderPlain={id => { setOrderDesignId(null); setOrderBlankId(id); setActiveNav('create-order') }} /></div>}
           {activeNav === 'files' && catalogueOn && <div style={{ position: 'relative', zIndex: 1 }}><FilesView onOrder={id => { setOrderBlankId(null); setOrderDesignId(id); setActiveNav('create-order') }} /></div>}
