@@ -221,80 +221,47 @@ export default function AuthPage() {
         </div>
       </div>
 
-      {/* ── Right: Visual panel (Deep Forest Gradient + Lime Glowing elements) ── */}
-      <div style={{
-        flex: 1,
-        background: 'linear-gradient(135deg, #172B15 0%, #0C180E 100%)',
-        position: 'relative', overflow: 'hidden',
-        display: 'flex', alignItems: 'center', justifyContent: 'center',
-      }} className="auth-visual-panel">
+      {/* ── Right: a real product photo, a short message and true points. ── */}
+      <div className="auth-visual-panel" style={{ flex: 1, position: 'relative', overflow: 'hidden', background: '#172B15', minHeight: '100vh' }}>
+        <img src="/images/auth_flatlay.webp" alt="" style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: 'cover', objectPosition: 'center top' }} />
+        {/* Darkens the bottom so the text reads on any photo. */}
+        <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(180deg, rgba(12,24,14,0) 45%, rgba(12,24,14,0.45) 65%, rgba(12,24,14,0.85) 100%)' }} />
 
-        {/* Ambient Lime Background glows */}
-        <div style={{ position: 'absolute', top: '10%', right: '10%', width: '360px', height: '360px', background: 'radial-gradient(circle, rgba(185,249,93,0.08) 0%, transparent 70%)', pointerEvents: 'none' }} />
-        <div style={{ position: 'absolute', bottom: '15%', left: '5%', width: '280px', height: '280px', background: 'radial-gradient(circle, rgba(57,181,74,0.08) 0%, transparent 70%)', pointerEvents: 'none' }} />
-
-        {/* T-shirt mockup SVG */}
-        <div style={{ position: 'relative', zIndex: 2, textAlign: 'center', padding: '40px' }}>
-          <svg width="280" height="280" viewBox="0 0 280 280" fill="none" xmlns="http://www.w3.org/2000/svg" style={{ marginBottom: '40px', filter: 'drop-shadow(0 20px 60px rgba(185,249,93,0.15))' }}>
-            {/* T-shirt shape */}
-            <path d="M85 40 L40 80 L70 95 L65 220 L215 220 L210 95 L240 80 L195 40 Q175 55 140 55 Q105 55 85 40Z"
-              fill="#111A13" stroke="rgba(185,249,93,0.15)" strokeWidth="1.5"/>
-            {/* Collar */}
-            <path d="M85 40 Q105 70 140 70 Q175 70 195 40" fill="none" stroke="rgba(185,249,93,0.2)" strokeWidth="1.5"/>
-            {/* Design on shirt */}
-            <rect x="108" y="110" width="64" height="64" rx="8" fill="rgba(185,249,93,0.06)" stroke="rgba(185,249,93,0.25)" strokeWidth="1"/>
-            <text x="140" y="138" textAnchor="middle" fill="rgba(185,249,93,0.9)" fontSize="11" fontFamily="system-ui" fontWeight="600">YOUR</text>
-            <text x="140" y="153" textAnchor="middle" fill="rgba(185,249,93,0.9)" fontSize="11" fontFamily="system-ui" fontWeight="600">DESIGN</text>
-            <text x="140" y="168" textAnchor="middle" fill="rgba(185,249,93,0.9)" fontSize="11" fontFamily="system-ui" fontWeight="600">HERE</text>
-          </svg>
-
-          <h2 style={{
-            fontFamily: "'Fraunces', sans-serif",
-            fontSize: '28px', fontWeight: 800,
-            color: 'white', letterSpacing: '-0.5px',
-            marginBottom: '12px', lineHeight: 1.2,
-          }}>
-            Your brand.<br/>
-            <span style={{ color: '#B9F95D' }}>Printed & shipped.</span>
-          </h2>
-          <p style={{ fontSize: '14px', color: '#A1A8A3', lineHeight: 1.6, maxWidth: '280px', margin: '0 auto 32px' }}>
-            Connect your Shopify store and let No Limit Studio handle manufacturing, printing, and delivery.
-          </p>
-
-          {/* Stats row */}
-          <div style={{ display: 'flex', gap: '32px', justifyContent: 'center' }}>
-            {[['10K+', 'Stores'], ['2M+', 'Orders'], ['24h', 'Fulfillment']].map(([val, label]) => (
-              <div key={label} style={{ textAlign: 'center' }}>
-                <div style={{ fontFamily: "'Fraunces', sans-serif", fontSize: '20px', fontWeight: 800, color: '#B9F95D', marginBottom: '2px' }}>{val}</div>
-                <div style={{ fontSize: '11px', color: '#A1A8A3', fontWeight: 550 }}>{label}</div>
-              </div>
-            ))}
+        {/* How an order looks in the dashboard (illustration). */}
+        <div style={{ position: 'absolute', top: '7%', right: '7%', width: '250px', background: 'rgba(255,255,255,0.96)', borderRadius: '16px', padding: '14px 16px', boxShadow: '0 18px 40px rgba(0,0,0,0.25)' }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+            <span style={{ fontSize: '11px', fontWeight: 700, color: '#889B8E', letterSpacing: '0.04em' }}>NEW ORDER</span>
+            <span style={{ fontSize: '10.5px', fontWeight: 700, color: '#2B5BA8', background: '#EAF0FA', padding: '2px 8px', borderRadius: '100px' }}>Printing</span>
+          </div>
+          <div style={{ fontSize: '14px', fontWeight: 800, color: '#172B15', marginTop: '6px' }}>Oversized hoodie × 2</div>
+          <div style={{ height: '6px', background: '#EEF0EA', borderRadius: '100px', marginTop: '10px', overflow: 'hidden' }}>
+            <div style={{ width: '62%', height: '100%', background: '#B9F95D', borderRadius: '100px' }} />
+          </div>
+          <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '10.5px', color: '#889B8E', marginTop: '6px', fontWeight: 600 }}>
+            <span>Queued</span><span style={{ color: '#172B15' }}>Printing</span><span>Shipped</span>
+          </div>
+        </div>
+        <div style={{ position: 'absolute', top: '50%', right: '7%', display: 'flex', alignItems: 'center', gap: '10px', background: 'rgba(255,255,255,0.96)', borderRadius: '14px', padding: '10px 14px', boxShadow: '0 14px 32px rgba(0,0,0,0.22)' }}>
+          <span style={{ width: '30px', height: '30px', borderRadius: '9px', background: '#B9F95D', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '15px' }}>🚚</span>
+          <div>
+            <div style={{ fontSize: '12.5px', fontWeight: 800, color: '#172B15' }}>Shipped · tracking emailed</div>
+            <div style={{ fontSize: '11px', color: '#889B8E' }}>Under your brand name</div>
           </div>
         </div>
 
-        {/* Floating badges */}
-        <div style={{ 
-          position: 'absolute', top: '18%', left: '8%', 
-          background: 'rgba(17,26,19,0.7)', 
-          border: '1.5px solid rgba(185,249,93,0.15)', 
-          borderRadius: '12px', padding: '10px 16px', 
-          backdropFilter: 'blur(12px)',
-          boxShadow: '0 8px 32px rgba(9,26,14,0.3)'
-        }}>
-          <div style={{ fontSize: '11px', color: '#889B8E', marginBottom: '2px', fontWeight: 600 }}>New order</div>
-          <div style={{ fontSize: '13px', fontWeight: 700, color: '#FFFFFF' }}>Classic Hoodie × 2</div>
-        </div>
-        <div style={{ 
-          position: 'absolute', bottom: '22%', right: '6%', 
-          background: 'rgba(57,181,74,0.1)', 
-          border: '1px solid rgba(57,181,74,0.3)', 
-          borderRadius: '12px', padding: '10px 16px', 
-          backdropFilter: 'blur(12px)',
-          boxShadow: '0 8px 32px rgba(9,26,14,0.2)'
-        }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-            <div style={{ width: '7px', height: '7px', borderRadius: '50%', background: '#B9F95D', boxShadow: '0 0 8px #B9F95D' }} />
-            <div style={{ fontSize: '12px', fontWeight: 700, color: '#B9F95D' }}>Shipped · On the way</div>
+        <div style={{ position: 'absolute', left: '8%', right: '8%', bottom: '8%', color: '#FFFFFF' }}>
+          <h2 style={{ fontFamily: "'Fraunces', sans-serif", fontSize: '38px', fontWeight: 800, letterSpacing: '-0.6px', lineHeight: 1.1, margin: 0 }}>
+            Your brand.<br /><span style={{ color: '#B9F95D' }}>Printed & shipped.</span>
+          </h2>
+          <p style={{ fontSize: '15px', color: 'rgba(255,255,255,0.82)', lineHeight: 1.6, margin: '12px 0 20px', maxWidth: '440px' }}>
+            Design your products and sell anywhere. We print, pack and ship every order for you.
+          </p>
+          <div style={{ display: 'flex', flexWrap: 'wrap', gap: '10px' }}>
+            {['No minimum order', 'Dispatched in ~48 hours', 'Shipping across India'].map(t => (
+              <span key={t} style={{ display: 'inline-flex', alignItems: 'center', gap: '7px', background: 'rgba(255,255,255,0.12)', border: '1px solid rgba(255,255,255,0.22)', borderRadius: '100px', padding: '7px 13px', fontSize: '13px', fontWeight: 600, backdropFilter: 'blur(6px)', WebkitBackdropFilter: 'blur(6px)' }}>
+                <span style={{ color: '#B9F95D', fontWeight: 900 }}>✓</span>{t}
+              </span>
+            ))}
           </div>
         </div>
       </div>
