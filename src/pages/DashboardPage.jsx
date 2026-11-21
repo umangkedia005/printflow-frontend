@@ -5,6 +5,7 @@ import { openWalletTopup } from '../utils/razorpay'
 import OrderManagement from '../components/orders/OrderManagement'
 import BrandingView from '../components/branding/BrandingView'
 import StockLevel from '../components/stock/StockLevel'
+import EnquiryView from '../components/enquiry/EnquiryView'
 import AccountSettings from '../components/settings/AccountSettings'
 import { SUPPORT_EMAIL, SUPPORT_PHONES, openInvoice, fetchOrders, fetchSubscription, fetchMyStores, linkStore, updateSubscription, fetchPlans, fetchWallet, fulfillOrder, fetchProductMappings, updateProductMapping, createShopifySubscription, fetchCatalogue } from '../utils/api'
 import { SHOPIFY_INSTALL_URL } from '../utils/shopify'
@@ -92,6 +93,7 @@ const IconCreateOrder = () => <svg width="15" height="15" viewBox="0 0 16 16" fi
 const IconSample   = () => <svg width="15" height="15" viewBox="0 0 16 16" fill="none"><circle cx="7" cy="7" r="4.75" stroke="currentColor" strokeWidth="1.5"/><path d="M10.5 10.5 14 14" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/></svg>
 const IconStock    = () => <svg width="15" height="15" viewBox="0 0 16 16" fill="none"><path d="M3 14V9M6.5 14V5M10 14V7.5M13.5 14V3" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round"/></svg>
 const IconManage   = () => <svg width="15" height="15" viewBox="0 0 16 16" fill="none"><rect x="2" y="2" width="12" height="12" rx="2" stroke="currentColor" strokeWidth="1.5"/><path d="M5 10.5V8M8 10.5V5.5M11 10.5V7" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/></svg>
+const IconBulk = () => <svg width="15" height="15" viewBox="0 0 16 16" fill="none"><path d="M2 5.5 8 2.5l6 3-6 3zM2 5.5v5l6 3 6-3v-5M8 8.5v5" stroke="currentColor" strokeWidth="1.5" strokeLinejoin="round"/></svg>
 const IconBranding = () => <svg width="15" height="15" viewBox="0 0 16 16" fill="none"><path d="M8.5 1.75h5.75V7.5L7.5 14.25 1.75 8.5z" stroke="currentColor" strokeWidth="1.5" strokeLinejoin="round"/><circle cx="11" cy="5" r="1.1" fill="currentColor"/></svg>
 const IconTag      = () => <svg width="14" height="14" viewBox="0 0 16 16" fill="none"><rect x="4" y="3.5" width="8" height="11" rx="1.5" stroke="currentColor" strokeWidth="1.5"/><circle cx="8" cy="6.5" r="1" fill="currentColor"/><path d="M8 3.5V1.5" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/></svg>
 const IconBag      = () => <svg width="14" height="14" viewBox="0 0 16 16" fill="none"><path d="M2.5 5h11l-1 9.25h-9z" stroke="currentColor" strokeWidth="1.5" strokeLinejoin="round"/><path d="M5.5 5V4a2.5 2.5 0 015 0v1" stroke="currentColor" strokeWidth="1.5"/></svg>
@@ -297,6 +299,7 @@ const NAV_ITEMS = [
   { id: 'create-order',  label: 'Create order',  Icon: IconCreateOrder },
   { id: 'sample',        label: 'Book a Sample', Icon: IconSample },
   { id: 'stock',         label: 'Stock Level',   Icon: IconStock },
+  { id: 'enquiry',       label: 'Bulk & Custom', Icon: IconBulk },
   { id: 'products',      label: 'Products',      Icon: IconProducts },
   { id: 'billing',       label: 'Billing',       Icon: IconBilling },
   { id: 'wallet',        label: 'Wallet',        Icon: IconWallet },
@@ -305,7 +308,7 @@ const NAV_ITEMS = [
 ]
 
 // Sidebar order, like Unitee's. Trends stays out until it has real data.
-const MENU_ORDER = ['dashboard', 'catalogue', 'files', 'garments', 'products', 'sample', 'branding', 'create-order', 'orders',
+const MENU_ORDER = ['dashboard', 'catalogue', 'files', 'garments', 'products', 'sample', 'branding', 'enquiry', 'create-order', 'orders',
   'stock', 'order-management', 'wallet', 'billing', 'notifications', 'settings', 'help']
 
 // ── Upgrade Modal ─────────────────────────────────────────────────────────────
@@ -1914,6 +1917,7 @@ export default function DashboardPage() {
             </div>
           )}
           {activeNav === 'stock' && <div style={{ position: 'relative', zIndex: 1 }}><StockLevel /></div>}
+          {activeNav === 'enquiry' && <div style={{ position: 'relative', zIndex: 1 }}><EnquiryView accountEmail={currentUser?.email} /></div>}
           {activeNav === 'garments' && catalogueOn && <div style={{ position: 'relative', zIndex: 1 }}><GarmentsView onOrderPlain={id => { setOrderDesignId(null); setOrderBlankId(id); setActiveNav('create-order') }} /></div>}
           {activeNav === 'files' && catalogueOn && <div style={{ position: 'relative', zIndex: 1 }}><FilesView onOrder={id => { setOrderBlankId(null); setOrderDesignId(id); setActiveNav('create-order') }} /></div>}
           {activeNav === 'catalogue' && catalogueOn && <div style={{ position: 'relative', zIndex: 1 }}><CatalogueView onOrderPlain={(id, color) => { setOrderDesignId(null); setOrderBlankId(id); setOrderBlankColor(color || null); setActiveNav('create-order') }} onOrderDesign={id => { setOrderBlankId(null); setOrderDesignId(id); setActiveNav('create-order') }} /></div>}

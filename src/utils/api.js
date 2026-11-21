@@ -538,3 +538,15 @@ export async function fetchManualOrders() {
   if (!res.ok) throw new Error(data.error || 'Failed to load your orders')
   return Array.isArray(data) ? data : []
 }
+
+// Bulk & Custom: the enquiry form, emailed to the team.
+export async function sendEnquiry(form) {
+  const res = await fetch(`${BASE_URL}/enquiries`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...(await shopAuthHeaders()) },
+    body: JSON.stringify(form),
+  })
+  const data = await res.json().catch(() => ({}))
+  if (!res.ok) throw new Error(data.error || 'Could not send your enquiry')
+  return data
+}
