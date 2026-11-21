@@ -216,7 +216,9 @@ export default function OrderManagement({ onOpenOrders }) {
                         <td style={{ padding: '12px 14px' }}>
                           {r.invoiceable
                             ? <button onClick={() => invoice(r.order_id)} title={r.invoice_number || 'Tax invoice'} style={{ background: 'none', border: `1px solid ${LINE}`, borderRadius: '8px', padding: '5px 10px', fontSize: '12px', fontWeight: 700, color: INK, cursor: 'pointer', fontFamily: 'Inter, sans-serif', whiteSpace: 'nowrap' }}>⬇ Download</button>
-                            : <span style={{ fontSize: '11px', color: SAGE }}>After printing</span>}
+                            : r.paid == null
+                              ? <span title="The invoice is made when the order is paid from your wallet (when you send it to print)." style={{ fontSize: '11px', color: SAGE }}>After payment</span>
+                              : <span title="Paid before invoices started, so there's no invoice for this order." style={{ fontSize: '11px', color: SAGE }}>Not available</span>}
                         </td>
                       </tr>
                     )
