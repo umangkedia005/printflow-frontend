@@ -43,10 +43,26 @@ function BlankCard({ blank, onDesign, onSizeChart, onOrderPlain }) {
   // (an own garment we haven't priced yet).
   const orderable = blank.variants.filter(v => v.in_stock !== false && Number(v.base_cost) > 0).map(v => Number(v.base_cost))
   const fromCost = orderable.length ? Math.min(...orderable) : null
+  // With several colours the photo cycles through them; hovering pauses it,
+  // and clicking a colour dot shows that colour.
+  const colors = blank.colors
+  const [shown, setShown] = useState(0)
+  const [paused, setPaused] = useState(false)
+  useEffect(() => {
+    if (colors.length < 2 || paused) return
+    const t = setInterval(() => setShown(i => (i + 1) % colors.length), 2500)
+    return () => clearInterval(t)
+  }, [colors.length, paused])
+  const photoOf = c => c.image_urls?.[blank.views?.[0]?.id] || c.image_url
   return (
-    <div style={{ background: '#FFFFFF', border: '1px solid rgba(23,43,21,0.06)', borderRadius: '20px', boxShadow: '0 8px 30px rgba(23,43,21,0.015)', padding: '14px', display: 'flex', flexDirection: 'column' }}>
+    <div onMouseEnter={() => setPaused(true)} onMouseLeave={() => setPaused(false)} style={{ background: '#FFFFFF', border: '1px solid rgba(23,43,21,0.06)', borderRadius: '20px', boxShadow: '0 8px 30px rgba(23,43,21,0.015)', padding: '14px', display: 'flex', flexDirection: 'column' }}>
       <div style={{ position: 'relative' }}>
-        <GarmentMockup type={blank.mockup} color={blank.colors[0].hex} photoUrl={blank.colors[0].image_urls?.[blank.views?.[0]?.id] || blank.colors[0].image_url} />
+        {/* Every colour is stacked (so the photos are loaded) and the shown one fades in. */}
+        {colors.map((c, i) => (
+          <div key={c.name} aria-hidden={i !== shown} style={{ position: i === 0 ? 'relative' : 'absolute', inset: 0, opacity: i === shown ? 1 : 0, transition: 'opacity 0.6s ease' }}>
+            <GarmentMockup type={blank.mockup} color={c.hex} photoUrl={photoOf(c)} />
+          </div>
+        ))}
         {blank.size_chart && (
           <button onClick={onSizeChart} style={{ position: 'absolute', top: '10px', right: '10px', background: '#FFFFFF', border: '1px solid rgba(23,43,21,0.08)', borderRadius: '8px', padding: '5px 10px', fontSize: '11px', fontWeight: 600, color: '#172B15', cursor: 'pointer', fontFamily: 'Inter, sans-serif' }}>Size chart</button>
         )}
@@ -55,7 +71,11 @@ function BlankCard({ blank, onDesign, onSizeChart, onOrderPlain }) {
         <div style={{ fontFamily: "'Fraunces', sans-serif", fontSize: '17px', fontWeight: 800, color: '#172B15', letterSpacing: '-0.2px' }}>{blank.name}</div>
         <div style={{ fontSize: '12px', color: '#889B8E', marginTop: '4px' }}>{blank.own ? `Your garment · ${blank.category} | ${sizes[0]}–${sizes[sizes.length - 1]}` : `${blank.gsm} GSM | ${sizes[0]}–${sizes[sizes.length - 1]} | ${blank.fabric}`}</div>
         <div style={{ display: 'flex', gap: '5px', marginTop: '10px' }}>
-          {blank.colors.map(c => <span key={c.name} title={c.name} style={{ width: '14px', height: '14px', borderRadius: '50%', background: c.hex, border: '1px solid #D8D8D4' }} />)}
+          {colors.map((c, i) => (
+            <button key={c.name} type="button" title={c.name} aria-label={`Show ${c.name}`} onClick={() => { setShown(i); setPaused(true) }}
+              style={{ width: '16px', height: '16px', padding: 0, borderRadius: '50%', background: c.hex, border: '1px solid #D8D8D4', cursor: 'pointer', boxShadow: i === shown && colors.length > 1 ? '0 0 0 2px #FFFFFF, 0 0 0 3.5px #172B15' : 'none', transition: 'box-shadow 0.2s' }} />
+          ))}
+          {colors.length > 1 && <span style={{ fontSize: '11px', color: '#889B8E', marginLeft: '4px', alignSelf: 'center' }}>{colors[shown]?.name}</span>}
         </div>
         <div style={{ fontSize: '12px', color: '#172B15', marginTop: '10px', marginBottom: '14px' }}>{fromCost == null ? 'Price coming soon: we\'ll email you when it\'s set' : <>{blank.own ? 'Your garment · from' : 'Base cost from'} <strong style={{ color: '#172B15' }}>₹{fromCost}</strong> + tax</>}</div>
         <button className="pf-btn" onClick={onDesign} style={{ marginTop: 'auto', width: '100%', padding: '12px', fontSize: '13px', fontWeight: 800, background: '#172B15', color: '#FFFFFF', borderRadius: '12px' }}>Design now</button>
