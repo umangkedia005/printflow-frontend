@@ -462,11 +462,11 @@ function formatDate(iso) {
 
 // Orders a merchant places themselves, priced and paid from the wallet on
 // the server; the browser only sends what was picked.
-export async function quoteManualOrder(lines, shippingMethod) {
+export async function quoteManualOrder(lines, shippingMethod, sample = false) {
   const res = await fetch(`${BASE_URL}/manual-orders/quote`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json', ...(await shopAuthHeaders()) },
-    body: JSON.stringify({ lines, shipping_method: shippingMethod }),
+    body: JSON.stringify({ lines, shipping_method: shippingMethod, ...(sample ? { sample: true } : {}) }),
   })
   const data = await res.json()
   if (!res.ok) throw new Error(data.error || 'Could not price this order')

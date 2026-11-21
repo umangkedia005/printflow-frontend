@@ -105,16 +105,25 @@ function ProductPicker({ designs, blanks, onPick, onClose }) {
 
 // initialDesignId: a design to start the order with (from My files → Order);
 // initialBlankId: a catalogue product to start with, plain (Catalogue → Order plain).
-function CreateOrder({ walletBalance, onTopUp, onPlaced, onCancel, initialDesignId = null, initialBlankId = null }) {
+function CreateOrder({ walletBalance, onTopUp, onPlaced, onCancel, initialDesignId = null, initialBlankId = null, sample = false }) {
   const [designs, setDesigns] = useState([])
   const [blanks, setBlanks] = useState([])
   const [picking, setPicking] = useState(false)
   const [lines, setLines] = useState([])
   const [method, setMethod] = useState('surface')
+  const [prefilled, setPrefilled] = useState(false)
   // Start from the shipping method chosen in Settings → Shipping Preferences.
   useEffect(() => {
-    fetchAccountSettings().then(st => { if (st?.shipping?.default_method) setMethod(st.shipping.default_method) }).catch(() => {})
-  }, [])
+    fetchAccountSettings().then(st => {
+      if (st?.shipping?.default_method) setMethod(st.shipping.default_method)
+      // Samples go to the merchant: start from Settings → Billing Details.
+      const b = st?.billing
+      if (sample && b?.address1) {
+        setAddress(a => ({ ...a, name: b.business_name || '', email: b.email || '', phone: b.phone || '', address1: b.address1 || '', address2: b.address2 || '', city: b.city || '', state: b.state || '', pincode: b.pincode || '' }))
+        setPrefilled(true)
+      }
+    }).catch(() => {})
+  }, [sample])
   const [quote, setQuote] = useState(null)
   const [quoteError, setQuoteError] = useState('')
   const [address, setAddress] = useState({ reference: '', name: '', email: '', phone: '', address1: '', address2: '', city: '', state: '', pincode: '' })
@@ -148,12 +157,12 @@ function CreateOrder({ walletBalance, onTopUp, onPlaced, onCancel, initialDesign
     if (!payload.length || payload.some(l => !(l.qty >= 1))) return
     let stale = false
     const t = setTimeout(() => {
-      quoteManualOrder(payload, method)
+      quoteManualOrder(payload, method, sample)
         .then(res => { if (!stale) { setQuote(res); setQuoteError('') } })
         .catch(err => { if (!stale) { setQuote(null); setQuoteError(err.message) } })
     }, 300)
     return () => { stale = true; clearTimeout(t) }
-  }, [payload, method])
+  }, [payload, method, sample])
 
   function addLine(item, kind) {
     const { colors, sizes } = optionsFor(item, kind)
@@ -192,7 +201,7 @@ function CreateOrder({ walletBalance, onTopUp, onPlaced, onCancel, initialDesign
     setError('')
     try {
       const { reference, ...addr } = address
-      const res = await placeManualOrder({ lines: payload, shipping_method: method, address: addr, reference })
+      const res = await placeManualOrder({ lines: payload, shipping_method: method, address: addr, reference, ...(sample ? { sample: true } : {}) })
       onPlaced(res)
     } catch (err) {
       setError(err.message)
@@ -206,8 +215,10 @@ function CreateOrder({ walletBalance, onTopUp, onPlaced, onCancel, initialDesign
   return (
     <div>
       <button onClick={onCancel} style={{ background: 'none', border: 'none', padding: 0, color: SAGE, fontSize: '13px', fontWeight: 600, cursor: 'pointer', fontFamily: 'Inter, sans-serif', marginBottom: '8px' }}>← Back to orders</button>
-      <h1 style={{ fontFamily: SERIF, fontSize: '28px', fontWeight: 800, color: INK, letterSpacing: '-0.5px' }}>Create new order</h1>
-      <p style={{ fontSize: '13px', color: SAGE, fontWeight: 500, margin: '4px 0 22px' }}>Order your own designs or blank products. It's paid from your wallet and printed like any other order.</p>
+      <h1 style={{ fontFamily: SERIF, fontSize: '28px', fontWeight: 800, color: INK, letterSpacing: '-0.5px' }}>{sample ? 'Book a Sample' : 'Create new order'}</h1>
+      <p style={{ fontSize: '13px', color: SAGE, fontWeight: 500, margin: '4px 0 22px' }}>{sample
+        ? 'Order a sample of your designs or blanks to check the quality before you sell. Samples are discounted, paid from your wallet, and checked by our team before they ship.'
+        : "Order your own designs or blank products. It's paid from your wallet and printed like any other order."}</p>
 
       <div className="pf-design-grid">
         <div style={{ display: 'flex', flexDirection: 'column', gap: '16px', minWidth: 0 }}>
@@ -257,6 +268,11 @@ function CreateOrder({ walletBalance, onTopUp, onPlaced, onCancel, initialDesign
           </Card>
 
           <Card title="Shipping details">
+            {sample && (
+              <div style={{ fontSize: '12px', color: SAGE, marginBottom: '12px' }}>
+                {prefilled ? 'Filled in from Settings → Billing Details. Change it if the sample should go somewhere else.' : 'Tip: add your address under Settings → Billing Details and it will be filled in here next time.'}
+              </div>
+            )}
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: '14px' }}>
               <Field label="Reference ID" optional><input style={INPUT} value={address.reference} onChange={e => setA('reference', e.target.value)} placeholder="Your own order number" /></Field>
               <Field label="Full name"><input style={INPUT} value={address.name} onChange={e => setA('name', e.target.value)} placeholder="Riya Kapoor" autoComplete="name" /></Field>
@@ -280,11 +296,12 @@ function CreateOrder({ walletBalance, onTopUp, onPlaced, onCancel, initialDesign
           <Card title="Order summary">
             {[
               ['Subtotal', quote?.quote.subtotal],
+              ...(quote?.quote.sample ? [[`Sample discount (${quote.quote.sample_discount_pct}%)`, -Number(quote.quote.sample_discount)]] : []),
               ['Shipping', quote?.quote.shipping],
               [`Product tax (${quote?.quote.product_tax_pct ?? 5}%)`, quote?.quote.product_tax],
               [`Shipping tax (${quote?.quote.shipping_tax_pct ?? 18}%)`, quote?.quote.shipping_tax],
             ].map(([k, v]) => (
-              <div key={k} style={{ display: 'flex', justifyContent: 'space-between', fontSize: '13px', color: SAGE, padding: '6px 0' }}><span>{k}</span><span style={{ color: INK, fontWeight: 600 }}>{rupees(v)}</span></div>
+              <div key={k} style={{ display: 'flex', justifyContent: 'space-between', fontSize: '13px', color: SAGE, padding: '6px 0' }}><span>{k}</span><span style={{ color: v < 0 ? '#166534' : INK, fontWeight: 600 }}>{v < 0 ? `−${rupees(-v)}` : rupees(v)}</span></div>
             ))}
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', borderTop: `1px solid ${LINE}`, marginTop: '8px', paddingTop: '12px' }}>
               <span style={{ fontFamily: SERIF, fontSize: '18px', fontWeight: 800, color: INK }}>Total</span>
@@ -316,7 +333,7 @@ function CreateOrder({ walletBalance, onTopUp, onPlaced, onCancel, initialDesign
             {error && <div style={{ background: '#FFF5F5', border: '1px solid #FED7D7', borderRadius: '10px', padding: '10px 14px', marginBottom: '12px', fontSize: '12px', color: '#C53030' }}>⚠ {error}</div>}
             {(missing.length > 0 || short) && <div style={{ fontSize: '12px', color: SAGE, marginBottom: '10px' }}>{missing[0] || 'Top up your wallet to place this order'}</div>}
             <button onClick={handlePlace} disabled={placing || missing.length > 0 || !quote || short} className="pf-btn" style={{ width: '100%', padding: '14px', fontSize: '14px', fontWeight: 800, background: LIME, color: INK, borderRadius: '14px', boxShadow: '0 6px 18px rgba(185,249,93,0.35)' }}>
-              {placing ? 'Placing order…' : `Place order${quote ? ` · ${rupees(total)}` : ''}`}
+              {placing ? 'Placing order…' : `${sample ? 'Book sample' : 'Place order'}${quote ? ` · ${rupees(total)}` : ''}`}
             </button>
           </div>
         </div>
@@ -329,7 +346,7 @@ function CreateOrder({ walletBalance, onTopUp, onPlaced, onCancel, initialDesign
 
 // The Manual orders tab, or (startInCreate, from the sidebar's Create order)
 // straight into the create page, handing back to the parent when done.
-export default function ManualOrdersView({ walletBalance, onWalletChanged, onTopUp, startInCreate = false, onCancelCreate, onPlaced, initialNotice = '', initialDesignId = null, initialBlankId = null }) {
+export default function ManualOrdersView({ walletBalance, onWalletChanged, onTopUp, startInCreate = false, onCancelCreate, onPlaced, initialNotice = '', initialDesignId = null, initialBlankId = null, sample = false }) {
   const [creating, setCreating] = useState(startInCreate)
   const [orders, setOrders] = useState([])
   const [loading, setLoading] = useState(true)
@@ -349,11 +366,12 @@ export default function ManualOrdersView({ walletBalance, onWalletChanged, onTop
       <CreateOrder
         initialDesignId={initialDesignId}
         initialBlankId={initialBlankId}
+        sample={sample}
         walletBalance={walletBalance}
         onTopUp={onTopUp}
         onCancel={() => (onCancelCreate ? onCancelCreate() : setCreating(false))}
         onPlaced={res => {
-          const message = `Order ${res.order_id} placed. ${rupees(res.total)} was paid from your wallet.`
+          const message = `${sample ? 'Sample order' : 'Order'} ${res.order_id} placed. ${rupees(res.total)} was paid from your wallet.`
           onWalletChanged()
           if (onPlaced) return onPlaced(message)
           setCreating(false)
@@ -392,7 +410,7 @@ export default function ManualOrdersView({ walletBalance, onWalletChanged, onTop
               return (
                 <div key={o.order_id} style={{ padding: '14px 16px', borderBottom: i < orders.length - 1 ? `1px solid ${LINE}` : 'none' }}>
                   <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: '10px' }}>
-                    <span style={{ fontWeight: 700, color: INK, fontSize: '13px' }}>{o.order_id}</span>
+                    <span style={{ fontWeight: 700, color: INK, fontSize: '13px' }}>{o.order_id}{o.sample && <span style={{ marginLeft: '6px', background: '#EAF0FA', color: '#2B5BA8', padding: '2px 7px', borderRadius: '100px', fontSize: '10px', fontWeight: 800, letterSpacing: '0.04em', verticalAlign: 'middle' }}>SAMPLE</span>}</span>
                     <span style={{ background: bg, color: fg, padding: '3px 10px', borderRadius: '100px', fontSize: '11px', fontWeight: 700, flexShrink: 0 }}>{label}</span>
                   </div>
                   <div style={{ display: 'flex', gap: '10px', alignItems: 'center', marginTop: '10px' }}>
@@ -430,7 +448,7 @@ export default function ManualOrdersView({ walletBalance, onWalletChanged, onTop
                   return (
                     <tr key={o.order_id} style={{ borderBottom: `1px solid ${LINE}` }}>
                       <td style={{ padding: '14px 18px' }}>
-                        <div style={{ fontWeight: 700, color: INK, fontSize: '13px' }}>{o.order_id}</div>
+                        <div style={{ fontWeight: 700, color: INK, fontSize: '13px' }}>{o.order_id}{o.sample && <span style={{ marginLeft: '6px', background: '#EAF0FA', color: '#2B5BA8', padding: '2px 7px', borderRadius: '100px', fontSize: '10px', fontWeight: 800, letterSpacing: '0.04em', verticalAlign: 'middle' }}>SAMPLE</span>}</div>
                         {o.reference && <div style={{ fontSize: '11px', color: SAGE }}>Ref {o.reference}</div>}
                       </td>
                       <td style={{ padding: '14px 18px' }}>
