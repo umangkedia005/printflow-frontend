@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { SUPPORT_EMAIL, SUPPORT_PHONES, fetchAccountSettings, sendEnquiry } from '../../utils/api'
 
 // Bulk & Custom: a brand tells us about a bulk order, a custom product or
@@ -20,6 +20,7 @@ const TYPES = [
   { id: 'other', title: 'Something else', text: 'Partnerships, events, merch drops or anything else.',
     icon: <><circle cx="10" cy="10" r="6.5" /><path d="M8.2 8.2a1.9 1.9 0 1 1 2.6 1.8c-.5.2-.8.6-.8 1.1v.4M10 13.6v.1" /></> },
 ]
+const MIN_MESSAGE = 10
 const TIMELINES = ['Within 2 weeks', 'Within a month', '1–3 months', 'Just exploring']
 
 const label = { display: 'block', fontSize: '12px', fontWeight: 700, color: INK, marginBottom: '6px' }
@@ -40,6 +41,8 @@ export default function EnquiryView({ accountEmail }) {
   const [sending, setSending] = useState(false)
   const [error, setError] = useState('')
   const [sent, setSent] = useState(false)
+  const [badField, setBadField] = useState('')
+  const messageRef = useRef(null)
   const set = patch => setForm(f => ({ ...f, ...patch }))
 
   // Fill in what we already know from Settings (only empty fields).
@@ -57,10 +60,13 @@ export default function EnquiryView({ accountEmail }) {
 
   async function submit(e) {
     e.preventDefault()
-    setError('')
+    setError(''); setBadField('')
     if (!form.name.trim()) return setError('Enter your name')
     if (form.phone.replace(/\D/g, '').replace(/^91(?=\d{10}$)/, '').length !== 10) return setError('Enter a 10-digit phone number')
-    if (form.message.trim().length < 10) return setError('Tell us a little more about what you need')
+    if (form.message.trim().length < MIN_MESSAGE) {
+      setBadField('message'); messageRef.current?.focus()
+      return setError(`Please describe what you need in a few more words (at least ${MIN_MESSAGE} characters), e.g. "300 black tees, front print, 240 GSM fabric".`)
+    }
     setSending(true)
     try {
       await sendEnquiry(form)
@@ -143,10 +149,13 @@ export default function EnquiryView({ accountEmail }) {
                 </div>
               </div>
 
-              <label style={{ display: 'block', marginTop: '16px' }}><span style={label}>What do you need? *</span>
-                <textarea style={{ ...input, minHeight: '120px', resize: 'vertical', lineHeight: 1.55 }} value={form.message} maxLength={2000} onChange={e => set({ message: e.target.value })}
+              <label style={{ display: 'block', marginTop: '16px' }}><span style={label}>What do you need? * <span style={{ fontWeight: 500, color: SAGE }}>(a sentence or two)</span></span>
+                <textarea ref={messageRef} style={{ ...input, minHeight: '120px', resize: 'vertical', lineHeight: 1.55, ...(badField === 'message' ? { borderColor: '#D64545', boxShadow: '0 0 0 3px rgba(214,69,69,0.12)' } : {}) }} value={form.message} maxLength={2000}
+                  onChange={e => { set({ message: e.target.value }); if (badField === 'message' && e.target.value.trim().length >= MIN_MESSAGE) { setBadField(''); setError('') } }}
                   placeholder="Colours, sizes, print positions, fabric, packaging, budget, a link to a reference… anything that helps us quote." /></label>
-              <div style={{ fontSize: '11.5px', color: SAGE, textAlign: 'right', marginTop: '4px' }}>{form.message.length}/2000</div>
+              <div style={{ fontSize: '11.5px', color: SAGE, textAlign: 'right', marginTop: '4px' }}>
+                {form.message.trim().length < MIN_MESSAGE ? `${MIN_MESSAGE - form.message.trim().length} more character${MIN_MESSAGE - form.message.trim().length === 1 ? '' : 's'} needed` : `${form.message.length}/2000`}
+              </div>
 
               {error && <div role="alert" style={{ background: '#FCEBEB', color: '#B42318', borderRadius: '10px', padding: '10px 12px', fontSize: '13px', fontWeight: 600, marginTop: '10px' }}>{error}</div>}
 
