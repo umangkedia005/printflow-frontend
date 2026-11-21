@@ -2,6 +2,7 @@ import React, { useState, useEffect, useCallback, useRef } from 'react'
 import { useNavigate, useSearchParams } from 'react-router-dom'
 import { useAuth } from '../contexts/AuthContext'
 import { openWalletTopup } from '../utils/razorpay'
+import AccountSettings from '../components/settings/AccountSettings'
 import { SUPPORT_EMAIL, SUPPORT_PHONES, fetchOrders, fetchSubscription, fetchMyStores, linkStore, updateSubscription, fetchPlans, fetchWallet, fulfillOrder, fetchProductMappings, updateProductMapping, createShopifySubscription, fetchCatalogue } from '../utils/api'
 import { SHOPIFY_INSTALL_URL } from '../utils/shopify'
 import CatalogueView from '../components/catalogue/CatalogueView'
@@ -1626,59 +1627,6 @@ export default function DashboardPage() {
     </>
   )
 
-  const SettingsView = () => (
-    <>
-      <div style={{ marginBottom: '28px' }}>
-        <h1 style={{ fontFamily: "'Fraunces', sans-serif", fontSize: '26px', fontWeight: 800, color: '#0A0A0A', letterSpacing: '-0.5px', marginBottom: '4px' }}>Settings</h1>
-        <p style={{ fontSize: '13px', color: '#BABAB6' }}>Manage your store, notifications, and fulfillment.</p>
-      </div>
-      <SectionCard title="Connected Store">
-        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '16px' }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-            <div style={{ width: '40px', height: '40px', background: '#F4F4F0', border: '1px solid #E8E8E4', borderRadius: '10px', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '18px' }}>🛍</div>
-            <div>
-              <div style={{ fontSize: '14px', fontWeight: 600, color: '#0A0A0A' }}>{shopDomain}</div>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '5px', marginTop: '3px' }}>
-                <div style={{ width: '6px', height: '6px', borderRadius: '50%', background: '#22C55E' }}/>
-                <span style={{ fontSize: '11px', color: '#22C55E', fontWeight: 600 }}>Connected</span>
-              </div>
-            </div>
-          </div>
-          <button onClick={() => { if (window.shopify) window.open(SHOPIFY_INSTALL_URL, '_top'); else window.location.href = SHOPIFY_INSTALL_URL }} style={{ background: 'transparent', border: '1px solid #E8E8E4', borderRadius: '8px', padding: '7px 14px', fontSize: '12px', color: '#888', cursor: 'pointer', fontFamily: 'Inter, sans-serif', transition: 'border-color 0.15s, color 0.15s' }} onMouseOver={e=>{e.currentTarget.style.borderColor='#CCC';e.currentTarget.style.color='#555'}} onMouseOut={e=>{e.currentTarget.style.borderColor='#E8E8E4';e.currentTarget.style.color='#888'}}>+ Add Store</button>
-        </div>
-      </SectionCard>
-      <SectionCard title="Email Notifications">
-        {[
-          ['Order confirmed', 'When you place an order from Create order or My files'],
-          ['Printing, shipped, delivered', 'As your order moves along, with courier and tracking number when it ships'],
-          ['Wallet top-up receipt', 'Every time money is added to your wallet'],
-          ['Low wallet', 'When a new Shopify order costs more than your wallet balance'],
-        ].map(([label, desc], i, list) => (
-          <div key={label} style={{ padding: '12px 0', borderBottom: i < list.length - 1 ? '1px solid #F4F4F0' : 'none' }}>
-            <div style={{ fontSize: '13px', fontWeight: 500, color: '#0A0A0A', marginBottom: '2px' }}>{label}</div>
-            <div style={{ fontSize: '12px', color: '#999' }}>{desc}</div>
-          </div>
-        ))}
-        <div style={{ paddingTop: '14px' }}>
-          <p style={{ fontSize: '12px', color: '#BABAB6' }}>Sent to <strong style={{ color: '#555' }}>{currentUser?.email}</strong> from orders@nolimitstudio.in</p>
-        </div>
-      </SectionCard>
-      <SectionCard title="Fulfillment">
-        <div style={{ background: '#FAFAF8', border: '1px solid #E8E8E4', borderRadius: '10px', padding: '14px 16px' }}>
-          <div style={{ fontSize: '12px', fontWeight: 600, color: '#0A0A0A', marginBottom: '4px' }}>How fulfilment works</div>
-          <div style={{ fontSize: '12px', color: '#999' }}>New Shopify orders appear under Orders. Open one and click "Send to Print Factory": the printing cost is taken from your wallet and we take it from there.</div>
-        </div>
-      </SectionCard>
-      <SectionCard title="Account">
-        <div style={{ paddingBottom: '16px', borderBottom: '1px solid #F4F4F0', marginBottom: '16px' }}>
-          <div style={{ fontSize: '12px', color: '#999', marginBottom: '4px' }}>Signed in as</div>
-          <div style={{ fontSize: '14px', fontWeight: 500, color: '#0A0A0A' }}>{currentUser?.email}</div>
-        </div>
-        <button onClick={logout} style={{ background: '#FFF5F5', border: '1px solid #FED7D7', borderRadius: '8px', padding: '9px 18px', fontSize: '13px', fontWeight: 500, color: '#C53030', cursor: 'pointer', fontFamily: 'Inter, sans-serif' }}>Sign out of No Limit Studio</button>
-      </SectionCard>
-    </>
-  )
-
   // ── Render ─────────────────────────────────────────────────────────────────
 
   // Shown instead of Shopify-only pages (Shopify orders) when no store is
@@ -1929,7 +1877,12 @@ export default function DashboardPage() {
           {activeNav === 'products' && <div style={{ position: 'relative', zIndex: 1 }}><ProductsView /></div>}
           {activeNav === 'billing'  && <div style={{ position: 'relative', zIndex: 1 }}><BillingView /></div>}
           {activeNav === 'wallet'   && <div style={{ position: 'relative', zIndex: 1 }}><WalletView /></div>}
-          {activeNav === 'settings' && <div style={{ position: 'relative', zIndex: 1 }}><SettingsView /></div>}
+          {activeNav === 'settings' && (
+            <div style={{ position: 'relative', zIndex: 1 }}>
+              <AccountSettings email={currentUser?.email} shopDomain={shopDomain} onSignOut={logout}
+                onAddStore={() => { if (window.shopify) window.open(SHOPIFY_INSTALL_URL, '_top'); else window.location.href = SHOPIFY_INSTALL_URL }} />
+            </div>
+          )}
           
           {/* Notifications Panel View (With custom sender) */}
           {activeNav === 'notifications' && <div style={{ position: 'relative', zIndex: 1 }}><ActivityFeed onTopUp={() => { setActiveNav('wallet'); setShowTopup(true) }} /></div>}

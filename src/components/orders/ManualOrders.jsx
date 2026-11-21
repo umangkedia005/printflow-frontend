@@ -1,14 +1,14 @@
 import { useCallback, useEffect, useMemo, useState } from 'react'
 import { createPortal } from 'react-dom'
 import DesignMockup from '../catalogue/DesignMockup'
-import { fetchDesignableProducts, fetchMerchantProducts, quoteManualOrder, placeManualOrder, fetchManualOrders } from '../../utils/api'
+import { fetchDesignableProducts, fetchMerchantProducts, quoteManualOrder, placeManualOrder, fetchManualOrders, fetchAccountSettings } from '../../utils/api'
+import { STATES } from '../../utils/indiaStates'
 
 const INK = '#172B15', SAGE = '#889B8E', LIME = '#B9F95D', LINE = 'rgba(23,43,21,0.08)'
 const CARD = { background: '#FFFFFF', border: '1px solid rgba(23,43,21,0.06)', borderRadius: '20px', boxShadow: '0 8px 30px rgba(23,43,21,0.015)' }
 const SERIF = "'Fraunces', sans-serif"
 const LABEL = { display: 'block', fontSize: '11px', fontWeight: 700, color: SAGE, textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: '7px' }
 const INPUT = { width: '100%', padding: '11px 14px', boxSizing: 'border-box', border: '1px solid rgba(23,43,21,0.1)', borderRadius: '12px', fontSize: '13px', outline: 'none', fontFamily: 'Inter, sans-serif', color: INK, background: '#FFFFFF' }
-const STATES = ['Andaman and Nicobar Islands', 'Andhra Pradesh', 'Arunachal Pradesh', 'Assam', 'Bihar', 'Chandigarh', 'Chhattisgarh', 'Dadra and Nagar Haveli and Daman and Diu', 'Delhi', 'Goa', 'Gujarat', 'Haryana', 'Himachal Pradesh', 'Jammu and Kashmir', 'Jharkhand', 'Karnataka', 'Kerala', 'Ladakh', 'Lakshadweep', 'Madhya Pradesh', 'Maharashtra', 'Manipur', 'Meghalaya', 'Mizoram', 'Nagaland', 'Odisha', 'Puducherry', 'Punjab', 'Rajasthan', 'Sikkim', 'Tamil Nadu', 'Telangana', 'Tripura', 'Uttar Pradesh', 'Uttarakhand', 'West Bengal']
 const STATUS = {
   queued: ['Queued', '#FFF7ED', '#C2410C'],
   printing: ['Printing', '#EFF6FF', '#1D4ED8'],
@@ -111,6 +111,10 @@ function CreateOrder({ walletBalance, onTopUp, onPlaced, onCancel, initialDesign
   const [picking, setPicking] = useState(false)
   const [lines, setLines] = useState([])
   const [method, setMethod] = useState('surface')
+  // Start from the shipping method chosen in Settings → Shipping Preferences.
+  useEffect(() => {
+    fetchAccountSettings().then(st => { if (st?.shipping?.default_method) setMethod(st.shipping.default_method) }).catch(() => {})
+  }, [])
   const [quote, setQuote] = useState(null)
   const [quoteError, setQuoteError] = useState('')
   const [address, setAddress] = useState({ reference: '', name: '', email: '', phone: '', address1: '', address2: '', city: '', state: '', pincode: '' })

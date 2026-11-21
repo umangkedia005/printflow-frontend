@@ -192,6 +192,26 @@ export async function fetchActivity() {
   return Array.isArray(data) ? data : []
 }
 
+// Settings tabs: billing details, bank account (number comes back masked),
+// shipping preferences and which emails to send.
+export async function fetchAccountSettings() {
+  const res = await fetch(`${BASE_URL}/account-settings`, { headers: await shopAuthHeaders() })
+  const data = await res.json()
+  if (!res.ok) throw new Error(data.error || 'Could not load your settings')
+  return data
+}
+
+export async function saveAccountSettings(section, values) {
+  const res = await fetch(`${BASE_URL}/account-settings`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...(await shopAuthHeaders()) },
+    body: JSON.stringify({ section, data: values }),
+  })
+  const data = await res.json()
+  if (!res.ok) throw new Error(data.error || 'Could not save your settings')
+  return data
+}
+
 // The account's own garments (My garments), each with its review status.
 // Approved ones carry `blank`: the garment in catalogue-product shape.
 export async function fetchGarments() {
