@@ -8,6 +8,7 @@ import DashboardPage from './pages/DashboardPage'
 import BillingConfirmPage from './pages/BillingConfirmPage'
 import PrivacyPage from './pages/PrivacyPage'
 import TermsPage from './pages/TermsPage'
+import { CancellationPage, RefundPage, ShippingPage } from './pages/PolicyPages'
 import ProtectedRoute from './components/ProtectedRoute'
 import { exchangeToken } from './utils/api'
 import './App.css'
@@ -110,6 +111,9 @@ function App() {
           <Route path="/" element={embedded ? <Navigate to="/dashboard" replace /> : <HomePage />} />
           <Route path="/privacy" element={<PrivacyPage />} />
           <Route path="/terms" element={<TermsPage />} />
+          <Route path="/cancellation" element={<CancellationPage />} />
+          <Route path="/refund" element={<RefundPage />} />
+          <Route path="/shipping" element={<ShippingPage />} />
           <Route
             path="/success"
             element={

@@ -91,6 +91,17 @@ const IconBilling  = () => <svg width="15" height="15" viewBox="0 0 16 16" fill=
 const IconWallet   = () => <svg width="15" height="15" viewBox="0 0 16 16" fill="none"><path d="M2 4.5A1.5 1.5 0 013.5 3h9A1.5 1.5 0 0114 4.5v7A1.5 1.5 0 0112.5 13h-9A1.5 1.5 0 012 11.5v-7Z" stroke="currentColor" strokeWidth="1.5"/><path d="M10.5 8a1 1 0 102 0 1 1 0 00-2 0Z" fill="currentColor"/><path d="M2 6.5h12" stroke="currentColor" strokeWidth="1.5"/></svg>
 const IconMail     = () => <svg width="15" height="15" viewBox="0 0 16 16" fill="none"><rect x="1.75" y="3.25" width="12.5" height="9.5" rx="1.5" stroke="currentColor" strokeWidth="1.5"/><path d="M2.5 4.5 8 8.75l5.5-4.25" stroke="currentColor" strokeWidth="1.5" strokeLinejoin="round"/></svg>
 const IconPhone    = () => <svg width="15" height="15" viewBox="0 0 24 24" fill="currentColor"><path d="M6.6 10.8a15.1 15.1 0 0 0 6.6 6.6l2.2-2.2a1 1 0 0 1 1-.25 11.4 11.4 0 0 0 3.6.57 1 1 0 0 1 1 1V20a1 1 0 0 1-1 1A17 17 0 0 1 3 4a1 1 0 0 1 1-1h3.5a1 1 0 0 1 1 1c0 1.25.2 2.45.57 3.57a1 1 0 0 1-.25 1z"/></svg>
+const IconPolicy   = () => <svg width="15" height="15" viewBox="0 0 16 16" fill="none"><path d="M4 1.75h5.5L12.75 5v9.25H4z" stroke="currentColor" strokeWidth="1.5" strokeLinejoin="round"/><path d="M9.25 1.75V5.25h3.5M6.25 8.5h4M6.25 11h4" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/></svg>
+const IconLock     = () => <svg width="14" height="14" viewBox="0 0 16 16" fill="none"><rect x="3" y="7" width="10" height="7.25" rx="1.5" stroke="currentColor" strokeWidth="1.5"/><path d="M5.25 7V5a2.75 2.75 0 015.5 0v2" stroke="currentColor" strokeWidth="1.5"/></svg>
+const IconUndo     = () => <svg width="14" height="14" viewBox="0 0 16 16" fill="none"><path d="M3.5 3v3.5H7" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/><path d="M3.9 6.3A5 5 0 1 1 3.2 10" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/></svg>
+const IconTruck    = () => <svg width="15" height="15" viewBox="0 0 16 16" fill="none"><path d="M1.5 3.5h8v7h-8zM9.5 6h3l2 2.5v2h-5" stroke="currentColor" strokeWidth="1.4" strokeLinejoin="round"/><circle cx="4.5" cy="11.75" r="1.25" fill="none" stroke="currentColor" strokeWidth="1.3"/><circle cx="11.75" cy="11.75" r="1.25" fill="none" stroke="currentColor" strokeWidth="1.3"/></svg>
+const POLICY_LINKS = [
+  { href: '/privacy',      label: 'Privacy Policy',       Icon: IconLock },
+  { href: '/cancellation', label: 'Cancellation Policy',  Icon: IconPolicy },
+  { href: '/refund',       label: 'Refund Policy',        Icon: IconUndo },
+  { href: '/shipping',     label: 'Shipping and Delivery', Icon: IconTruck },
+  { href: '/terms',        label: 'Terms and Conditions', Icon: IconPolicy },
+]
 const IconHelp     = () => <svg width="15" height="15" viewBox="0 0 16 16" fill="none"><circle cx="8" cy="8" r="6.5" stroke="currentColor" strokeWidth="1.5"/><path d="M8 10.5v-.5M8 8a1.5 1.5 0 10-1.5-1.5" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/></svg>
 
 // ── Stat icons ────────────────────────────────────────────────────────────────
@@ -631,6 +642,9 @@ export default function DashboardPage() {
   // Phones: the sidebar is a drawer behind the ☰ button (see .pf-sidebar in index.css).
   const [menuOpen, setMenuOpen]             = useState(false)
   const [contactOpen, setContactOpen]       = useState(false)
+  const [policyOpen, setPolicyOpen]         = useState(false)
+  const policyRef = useRef(null)
+  useEffect(() => { if (policyOpen) policyRef.current?.scrollIntoView({ block: 'nearest', behavior: 'smooth' }) }, [policyOpen])
   const contactRef = useRef(null)
   // Opening Contact Us near the bottom of the sidebar scrolls the numbers into view.
   useEffect(() => { if (contactOpen) contactRef.current?.scrollIntoView({ block: 'nearest', behavior: 'smooth' }) }, [contactOpen])
@@ -1776,6 +1790,26 @@ export default function DashboardPage() {
                   <div style={{ fontSize: '12.5px', fontWeight: 750, color: '#7A7A70' }}>{p.label}</div>
                   <a href={`tel:${p.tel}`} style={{ display: 'inline-block', marginTop: '3px', fontSize: '13.5px', fontWeight: 600, color: '#172B15', textDecoration: 'none' }}>{p.display}</a>
                 </div>
+              ))}
+            </div>
+          )}
+          <button onClick={() => setPolicyOpen(o => !o)} aria-expanded={policyOpen}
+            style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', width: '100%', padding: '12px 18px', border: 'none', background: policyOpen ? 'rgba(255,255,255,0.45)' : 'transparent', color: '#172B15', fontSize: '14.5px', fontWeight: 600, cursor: 'pointer', textAlign: 'left', marginBottom: '6px', fontFamily: 'Inter, sans-serif', borderRadius: '12px', transition: 'all 0.2s' }}
+            onMouseOver={e => { e.currentTarget.style.background = 'rgba(255,255,255,0.45)' }}
+            onMouseOut={e => { if (!policyOpen) e.currentTarget.style.background = 'transparent' }}
+          >
+            <span style={{ display: 'flex', alignItems: 'center', gap: '12px' }}><IconPolicy />Our Policy</span>
+            <svg width="12" height="12" viewBox="0 0 12 12" fill="none" style={{ transform: policyOpen ? 'rotate(180deg)' : 'none', transition: 'transform 0.2s' }}><path d="M3 4.5 6 7.5l3-3" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round"/></svg>
+          </button>
+          {policyOpen && (
+            <div ref={policyRef} style={{ padding: '0 10px 8px 34px' }}>
+              {/* Opens in a new tab so the dashboard (and anything half-done in it) stays put. */}
+              {POLICY_LINKS.map(({ href, label, Icon }) => (
+                <a key={href} href={href} target="_blank" rel="noopener noreferrer"
+                  style={{ display: 'flex', alignItems: 'center', gap: '10px', padding: '9px 10px', borderRadius: '10px', color: '#3D4A3B', fontSize: '13.5px', fontWeight: 600, textDecoration: 'none' }}
+                  onMouseOver={e => { e.currentTarget.style.background = 'rgba(255,255,255,0.45)' }}
+                  onMouseOut={e => { e.currentTarget.style.background = 'transparent' }}
+                ><span style={{ display: 'flex', flexShrink: 0, color: '#7A7A70' }}><Icon /></span>{label}</a>
               ))}
             </div>
           )}
