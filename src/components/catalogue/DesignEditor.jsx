@@ -76,7 +76,9 @@ function Card({ n, title, children }) {
 }
 
 // initialArtwork: a My files entry to start with on the first print area.
-export default function DesignEditor({ blank, onClose, onSaved, initialArtwork = null, backLabel = 'Back to catalogue', initialColor = null }) {
+// design: a saved design to edit (its artwork, placement, colours, sizes and
+// prices); saving updates it instead of making a new one.
+export default function DesignEditor({ blank, onClose, onSaved, initialArtwork = null, backLabel = 'Back to catalogue', initialColor = null, design = null }) {
   const areas = blank.print_areas
   const views = blank.views?.length ? blank.views : [{ id: 'main', label: 'Main' }]
   const viewOf = a => a.view_id || views[0].id
@@ -85,20 +87,22 @@ export default function DesignEditor({ blank, onClose, onSaved, initialArtwork =
     : [...new Set(blank.variants.filter(v => v.in_stock).map(v => v.size))]
 
   // Starts on the colour picked in the catalogue, if any.
-  const startColor = blank.colors.some(c => c.name === initialColor) ? initialColor : blank.colors[0].name
+  const savedColors = (design?.colors || []).filter(c => blank.colors.some(bc => bc.name === c))
+  const startColor = savedColors[0] || (blank.colors.some(c => c.name === initialColor) ? initialColor : blank.colors[0].name)
   const [previewColor, setPreviewColor] = useState(startColor)
-  const [colors, setColors] = useState([startColor])
-  const [sizes, setSizes] = useState(sizesInStock)
-  const [title, setTitle] = useState(blank.name)
-  const [description, setDescription] = useState('')
-  const [prices, setPrices] = useState({})
+  const [colors, setColors] = useState(savedColors.length ? savedColors : [startColor])
+  const [sizes, setSizes] = useState(design?.sizes?.length ? design.sizes.filter(s => sizesInStock.includes(s)) : sizesInStock)
+  const [title, setTitle] = useState(design?.title || blank.name)
+  const [description, setDescription] = useState(design?.description || '')
+  const [prices, setPrices] = useState(() => Object.fromEntries(Object.entries(design?.prices || {}).map(([k, v]) => [k, String(v)])))
   const [tab, setTab] = useState(areas[0].id)
   // Where the merchant has zoomed to; null means the area's starting view.
   const [view, setView] = useState(null)
   const [panning, setPanning] = useState(false)
   // Keyed by print area id.
-  const [artworks, setArtworks] = useState({})
-  const [placements, setPlacements] = useState({})
+  const savedArt = Object.entries(design?.artwork || {}).filter(([id]) => areas.some(a => a.id === id))
+  const [artworks, setArtworks] = useState(() => Object.fromEntries(savedArt.map(([id, a]) => [id, { name: 'Saved artwork', previewUrl: a.preview_url, px_w: Number(a.px_w), px_h: Number(a.px_h), s3_key: a.s3_key, uploading: false }])))
+  const [placements, setPlacements] = useState(() => Object.fromEntries(savedArt.map(([id, a]) => [id, { w: Number(a.width_in), x: Number(a.x_in), y: Number(a.y_in) }])))
   const [uploadError, setUploadError] = useState('')
   const [saving, setSaving] = useState(false)
   const [saveError, setSaveError] = useState('')
@@ -267,6 +271,7 @@ export default function DesignEditor({ blank, onClose, onSaved, initialArtwork =
     setSaveError('')
     try {
       await saveMerchantProduct({
+        ...(design ? { product_id: design.product_id } : {}),
         blank_id: blank.blank_id,
         title: title.trim(),
         description: description.trim(),
@@ -402,7 +407,7 @@ export default function DesignEditor({ blank, onClose, onSaved, initialArtwork =
       <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: '16px', flexWrap: 'wrap', marginBottom: '22px' }}>
         <div>
           <button onClick={onClose} style={{ background: 'none', border: 'none', padding: 0, color: '#889B8E', fontSize: '13px', fontWeight: 600, cursor: 'pointer', fontFamily: 'Inter, sans-serif', marginBottom: '8px' }}>← {backLabel}</button>
-          <h1 style={{ fontFamily: "'Fraunces', sans-serif", fontSize: '28px', fontWeight: 800, color: '#172B15', letterSpacing: '-0.5px' }}>Design: {blank.name}</h1>
+          <h1 style={{ fontFamily: "'Fraunces', sans-serif", fontSize: '28px', fontWeight: 800, color: '#172B15', letterSpacing: '-0.5px' }}>{design ? `Edit: ${design.title}` : `Design: ${blank.name}`}</h1>
           <p style={{ fontSize: '13px', color: '#889B8E', fontWeight: 500, marginTop: '4px' }}>{(blank.own ? ['Your garment', blank.category] : [blank.gsm && `${blank.gsm} GSM`, blank.fabric, blank.fit]).filter(Boolean).join(' · ')}</p>
         </div>
       </div>
@@ -604,7 +609,7 @@ export default function DesignEditor({ blank, onClose, onSaved, initialArtwork =
               </div>
             )}
             <button className="pf-btn" onClick={handleSave} disabled={saving || problems.length > 0} style={{ width: '100%', padding: '14px', fontSize: '14px', fontWeight: 800, background: '#B9F95D', color: '#172B15', borderRadius: '14px', boxShadow: '0 6px 18px rgba(185,249,93,0.35)' }}>
-              {saving ? 'Saving…' : 'Save draft'}
+              {saving ? 'Saving…' : design ? 'Save changes' : 'Save draft'}
             </button>
           </div>
         </div>

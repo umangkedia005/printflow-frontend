@@ -137,10 +137,12 @@ export default function CatalogueView({ onOrderPlain, onOrderDesign }) {
       <DesignEditor
         blank={designing.blank}
         initialColor={designing.color}
+        design={designing.design || null}
+        backLabel={designing.design ? 'Back to My designs' : 'Back to catalogue'}
         onClose={() => setDesigning(null)}
         onSaved={() => {
+          setNotice(designing.design ? `${designing.design.title} saved.` : 'Draft saved. Find it under My designs.')
           setDesigning(null)
-          setNotice('Draft saved. Find it under My designs.')
           setTab('designs')
           loadDesigns()
         }}
@@ -211,13 +213,20 @@ export default function CatalogueView({ onOrderPlain, onOrderDesign }) {
                 const blank = blanks.find(b => b.blank_id === d.blank_id)
                 return (
                   <div key={d.product_id} style={{ background: '#FFFFFF', border: '1px solid rgba(23,43,21,0.08)', borderRadius: '16px', padding: '14px', display: 'flex', flexDirection: 'column' }}>
-                    <DesignMockup design={d} blank={blank} />
+                    <button onClick={() => blank && setDesigning({ blank, design: d })} disabled={!blank} title={blank ? 'Edit this design' : 'This product is no longer in the catalogue'}
+                      style={{ background: 'none', border: 'none', padding: 0, cursor: blank ? 'pointer' : 'default', textAlign: 'left' }}>
+                      <DesignMockup design={d} blank={blank} />
+                    </button>
                     <div className="pf-name-row" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: '8px', marginTop: '12px' }}>
                       <div style={{ fontSize: '14px', fontWeight: 700, color: '#172B15', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{d.title}</div>
                       <span title="Saved here; not published to a Shopify store yet" style={{ flexShrink: 0, background: '#F4F4F0', color: '#172B15', padding: '3px 9px', borderRadius: '100px', fontSize: '10px', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.04em' }}>{d.status}</span>
                     </div>
                     <div style={{ fontSize: '12px', color: '#889B8E', marginTop: '4px', marginBottom: '12px' }}>{blankName(d.blank_id)} · {d.colors.length} color{d.colors.length === 1 ? '' : 's'} · {d.sizes.join(', ')}</div>
-                    {onOrderDesign && <button className="pf-btn" onClick={() => onOrderDesign(d.product_id)} style={{ marginTop: 'auto', width: '100%', padding: '11px', fontSize: '13px', fontWeight: 800, background: '#B9F95D', color: '#172B15', borderRadius: '12px' }}>Order</button>}
+                    {d.prices && Object.keys(d.prices).length > 0 && <div style={{ fontSize: '12px', color: '#172B15', marginTop: '-6px', marginBottom: '12px' }}>Selling price {[...new Set(Object.values(d.prices).map(Number))].sort((a, b) => a - b).map(p => `₹${p}`).join(' – ')}</div>}
+                    <div style={{ display: 'flex', gap: '8px', marginTop: 'auto' }}>
+                      {blank && <button onClick={() => setDesigning({ blank, design: d })} style={{ flex: 1, padding: '11px', fontSize: '13px', fontWeight: 700, background: '#FFFFFF', color: '#172B15', border: '1px solid rgba(23,43,21,0.15)', borderRadius: '12px', cursor: 'pointer', fontFamily: 'Inter, sans-serif' }}>Edit</button>}
+                      {onOrderDesign && <button className="pf-btn" onClick={() => onOrderDesign(d.product_id)} style={{ flex: 1, padding: '11px', fontSize: '13px', fontWeight: 800, background: '#B9F95D', color: '#172B15', borderRadius: '12px' }}>Order</button>}
+                    </div>
                   </div>
                 )
               })}
