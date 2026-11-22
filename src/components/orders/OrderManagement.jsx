@@ -16,12 +16,15 @@ const STATUS = {
   delivered: ['Delivered', '#F0FDF4', '#166534'],
 }
 const TABS = [['all', 'All orders'], ['awaiting', 'Awaiting print'], ['queued', 'Queued'], ['printing', 'Printing'], ['shipped', 'In transit'], ['delivered', 'Delivered']]
+const SHIP = { air: 'Air', surface: 'Surface' }
 const TYPES = { shopify: 'Shopify', manual: 'Manual', sample: 'Sample' }
 
 const rupees = n => `₹${Number(n || 0).toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`
 const day = iso => (iso ? new Date(iso).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' }) : '—')
 const ymd = d => `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`
 const localDay = iso => (iso ? ymd(new Date(iso)) : '')
+
+const INVOICE_BTN = { background: 'none', border: `1px solid ${LINE}`, borderRadius: '8px', padding: '5px 10px', fontSize: '12px', fontWeight: 700, color: INK, cursor: 'pointer', fontFamily: 'Inter, sans-serif', whiteSpace: 'nowrap' }
 
 function presets() {
   const now = new Date()
@@ -42,10 +45,10 @@ function toCsv(rows) {
     const s = v == null ? '' : String(v)
     return /[",\n]/.test(s) ? `"${s.replace(/"/g, '""')}"` : s
   }
-  const head = ['Order', 'Type', 'Store', 'Date', 'Customer', 'City', 'Pieces', 'Products', 'Status', 'Selling price (your customer)', 'Paid from wallet', 'Invoice number', 'Courier', 'Tracking number', 'Reference', 'Cash on delivery (collect)', 'Returned (RTO)']
+  const head = ['Order', 'Type', 'Store', 'Date', 'Customer', 'City', 'Pieces', 'Products', 'Status', 'Selling price (your customer)', 'Paid from wallet', 'Invoice number', 'Courier', 'Tracking number', 'Reference', 'Cash on delivery (collect)', 'Returned (RTO)', 'Shipping method']
   const body = rows.map(r => [
     r.order_name, TYPES[r.type], r.shop || '', localDay(r.created_at), r.customer, r.city || '', r.pieces, r.products.join('; '),
-    STATUS[r.status]?.[0] || r.status, r.type === 'shopify' ? r.order_total : (r.selling_total ?? ''), r.paid ?? '', r.invoice_number || '', r.tracking?.courier || '', r.tracking?.number || '', r.reference || '', r.cod?.amount ?? '', r.rto ? 'Yes' : '',
+    STATUS[r.status]?.[0] || r.status, r.type === 'shopify' ? r.order_total : (r.selling_total ?? ''), r.paid ?? '', r.invoice_number || '', r.tracking?.courier || '', r.tracking?.number || '', r.reference || '', r.cod?.amount ?? '', r.rto ? 'Yes' : '', SHIP[r.shipping_method] || '',
   ])
   return [head, ...body].map(line => line.map(cell).join(',')).join('\r\n')
 }
@@ -71,7 +74,7 @@ export default function OrderManagement({ onOpenOrders }) {
   const [type, setType] = useState('all')
   const [tab, setTab] = useState('all')
   const [invoiceError, setInvoiceError] = useState('')
-  const invoice = id => { setInvoiceError(''); openInvoice('order', id).catch(e => setInvoiceError(e.message)) }
+  const invoice = (id, kind = 'order') => { setInvoiceError(''); openInvoice(kind, id).catch(e => setInvoiceError(e.message)) }
 
   useEffect(() => {
     fetchOrderManagement().then(setData).catch(e => setError(e.message))
@@ -183,7 +186,13 @@ export default function OrderManagement({ onOpenOrders }) {
                       <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{r.customer}{r.city ? `, ${r.city}` : ''} · {day(r.created_at)}</span>
                       <span style={{ flexShrink: 0, fontWeight: 800, color: r.paid == null ? SAGE : INK }}>{r.paid == null ? 'Not paid yet' : rupees(r.paid)}</span>
                     </div>
-                    {r.invoiceable && <button onClick={() => invoice(r.order_id)} style={{ marginTop: '8px', background: 'none', border: `1px solid ${LINE}`, borderRadius: '8px', padding: '5px 10px', fontSize: '12px', fontWeight: 700, color: INK, cursor: 'pointer', fontFamily: 'Inter, sans-serif' }}>⬇ Invoice</button>}
+                    {SHIP[r.shipping_method] && <div style={{ fontSize: '11.5px', color: SAGE, marginTop: '4px' }}>Shipping: {SHIP[r.shipping_method]}</div>}
+                    {r.invoiceable && (
+                      <div style={{ display: 'flex', gap: '6px', marginTop: '8px', flexWrap: 'wrap' }}>
+                        <button onClick={() => invoice(r.order_id)} title="What you paid us" style={INVOICE_BTN}>⬇ Brand invoice</button>
+                        {r.customer_invoice && <button onClick={() => invoice(r.order_id, 'customer')} title="At your selling price, for the parcel" style={INVOICE_BTN}>⬇ Customer invoice</button>}
+                      </div>
+                    )}
                   </div>
                 )
               })}
@@ -211,11 +220,17 @@ export default function OrderManagement({ onOpenOrders }) {
                         <td style={{ padding: '12px 14px', fontSize: '13px', fontWeight: 800, color: r.paid == null ? SAGE : INK, whiteSpace: 'nowrap' }}>{r.paid == null ? 'Not paid yet' : rupees(r.paid)}</td>
                         <td style={{ padding: '12px 14px' }}>
                           <span style={{ background: bg, color: fg, padding: '3px 10px', borderRadius: '100px', fontSize: '11px', fontWeight: 700, whiteSpace: 'nowrap' }}>{label}</span>
+                          {SHIP[r.shipping_method] && <div style={{ fontSize: '11px', color: SAGE, marginTop: '4px' }}>{SHIP[r.shipping_method]}</div>}
                           {r.tracking?.url && <a href={r.tracking.url} target="_blank" rel="noopener noreferrer" style={{ display: 'block', marginTop: '4px', fontSize: '11px', color: INK, fontWeight: 700 }}>Track ↗</a>}
                         </td>
                         <td style={{ padding: '12px 14px' }}>
                           {r.invoiceable
-                            ? <button onClick={() => invoice(r.order_id)} title={r.invoice_number || 'Tax invoice'} style={{ background: 'none', border: `1px solid ${LINE}`, borderRadius: '8px', padding: '5px 10px', fontSize: '12px', fontWeight: 700, color: INK, cursor: 'pointer', fontFamily: 'Inter, sans-serif', whiteSpace: 'nowrap' }}>⬇ Download</button>
+                            ? (
+                              <div style={{ display: 'flex', flexDirection: 'column', gap: '4px', alignItems: 'stretch' }}>
+                                <button onClick={() => invoice(r.order_id)} title={`${r.invoice_number || 'Tax invoice'}: what you paid us`} style={INVOICE_BTN}>⬇ Brand</button>
+                                {r.customer_invoice && <button onClick={() => invoice(r.order_id, 'customer')} title={`${r.invoice_number ? `${r.invoice_number}-C: ` : ''}at your selling price, for the parcel`} style={INVOICE_BTN}>⬇ Customer</button>}
+                              </div>
+                            )
                             : r.paid == null
                               ? <span title="The invoice is made when the order is paid from your wallet (when you send it to print)." style={{ fontSize: '11px', color: SAGE }}>After payment</span>
                               : <span title="Paid before invoices started, so there's no invoice for this order." style={{ fontSize: '11px', color: SAGE }}>Not available</span>}
@@ -229,7 +244,7 @@ export default function OrderManagement({ onOpenOrders }) {
           </>
         )}
       </div>
-      <p style={{ fontSize: '11.5px', color: SAGE, marginTop: '10px' }}>"Selling price" is what your customer pays you; "Paid from wallet" is what printing and shipping cost you. The Excel file is a CSV that opens in Excel or Google Sheets.</p>
+      <p style={{ fontSize: '11.5px', color: SAGE, marginTop: '10px' }}>"Selling price" is what your customer pays you; "Paid from wallet" is what printing and shipping cost you. The Brand invoice is what you paid us; the Customer invoice is at your selling price, for the parcel. The Excel file is a CSV that opens in Excel or Google Sheets.</p>
     </div>
   )
 }

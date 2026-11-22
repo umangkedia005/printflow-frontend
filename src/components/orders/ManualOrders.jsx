@@ -190,9 +190,9 @@ function CreateOrder({ walletBalance, onTopUp, onPlaced, onCancel, initialDesign
       design: kind === 'design' ? item : null,
       name: kind === 'design' ? item.title : item.name,
       image, colors, sizes, color: colors.includes(preferColor) ? preferColor : colors[0], size: sizes[0], qty: 1,
-      // What the brand charges its customer per piece: starts from the design's
-      // price for this size; a blank has none until the brand types it.
-      selling: designPrice(kind === 'design' ? item : null, sizes[0]), sellingEdited: false,
+      // What the brand charges its customer per piece: a design's price comes
+      // from the design (changed under My designs); a blank's is typed here.
+      selling: designPrice(kind === 'design' ? item : null, sizes[0]),
     }])
     setPicking(false)
   }
@@ -270,7 +270,8 @@ function CreateOrder({ walletBalance, onTopUp, onPlaced, onCancel, initialDesign
             ) : (
               <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
                 {lines.map((l, i) => (
-                  <div key={l.key} style={{ display: 'flex', gap: '14px', alignItems: 'center', border: `1px solid ${LINE}`, borderRadius: '16px', padding: '12px', flexWrap: 'wrap' }}>
+                  <div key={l.key} style={{ border: `1px solid ${LINE}`, borderRadius: '16px', padding: '12px' }}>
+                    <div style={{ display: 'flex', gap: '14px', alignItems: 'flex-start' }}>
                     {l.design ? (
                       <div style={{ width: '56px', flexShrink: 0 }}>
                         {/* Follows the colour picked on this line. */}
@@ -281,29 +282,44 @@ function CreateOrder({ walletBalance, onTopUp, onPlaced, onCancel, initialDesign
                       {l.image && <img src={l.image} alt="" style={{ width: l.kind === 'design' ? '80%' : '100%', height: l.kind === 'design' ? '80%' : '100%', objectFit: l.kind === 'design' ? 'contain' : 'cover' }} />}
                     </div>
                     )}
-                    <div style={{ flex: '1 1 160px', minWidth: 0 }}>
-                      <div style={{ fontSize: '14px', fontWeight: 700, color: INK, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{l.name}</div>
-                      <div style={{ fontSize: '11px', color: SAGE, marginTop: '2px' }}>{l.kind === 'design' ? 'Your design' : 'Blank, no print'}{priceOf(i) != null ? ` · ${rupees(priceOf(i))} each` : ''}</div>
+                    <div style={{ flex: 1, minWidth: 0 }}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: '8px' }}>
+                      <div style={{ minWidth: 0 }}>
+                        <div style={{ fontSize: '14px', fontWeight: 700, color: INK, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{l.name}</div>
+                        <div style={{ fontSize: '11px', color: SAGE, marginTop: '2px' }}>{l.kind === 'design' ? 'Your design' : 'Blank, no print'}{priceOf(i) != null ? ` · ${rupees(priceOf(i))} each` : ''}</div>
+                      </div>
+                      <button onClick={() => removeLine(l.key)} aria-label="Remove" style={{ border: 'none', background: 'none', color: '#C53030', cursor: 'pointer', fontSize: '15px', padding: '2px 6px', flexShrink: 0 }}>✕</button>
                     </div>
+                    <div style={{ display: 'flex', gap: '8px', alignItems: 'center', flexWrap: 'wrap', marginTop: '10px' }}>
                     <select value={l.color} onChange={e => setLine(l.key, { color: e.target.value })} style={{ ...INPUT, width: 'auto', padding: '8px 10px' }}>{l.colors.map(c => <option key={c}>{c}</option>)}</select>
-                    <select value={l.size} onChange={e => setLine(l.key, { size: e.target.value, ...(l.sellingEdited ? {} : { selling: designPrice(l.design, e.target.value) }) })} style={{ ...INPUT, width: 'auto', padding: '8px 10px' }}>{l.sizes.map(s => <option key={s}>{s}</option>)}</select>
+                    <select value={l.size} onChange={e => setLine(l.key, { size: e.target.value, ...(l.design ? { selling: designPrice(l.design, e.target.value) } : {}) })} style={{ ...INPUT, width: 'auto', padding: '8px 10px' }}>{l.sizes.map(s => <option key={s}>{s}</option>)}</select>
                     <div style={{ display: 'flex', alignItems: 'center', border: '1px solid rgba(23,43,21,0.1)', borderRadius: '12px' }}>
                       <button onClick={() => setLine(l.key, { qty: Math.max(1, Number(l.qty) - 1) })} aria-label="Fewer" style={{ width: '32px', height: '36px', border: 'none', background: 'none', cursor: 'pointer', fontSize: '16px', color: INK }}>−</button>
                       <input value={l.qty} onChange={e => setLine(l.key, { qty: e.target.value.replace(/\D/g, '').slice(0, 3) })} aria-label="Quantity" style={{ width: '38px', border: 'none', textAlign: 'center', fontSize: '13px', fontWeight: 700, color: INK, outline: 'none' }} />
                       <button onClick={() => setLine(l.key, { qty: Math.min(500, Number(l.qty || 0) + 1) })} aria-label="More" style={{ width: '32px', height: '36px', border: 'none', background: 'none', cursor: 'pointer', fontSize: '16px', color: INK }}>+</button>
                     </div>
-                    {!sample && (
-                      <label style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '11px', fontWeight: 700, color: SAGE, whiteSpace: 'nowrap' }}>
-                        Sell at ₹
-                        <input value={l.selling} inputMode="decimal" placeholder="Price" aria-label={`Selling price for ${l.name}`}
-                          onChange={e => setLine(l.key, { selling: e.target.value.replace(/[^0-9.]/g, '').slice(0, 8), sellingEdited: true })}
-                          style={{ ...INPUT, width: '78px', padding: '8px 10px', borderColor: l.selling ? 'rgba(23,43,21,0.1)' : '#F6AD55' }} />
-                      </label>
-                    )}
-                    {/* Line total and remove stay together at the end of the row. */}
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '6px', marginLeft: 'auto' }}>
-                      <div style={{ minWidth: '70px', textAlign: 'right', fontSize: '14px', fontWeight: 800, color: INK, whiteSpace: 'nowrap' }}>{priceOf(i) != null ? rupees(priceOf(i) * Number(l.qty || 0)) : '—'}</div>
-                      <button onClick={() => removeLine(l.key)} aria-label="Remove" style={{ border: 'none', background: 'none', color: '#C53030', cursor: 'pointer', fontSize: '15px', padding: '6px' }}>✕</button>
+                    </div>
+                    </div>
+                    </div>
+                    {/* Second row: what the customer pays, and what this line costs the brand. */}
+                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '12px', flexWrap: 'wrap', borderTop: `1px solid ${LINE}`, marginTop: '12px', paddingTop: '10px' }}>
+                      {sample ? <span /> : l.design && designPrice(l.design, l.size) ? (
+                        <div style={{ fontSize: '12px', color: SAGE }}>
+                          Selling price <b style={{ color: INK, fontSize: '13px' }}>{rupees(l.selling)}</b>
+                          <span style={{ fontSize: '11px' }}> · change it in My designs</span>
+                        </div>
+                      ) : (
+                        <label style={{ display: 'flex', alignItems: 'center', gap: '8px', fontSize: '12px', color: SAGE, whiteSpace: 'nowrap' }}>
+                          Selling price ₹
+                          <input value={l.selling} inputMode="decimal" placeholder="Price" aria-label={`Selling price for ${l.name}`}
+                            onChange={e => setLine(l.key, { selling: e.target.value.replace(/[^0-9.]/g, '').slice(0, 8) })}
+                            style={{ ...INPUT, width: '92px', padding: '7px 10px', borderColor: l.selling ? 'rgba(23,43,21,0.1)' : '#F6AD55' }} />
+                        </label>
+                      )}
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginLeft: 'auto' }}>
+                        <span style={{ fontSize: '12px', color: SAGE }}>You pay</span>
+                        <span style={{ fontSize: '14px', fontWeight: 800, color: INK, whiteSpace: 'nowrap' }}>{priceOf(i) != null ? rupees(priceOf(i) * Number(l.qty || 0)) : '—'}</span>
+                      </div>
                     </div>
                   </div>
                 ))}
