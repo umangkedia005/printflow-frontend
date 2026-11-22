@@ -259,6 +259,7 @@ function CodTag({ r }) {
 
 // We ship within India in rupees only, for now.
 function IntlTag({ r }) {
+  if (r.cancelled) return <span title="Cancelled on your Shopify store. It can't be sent to print, and COD won't be collected." style={{ display: 'inline-block', padding: '1px 7px', borderRadius: '100px', fontSize: '10px', fontWeight: 800, letterSpacing: '0.04em', background: '#FFF5F5', color: '#C53030', verticalAlign: 'middle', whiteSpace: 'nowrap' }}>Cancelled</span>
   if (!r.international) return null
   return <span title="International orders aren't available yet. This order can't be sent to print and nothing is charged." style={{ display: 'inline-block', padding: '1px 7px', borderRadius: '100px', fontSize: '10px', fontWeight: 800, letterSpacing: '0.04em', background: '#FFF5F5', color: '#C53030', verticalAlign: 'middle', whiteSpace: 'nowrap' }}>International · {r.international}</span>
 }
