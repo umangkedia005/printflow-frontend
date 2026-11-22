@@ -20,19 +20,19 @@ const BLOCKS = [
   {
     kicker: 'Go live in minutes',
     title: 'Start selling without stock',
-    image: '/images/tshirt_1.jpg',
+    image: '/images/home/block-sofa.webp',
     points: ['No minimum order: print one piece or a thousand.', 'Pay per order from your wallet. No upfront inventory.', 'Connect your Shopify store and orders flow in automatically.'],
   },
   {
     kicker: 'Made for brands',
     title: 'Your designs, printed properly',
-    image: '/images/fulfillment/tee_back_bull.jpg',
+    image: '/images/home/block-printdetail.webp',
     points: ['Premium blanks: tees, oversized fits, hoodies, polos and more.', 'DTF printing on front, back and sleeves, priced by design size.', 'Your own hang tags, courier bags and thank-you cards.'],
   },
   {
     kicker: 'We handle the rest',
     title: 'Printed, packed and shipped',
-    image: '/images/branding/bags-colours.jpg',
+    image: '/images/home/block-packaging.webp',
     points: ['Dispatched in about 48 hours across India.', 'Courier and tracking number emailed to you.', 'GST invoices for every order, in your dashboard.'],
   },
 ]
@@ -45,12 +45,12 @@ const STEPS = [
 ]
 
 const LOOKBOOK = [
-  ['/images/fulfillment/tee_back_playlist.jpg', 'Back print tee'],
-  ['/images/hoodie_1.jpg', 'Hoodie'],
-  ['/images/fulfillment/pet_tee_frenchie_1.jpg', 'Pet tee'],
-  ['/images/fulfillment/tee_back_drink.jpg', 'Oversized tee'],
-  ['/images/branding/tags-colours.jpg', 'Your hang tags'],
-  ['/images/fulfillment/tee_back_flirt.jpg', 'Statement tee'],
+  ['/images/home/look-red-tee.webp', 'Front print tee'],
+  ['/images/home/look-print-closeup.webp', 'Print close-up'],
+  ['/images/home/look-pink-tee.webp', 'Oversized tee'],
+  ['/images/home/look-back-ticket.webp', 'Back print'],
+  ['/images/home/look-hang-tag.webp', 'Your hang tags'],
+  ['/images/home/look-back-olive.webp', 'Big back print'],
 ]
 
 const FAQ = [
@@ -185,10 +185,10 @@ export default function HomePage() {
             </a>
           </div>
           <div style={{ position: 'relative' }}>
-            <img src="/images/hoodie_1.jpg" alt="A model wearing a printed hoodie" style={{ display: 'block', width: '100%', aspectRatio: '1 / 1', objectFit: 'cover', borderRadius: '28px', boxShadow: '0 30px 60px rgba(23,43,21,0.14)' }} />
+            <img src="/images/home/hero-sky.webp" alt="Three people in printed oversized tees sitting on a white wall under a blue sky" style={{ display: 'block', width: '100%', aspectRatio: '1 / 1', objectFit: 'cover', borderRadius: '28px', boxShadow: '0 30px 60px rgba(23,43,21,0.14)' }} />
             <div style={{ position: 'absolute', left: '-14px', bottom: '28px', background: '#FFFFFF', borderRadius: '16px', padding: '12px 16px', boxShadow: '0 12px 30px rgba(23,43,21,0.12)', display: 'flex', alignItems: 'center', gap: '10px' }}>
               <span style={{ width: '36px', height: '36px', borderRadius: '10px', background: LIME, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '18px' }}>🚚</span>
-              <div><div style={{ fontSize: '13px', fontWeight: 800 }}>Dispatched in ~48 hours</div><div style={{ fontSize: '12px', color: SAGE }}>Shipping across India</div></div>
+              <div><div style={{ fontSize: '13px', fontWeight: 800 }}>Dispatched in ~48 hours</div><div style={{ fontSize: '12px', color: SAGE }}>Ship wherever you want</div></div>
             </div>
           </div>
         </div>
