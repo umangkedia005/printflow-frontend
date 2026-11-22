@@ -201,8 +201,12 @@ function CreateOrder({ walletBalance, onTopUp, onPlaced, onCancel, initialDesign
   useEffect(() => {
     if (!codEdited) setCodAmount(retail > 0 ? String(retail) : '')
   }, [retail, codEdited])
-  const cod = payment === 'cod' && !sample
-  const codNumber = Number(codAmount || 0)
+  // COD: the courier collects the whole selling price. Part paid: the
+  // customer paid some online, the courier collects the rest.
+  const cod = (payment === 'cod' || payment === 'partial') && !sample
+  const partial = payment === 'partial' && !sample
+  const onlinePaid = partial ? Number(codPrepaid || 0) : 0
+  const codNumber = Math.round((Number(codAmount || 0) - onlinePaid) * 100) / 100
   const codFee = codInfo?.fee ?? 40
 
   const total = quote ? Number(quote.quote.total) : 0
@@ -215,7 +219,9 @@ function CreateOrder({ walletBalance, onTopUp, onPlaced, onCancel, initialDesign
   if (address.phone.replace(/\D/g, '').slice(-10).length !== 10) missing.push('Enter a 10-digit phone number')
   if (!address.address1.trim() || !address.city.trim() || !address.state.trim()) missing.push('Enter the address, city and state')
   if (!/^[1-9][0-9]{5}$/.test(address.pincode.trim())) missing.push('Enter a 6-digit pincode')
-  if (cod && !(codNumber > codFee)) missing.push(`Enter the amount to collect (more than the ₹${codFee} COD fee)`)
+  if (partial && !(onlinePaid > 0)) missing.push('Enter how much the customer paid online')
+  if (partial && onlinePaid >= Number(codAmount || 0)) missing.push('Paid online must be less than the selling price (or choose Prepaid)')
+  else if (cod && !(codNumber > codFee)) missing.push(`The amount to collect must be more than the ₹${codFee} COD fee`)
   if (cod && codNumber > 50000) missing.push('Cash on delivery is limited to ₹50,000 per order')
 
   async function handlePlace() {
@@ -226,7 +232,7 @@ function CreateOrder({ walletBalance, onTopUp, onPlaced, onCancel, initialDesign
       const res = await placeManualOrder({
         lines: payload, shipping_method: method, address: addr, reference,
         ...(sample ? { sample: true } : {}),
-        ...(cod ? { payment: 'cod', cod_amount: codNumber, cod_prepaid: Number(codPrepaid || 0) } : {}),
+        ...(cod ? { payment: 'cod', cod_amount: codNumber, cod_prepaid: onlinePaid } : {}),
       })
       onPlaced(res)
     } catch (err) {
@@ -357,9 +363,9 @@ function CreateOrder({ walletBalance, onTopUp, onPlaced, onCancel, initialDesign
             {!sample && (
               <>
                 <span style={{ ...LABEL, marginTop: '20px' }}>Your customer pays</span>
-                <div style={{ display: 'flex', gap: '8px' }}>
-                  {[['prepaid', 'Prepaid', 'Already paid you'], ['cod', 'Cash on delivery', 'Courier collects']].map(([id, text, hint]) => (
-                    <button key={id} onClick={() => setPayment(id)} aria-pressed={payment === id} style={{ flex: 1, textAlign: 'left', padding: '10px 12px', borderRadius: '14px', border: payment === id ? `1.5px solid ${INK}` : '1px solid rgba(23,43,21,0.1)', background: payment === id ? '#F6F7F2' : '#FFFFFF', cursor: 'pointer', fontFamily: 'Inter, sans-serif' }}>
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(120px, 1fr))', gap: '8px' }}>
+                  {[['prepaid', 'Prepaid', 'Paid you in full'], ['cod', 'Cash on delivery', 'Courier collects all'], ['partial', 'Part paid', 'Rest on delivery']].map(([id, text, hint]) => (
+                    <button key={id} onClick={() => setPayment(id)} aria-pressed={payment === id} style={{ textAlign: 'left', padding: '10px 12px', borderRadius: '14px', border: payment === id ? `1.5px solid ${INK}` : '1px solid rgba(23,43,21,0.1)', background: payment === id ? '#F6F7F2' : '#FFFFFF', cursor: 'pointer', fontFamily: 'Inter, sans-serif' }}>
                       <div style={{ fontSize: '13px', fontWeight: 700, color: INK }}>{text}</div>
                       <div style={{ fontSize: '11px', color: SAGE, marginTop: '2px' }}>{hint}</div>
                     </button>
@@ -367,18 +373,20 @@ function CreateOrder({ walletBalance, onTopUp, onPlaced, onCancel, initialDesign
                 </div>
                 {cod && (
                   <div style={{ marginTop: '12px', display: 'flex', flexDirection: 'column', gap: '10px' }}>
-                    <Field label="Amount to collect from customer">
+                    <Field label={partial ? 'Selling price (full order value)' : 'Amount to collect from customer'}>
                       <input style={INPUT} inputMode="decimal" value={codAmount} placeholder="e.g. 899"
                         onChange={e => { setCodEdited(true); setCodAmount(e.target.value.replace(/[^0-9.]/g, '').slice(0, 8)) }} />
                     </Field>
-                    <Field label="Already paid online" optional>
-                      <input style={INPUT} inputMode="decimal" value={codPrepaid} placeholder="For part-paid orders, e.g. 99"
-                        onChange={e => setCodPrepaid(e.target.value.replace(/[^0-9.]/g, '').slice(0, 8))} />
-                    </Field>
+                    {partial && (
+                      <Field label="Paid online by the customer">
+                        <input style={INPUT} inputMode="decimal" value={codPrepaid} placeholder="e.g. 99"
+                          onChange={e => setCodPrepaid(e.target.value.replace(/[^0-9.]/g, '').slice(0, 8))} />
+                      </Field>
+                    )}
                     <div style={{ background: '#F6F7F2', borderRadius: '12px', padding: '10px 12px', fontSize: '12px', color: INK, lineHeight: 1.55 }}>
-                      {codNumber > codFee
-                        ? <>The courier collects <b>{rupees(codNumber)}</b>. After delivery we pay <b>{rupees(codNumber - codFee)}</b> to your bank account ({rupees(codNumber)} − {rupees(codFee)} COD fee). If the parcel comes back, the return shipping is charged to your wallet.</>
-                        : <>Enter your selling price: what the customer still has to pay. {retail > 0 ? '' : 'Tip: set retail prices on your designs and this fills in by itself.'}</>}
+                      {codNumber > codFee && (!partial || onlinePaid > 0)
+                        ? <>{partial && <>Customer paid you {rupees(onlinePaid)} online. </>}The courier collects <b>{rupees(codNumber)}</b>{partial ? ' (the rest)' : ''}. After delivery we pay <b>{rupees(codNumber - codFee)}</b> to your bank account ({rupees(codNumber)} − {rupees(codFee)} COD fee). If the parcel comes back, the return shipping is charged to your wallet.</>
+                        : <>{partial ? 'Enter the full selling price and how much the customer already paid online; the courier collects the rest.' : 'Enter your selling price: what the customer pays on delivery.'} {retail > 0 ? '' : 'Tip: set retail prices on your designs and the price fills in by itself.'}</>}
                     </div>
                     {codInfo && !codInfo.hasBank && (
                       <div style={{ background: '#FFF7ED', borderRadius: '12px', padding: '10px 12px', fontSize: '12px', color: '#C2410C' }}>
