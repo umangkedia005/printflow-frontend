@@ -359,7 +359,7 @@ function CreateOrder({ walletBalance, onTopUp, onPlaced, onCancel, initialDesign
               ['Subtotal', quote?.quote.subtotal],
               ...(quote?.quote.sample ? [[`Sample discount (${quote.quote.sample_discount_pct}%)`, -Number(quote.quote.sample_discount)]] : []),
               ['Shipping', quote?.quote.shipping],
-              [`Product tax (${quote?.quote.product_tax_pct ?? 5}%)`, quote?.quote.product_tax],
+              [`Product tax (${(quote?.quote.product_tax_rates || [quote?.quote.product_tax_pct ?? 5]).join('% + ')}%)`, quote?.quote.product_tax],
               [`Shipping tax (${quote?.quote.shipping_tax_pct ?? 18}%)`, quote?.quote.shipping_tax],
             ].map(([k, v]) => (
               <div key={k} style={{ display: 'flex', justifyContent: 'space-between', fontSize: '13px', color: SAGE, padding: '6px 0' }}><span>{k}</span><span style={{ color: v < 0 ? '#166534' : INK, fontWeight: 600 }}>{v < 0 ? `−${rupees(-v)}` : rupees(v)}</span></div>
