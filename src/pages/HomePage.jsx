@@ -54,7 +54,7 @@ const LOOKBOOK = [
 ]
 
 const FAQ = [
-  ['How much does it cost?', 'Signing up is free. For each order you pay the garment price, printing (₹47 per printed side + ₹0.45 per square inch of the design) and shipping, plus GST — all shown before you confirm. Shopify stores choose a monthly plan by order volume.'],
+  ['How much does it cost?', 'Signing up is free. For each order you pay the garment price, printing and shipping, plus GST — all shown before you confirm. Shopify stores choose a monthly plan by order volume.'],
   ['Is there a minimum order?', 'No. You can order a single piece, including samples at a discount to check the quality first.'],
   ['Do I need a Shopify store?', 'No. You can place orders yourself from the dashboard. If you have a Shopify store, connect it and its orders come in automatically.'],
   ['Where do you ship, and how fast?', 'Anywhere in India. Orders are usually printed and dispatched within 48 hours, and we email the tracking number.'],
