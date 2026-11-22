@@ -247,13 +247,15 @@ export default function DesignEditor({ blank, onClose, onSaved, initialArtwork =
   }
 
   const problems = []
+  const lowRes = []
   if (!placedAreas.length) problems.push('Upload artwork for at least one print area')
   placedAreas.forEach(a => {
     const art = artworks[a.id]
     const d = Math.round(art.px_w / placements[a.id].w)
     if (art.uploading) problems.push(`Waiting for the ${a.label} upload to finish`)
     else if (!art.s3_key) problems.push(`Upload the ${a.label} artwork again`)
-    if (d < (a.min_dpi || 150)) problems.push(`${a.label}: make the artwork smaller or use a higher-resolution file (${d} DPI)`)
+    // Low resolution is a warning, not a blocker: the brand may still print it.
+    if (d < (a.min_dpi || 150)) lowRes.push(`${a.label} (${d} DPI)`)
   })
   if (!colors.length) problems.push('Pick at least one color')
   if (!sizes.length) problems.push('Pick at least one size')
@@ -387,7 +389,7 @@ export default function DesignEditor({ blank, onClose, onSaved, initialArtwork =
   // Every view that has a print area, each with all of its areas drawn on it.
   const previewViews = views.filter(v => areas.some(a => viewOf(a) === v.id))
 
-  const dpiTone = dpi === null ? null : dpi >= GOOD_DPI ? ['#F0FDF4', '#166534', 'Sharp print'] : dpi >= minDpi ? ['#FFF7ED', '#C2410C', 'Acceptable, may look soft up close'] : ['#FFF5F5', '#C53030', 'Too low to print']
+  const dpiTone = dpi === null ? null : dpi >= GOOD_DPI ? ['#F0FDF4', '#166534', 'Sharp print'] : dpi >= minDpi ? ['#FFF7ED', '#C2410C', 'Acceptable, may look soft up close'] : ['#FFF5F5', '#C53030', 'Low resolution, may print blurry. Make it smaller or use a bigger file for a sharp print. You can still save it.']
   const inputStyle = { width: '100%', padding: '11px 14px', boxSizing: 'border-box', border: '1px solid rgba(23,43,21,0.1)', borderRadius: '12px', fontSize: '13px', outline: 'none', fontFamily: 'Inter, sans-serif', color: '#172B15', background: '#FFFFFF' }
   const chip = on => ({ padding: '7px 14px', borderRadius: '10px', border: on ? '1px solid #172B15' : '1px solid rgba(23,43,21,0.1)', background: on ? '#172B15' : '#FFFFFF', color: on ? '#FFFFFF' : '#172B15', fontSize: '12px', fontWeight: 700, cursor: 'pointer', fontFamily: 'Inter, sans-serif' })
 
@@ -596,6 +598,11 @@ export default function DesignEditor({ blank, onClose, onSaved, initialArtwork =
           <div className="pf-design-save" style={{ background: '#FFFFFF', border: '1px solid rgba(23,43,21,0.06)', borderRadius: '20px', boxShadow: '0 8px 30px rgba(23,43,21,0.015)', padding: '18px 22px' }}>
             {saveError && <div style={{ background: '#FFF5F5', border: '1px solid #FED7D7', borderRadius: '8px', padding: '10px 14px', marginBottom: '12px', fontSize: '12px', color: '#C53030' }}>⚠ {saveError}</div>}
             {problems.length > 0 && <div style={{ fontSize: '12px', color: '#889B8E', marginBottom: '10px' }}>{problems[0]}</div>}
+            {lowRes.length > 0 && problems.length === 0 && (
+              <div style={{ fontSize: '12px', color: '#C53030', background: '#FFF5F5', borderRadius: '8px', padding: '8px 12px', marginBottom: '10px', lineHeight: 1.5 }}>
+                Low resolution: {lowRes.join(', ')}. It will print, but may look blurry.
+              </div>
+            )}
             <button className="pf-btn" onClick={handleSave} disabled={saving || problems.length > 0} style={{ width: '100%', padding: '14px', fontSize: '14px', fontWeight: 800, background: '#B9F95D', color: '#172B15', borderRadius: '14px', boxShadow: '0 6px 18px rgba(185,249,93,0.35)' }}>
               {saving ? 'Saving…' : 'Save draft'}
             </button>
