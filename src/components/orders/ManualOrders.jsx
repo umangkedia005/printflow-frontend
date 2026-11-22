@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useMemo, useState } from 'react'
 import { createPortal } from 'react-dom'
 import DesignMockup from '../catalogue/DesignMockup'
-import { fetchDesignableProducts, fetchMerchantProducts, quoteManualOrder, placeManualOrder, fetchManualOrders, fetchAccountSettings } from '../../utils/api'
+import { fetchDesignableProducts, fetchMerchantProducts, quoteManualOrder, placeManualOrder, fetchManualOrders, fetchAccountSettings, fetchCodRemittance } from '../../utils/api'
 import { STATES } from '../../utils/indiaStates'
 
 const INK = '#172B15', SAGE = '#889B8E', LIME = '#B9F95D', LINE = 'rgba(23,43,21,0.08)'
@@ -129,6 +129,16 @@ function CreateOrder({ walletBalance, onTopUp, onPlaced, onCancel, initialDesign
   const [address, setAddress] = useState({ reference: '', name: '', email: '', phone: '', address1: '', address2: '', city: '', state: '', pincode: '' })
   const [placing, setPlacing] = useState(false)
   const [error, setError] = useState('')
+  // Cash on delivery: the courier collects the brand's selling price from the
+  // customer (minus anything already paid online); we pay it on, less the fee.
+  const [payment, setPayment] = useState('prepaid')
+  const [codAmount, setCodAmount] = useState('')
+  const [codEdited, setCodEdited] = useState(false)
+  const [codPrepaid, setCodPrepaid] = useState('')
+  const [codInfo, setCodInfo] = useState(null)
+  useEffect(() => {
+    if (!sample) fetchCodRemittance().then(d => setCodInfo({ fee: Number(d.cod_fee), hasBank: d.has_bank })).catch(() => {})
+  }, [sample])
 
   useEffect(() => {
     fetchMerchantProducts().then(list => {
@@ -186,6 +196,15 @@ function CreateOrder({ walletBalance, onTopUp, onPlaced, onCancel, initialDesign
     if (lines.length === 1) setQuote(null)
   }
 
+  // Start the amount to collect from the retail prices set on the designs.
+  const retail = lines.reduce((sum, l) => sum + (Number(l.design?.prices?.[l.size]) || 0) * Number(l.qty || 0), 0)
+  useEffect(() => {
+    if (!codEdited) setCodAmount(retail > 0 ? String(retail) : '')
+  }, [retail, codEdited])
+  const cod = payment === 'cod' && !sample
+  const codNumber = Number(codAmount || 0)
+  const codFee = codInfo?.fee ?? 40
+
   const total = quote ? Number(quote.quote.total) : 0
   const short = quote && total > Number(walletBalance || 0)
   const setA = (k, v) => setAddress(a => ({ ...a, [k]: v }))
@@ -196,13 +215,19 @@ function CreateOrder({ walletBalance, onTopUp, onPlaced, onCancel, initialDesign
   if (address.phone.replace(/\D/g, '').slice(-10).length !== 10) missing.push('Enter a 10-digit phone number')
   if (!address.address1.trim() || !address.city.trim() || !address.state.trim()) missing.push('Enter the address, city and state')
   if (!/^[1-9][0-9]{5}$/.test(address.pincode.trim())) missing.push('Enter a 6-digit pincode')
+  if (cod && !(codNumber > codFee)) missing.push(`Enter the amount to collect (more than the ₹${codFee} COD fee)`)
+  if (cod && codNumber > 50000) missing.push('Cash on delivery is limited to ₹50,000 per order')
 
   async function handlePlace() {
     setPlacing(true)
     setError('')
     try {
       const { reference, ...addr } = address
-      const res = await placeManualOrder({ lines: payload, shipping_method: method, address: addr, reference, ...(sample ? { sample: true } : {}) })
+      const res = await placeManualOrder({
+        lines: payload, shipping_method: method, address: addr, reference,
+        ...(sample ? { sample: true } : {}),
+        ...(cod ? { payment: 'cod', cod_amount: codNumber, cod_prepaid: Number(codPrepaid || 0) } : {}),
+      })
       onPlaced(res)
     } catch (err) {
       setError(err.message)
@@ -327,7 +352,43 @@ function CreateOrder({ walletBalance, onTopUp, onPlaced, onCancel, initialDesign
               </div>
               <button onClick={onTopUp} style={{ background: 'none', border: `1px solid ${INK}`, borderRadius: '10px', padding: '7px 12px', fontSize: '12px', fontWeight: 700, color: INK, cursor: 'pointer', fontFamily: 'Inter, sans-serif' }}>Top up</button>
             </div>
-            <div style={{ fontSize: '11px', color: SAGE, marginTop: '8px' }}>Prepaid only: your customer isn't charged on delivery.</div>
+            <div style={{ fontSize: '11px', color: SAGE, marginTop: '8px' }}>{sample ? 'Samples are prepaid only.' : 'Printing, shipping and GST are paid from your wallet now, for prepaid and COD orders alike.'}</div>
+
+            {!sample && (
+              <>
+                <span style={{ ...LABEL, marginTop: '20px' }}>Your customer pays</span>
+                <div style={{ display: 'flex', gap: '8px' }}>
+                  {[['prepaid', 'Prepaid', 'Already paid you'], ['cod', 'Cash on delivery', 'Courier collects']].map(([id, text, hint]) => (
+                    <button key={id} onClick={() => setPayment(id)} aria-pressed={payment === id} style={{ flex: 1, textAlign: 'left', padding: '10px 12px', borderRadius: '14px', border: payment === id ? `1.5px solid ${INK}` : '1px solid rgba(23,43,21,0.1)', background: payment === id ? '#F6F7F2' : '#FFFFFF', cursor: 'pointer', fontFamily: 'Inter, sans-serif' }}>
+                      <div style={{ fontSize: '13px', fontWeight: 700, color: INK }}>{text}</div>
+                      <div style={{ fontSize: '11px', color: SAGE, marginTop: '2px' }}>{hint}</div>
+                    </button>
+                  ))}
+                </div>
+                {cod && (
+                  <div style={{ marginTop: '12px', display: 'flex', flexDirection: 'column', gap: '10px' }}>
+                    <Field label="Amount to collect from customer">
+                      <input style={INPUT} inputMode="decimal" value={codAmount} placeholder="e.g. 899"
+                        onChange={e => { setCodEdited(true); setCodAmount(e.target.value.replace(/[^0-9.]/g, '').slice(0, 8)) }} />
+                    </Field>
+                    <Field label="Already paid online" optional>
+                      <input style={INPUT} inputMode="decimal" value={codPrepaid} placeholder="For part-paid orders, e.g. 99"
+                        onChange={e => setCodPrepaid(e.target.value.replace(/[^0-9.]/g, '').slice(0, 8))} />
+                    </Field>
+                    <div style={{ background: '#F6F7F2', borderRadius: '12px', padding: '10px 12px', fontSize: '12px', color: INK, lineHeight: 1.55 }}>
+                      {codNumber > codFee
+                        ? <>The courier collects <b>{rupees(codNumber)}</b>. After delivery we pay <b>{rupees(codNumber - codFee)}</b> to your bank account ({rupees(codNumber)} − {rupees(codFee)} COD fee). If the parcel comes back, the return shipping is charged to your wallet.</>
+                        : <>Enter your selling price: what the customer still has to pay. {retail > 0 ? '' : 'Tip: set retail prices on your designs and this fills in by itself.'}</>}
+                    </div>
+                    {codInfo && !codInfo.hasBank && (
+                      <div style={{ background: '#FFF7ED', borderRadius: '12px', padding: '10px 12px', fontSize: '12px', color: '#C2410C' }}>
+                        Add your bank account under Settings → Bank Account so we can pay your COD money to you.
+                      </div>
+                    )}
+                  </div>
+                )}
+              </>
+            )}
           </Card>
 
           <div className="pf-design-save" style={{ ...CARD, padding: '18px 22px' }}>
@@ -373,7 +434,7 @@ export default function ManualOrdersView({ walletBalance, onWalletChanged, onTop
         onTopUp={onTopUp}
         onCancel={() => (onCancelCreate ? onCancelCreate() : setCreating(false))}
         onPlaced={res => {
-          const message = `${sample ? 'Sample order' : 'Order'} ${res.order_id} placed. ${rupees(res.total)} was paid from your wallet.`
+          const message = `${sample ? 'Sample order' : 'Order'} ${res.order_id} placed. ${rupees(res.total)} was paid from your wallet.${res.cod ? ` The courier will collect ${rupees(res.cod)} from your customer.` : ''}`
           onWalletChanged()
           if (onPlaced) return onPlaced(message)
           setCreating(false)

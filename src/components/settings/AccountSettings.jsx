@@ -78,8 +78,8 @@ function draftsFrom(s) {
   }
 }
 
-export default function AccountSettings({ email, shopDomain, onAddStore, onSignOut }) {
-  const [tab, setTab] = useState('billing')
+export default function AccountSettings({ email, shopDomain, onAddStore, onSignOut, initialTab = 'billing' }) {
+  const [tab, setTab] = useState(initialTab)
   const [saved, setSaved] = useState(null)
   const [drafts, setDrafts] = useState(null)
   const [loadError, setLoadError] = useState('')

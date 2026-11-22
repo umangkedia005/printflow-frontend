@@ -42,10 +42,10 @@ function toCsv(rows) {
     const s = v == null ? '' : String(v)
     return /[",\n]/.test(s) ? `"${s.replace(/"/g, '""')}"` : s
   }
-  const head = ['Order', 'Type', 'Store', 'Date', 'Customer', 'City', 'Pieces', 'Products', 'Status', 'Order total (your customer)', 'Paid from wallet', 'Invoice number', 'Courier', 'Tracking number', 'Reference']
+  const head = ['Order', 'Type', 'Store', 'Date', 'Customer', 'City', 'Pieces', 'Products', 'Status', 'Order total (your customer)', 'Paid from wallet', 'Invoice number', 'Courier', 'Tracking number', 'Reference', 'Cash on delivery (collect)', 'Returned (RTO)']
   const body = rows.map(r => [
     r.order_name, TYPES[r.type], r.shop || '', localDay(r.created_at), r.customer, r.city || '', r.pieces, r.products.join('; '),
-    STATUS[r.status]?.[0] || r.status, r.type === 'shopify' ? r.order_total : '', r.paid ?? '', r.invoice_number || '', r.tracking?.courier || '', r.tracking?.number || '', r.reference || '',
+    STATUS[r.status]?.[0] || r.status, r.type === 'shopify' ? r.order_total : '', r.paid ?? '', r.invoice_number || '', r.tracking?.courier || '', r.tracking?.number || '', r.reference || '', r.cod?.amount ?? '', r.rto ? 'Yes' : '',
   ])
   return [head, ...body].map(line => line.map(cell).join(',')).join('\r\n')
 }
@@ -175,7 +175,7 @@ export default function OrderManagement({ onOpenOrders }) {
                 return (
                   <div key={r.order_id} style={{ padding: '14px 16px', borderBottom: i < rows.length - 1 ? `1px solid ${LINE}` : 'none' }}>
                     <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: '10px' }}>
-                      <span style={{ fontWeight: 800, color: INK, fontSize: '13px' }}>{r.order_name} <TypeTag type={r.type} /></span>
+                      <span style={{ fontWeight: 800, color: INK, fontSize: '13px' }}>{r.order_name} <TypeTag type={r.type} /> <CodTag r={r} /></span>
                       <span style={{ background: bg, color: fg, padding: '3px 10px', borderRadius: '100px', fontSize: '11px', fontWeight: 700, flexShrink: 0 }}>{label}</span>
                     </div>
                     <div style={{ fontSize: '12.5px', color: INK, marginTop: '6px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{r.pieces} pc · {r.products[0] || '—'}{r.products.length > 1 ? ` +${r.products.length - 1}` : ''}</div>
@@ -202,7 +202,7 @@ export default function OrderManagement({ onOpenOrders }) {
                     const [label, bg, fg] = STATUS[r.status] || STATUS.queued
                     return (
                       <tr key={r.order_id} style={{ borderBottom: `1px solid ${LINE}` }}>
-                        <td style={{ padding: '12px 14px', fontSize: '13px', fontWeight: 800, color: INK, whiteSpace: 'nowrap' }}>{r.order_name}<div style={{ marginTop: '3px' }}><TypeTag type={r.type} /></div></td>
+                        <td style={{ padding: '12px 14px', fontSize: '13px', fontWeight: 800, color: INK, whiteSpace: 'nowrap' }}>{r.order_name}<div style={{ marginTop: '3px', display: 'flex', gap: '4px', flexWrap: 'wrap' }}><TypeTag type={r.type} /><CodTag r={r} /></div></td>
                         <td style={{ padding: '12px 14px', fontSize: '12.5px', color: INK, whiteSpace: 'nowrap' }}>{day(r.created_at)}</td>
                         <td style={{ padding: '12px 14px', fontSize: '12.5px', color: INK }}>{r.customer}<div style={{ fontSize: '11px', color: SAGE }}>{r.city || ''}</div></td>
                         <td style={{ padding: '12px 14px', fontSize: '12px', color: INK, maxWidth: '240px' }}><div style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }} title={r.products.join('\n')}>{r.products[0] || '—'}</div>{r.products.length > 1 && <div style={{ fontSize: '11px', color: SAGE }}>+{r.products.length - 1} more</div>}</td>
@@ -232,6 +232,14 @@ export default function OrderManagement({ onOpenOrders }) {
       <p style={{ fontSize: '11.5px', color: SAGE, marginTop: '10px' }}>"Order total" is what your customer paid on Shopify; "Paid from wallet" is what printing and shipping cost you. The Excel file is a CSV that opens in Excel or Google Sheets.</p>
     </div>
   )
+}
+
+// COD orders show what the courier collects; returned parcels say RTO.
+function CodTag({ r }) {
+  const tag = (text, bg, fg, title) => <span title={title} style={{ display: 'inline-block', padding: '1px 7px', borderRadius: '100px', fontSize: '10px', fontWeight: 800, letterSpacing: '0.04em', background: bg, color: fg, verticalAlign: 'middle', whiteSpace: 'nowrap' }}>{text}</span>
+  if (r.rto) return tag('RTO', '#FFF5F5', '#C53030', 'The parcel came back to us (return to origin). The return shipping was charged to your wallet.')
+  if (!r.cod) return null
+  return tag(`COD ${rupees(r.cod.amount)}`, '#FFF7ED', '#C2410C', `Cash on delivery: the courier collects ${rupees(r.cod.amount)} from your customer${Number(r.cod.prepaid) > 0 ? ` (${rupees(r.cod.prepaid)} already paid online)` : ''}. See COD Remittance.`)
 }
 
 function TypeTag({ type }) {

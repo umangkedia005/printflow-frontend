@@ -6,6 +6,7 @@ import OrderManagement from '../components/orders/OrderManagement'
 import BrandingView from '../components/branding/BrandingView'
 import StockLevel from '../components/stock/StockLevel'
 import EnquiryView from '../components/enquiry/EnquiryView'
+import CodRemittance from '../components/cod/CodRemittance'
 import AccountSettings from '../components/settings/AccountSettings'
 import { SUPPORT_EMAIL, SUPPORT_PHONES, openInvoice, fetchOrders, fetchSubscription, fetchMyStores, linkStore, updateSubscription, fetchPlans, fetchWallet, fulfillOrder, fetchProductMappings, updateProductMapping, createShopifySubscription, fetchCatalogue } from '../utils/api'
 import { SHOPIFY_INSTALL_URL } from '../utils/shopify'
@@ -102,6 +103,7 @@ const BRANDING_PAGES = { 'branding-tags': 'hang_tag', 'branding-packaging': 'pol
 const IconProducts = () => <svg width="15" height="15" viewBox="0 0 16 16" fill="none"><path d="M8 1.5L14 4.5V11.5L8 14.5L2 11.5V4.5L8 1.5Z" stroke="currentColor" strokeWidth="1.5" strokeLinejoin="round"/><path d="M8 1.5V14.5M2 4.5L8 7.5L14 4.5" stroke="currentColor" strokeWidth="1.5"/></svg>
 const IconSettings = () => <svg width="15" height="15" viewBox="0 0 16 16" fill="none"><circle cx="8" cy="8" r="2.5" stroke="currentColor" strokeWidth="1.5"/><path d="M8 1.5V3M8 13v1.5M1.5 8H3M13 8h1.5M3.4 3.4l1.06 1.06M11.54 11.54l1.06 1.06M3.4 12.6l1.06-1.06M11.54 4.46l1.06-1.06" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/></svg>
 const IconBilling  = () => <svg width="15" height="15" viewBox="0 0 16 16" fill="none"><rect x="1" y="3.5" width="14" height="9" rx="1.5" stroke="currentColor" strokeWidth="1.5"/><path d="M1 6.5h14" stroke="currentColor" strokeWidth="1.5"/><path d="M4 10h2" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/></svg>
+const IconCod = () => <svg width="15" height="15" viewBox="0 0 16 16" fill="none"><rect x="1.5" y="4" width="13" height="8.5" rx="1.5" stroke="currentColor" strokeWidth="1.5"/><circle cx="8" cy="8.25" r="1.75" stroke="currentColor" strokeWidth="1.5"/><path d="M4 6.5v3.5M12 6.5v3.5" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/></svg>
 const IconWallet   = () => <svg width="15" height="15" viewBox="0 0 16 16" fill="none"><path d="M2 4.5A1.5 1.5 0 013.5 3h9A1.5 1.5 0 0114 4.5v7A1.5 1.5 0 0112.5 13h-9A1.5 1.5 0 012 11.5v-7Z" stroke="currentColor" strokeWidth="1.5"/><path d="M10.5 8a1 1 0 102 0 1 1 0 00-2 0Z" fill="currentColor"/><path d="M2 6.5h12" stroke="currentColor" strokeWidth="1.5"/></svg>
 const IconMail     = () => <svg width="15" height="15" viewBox="0 0 16 16" fill="none"><rect x="1.75" y="3.25" width="12.5" height="9.5" rx="1.5" stroke="currentColor" strokeWidth="1.5"/><path d="M2.5 4.5 8 8.75l5.5-4.25" stroke="currentColor" strokeWidth="1.5" strokeLinejoin="round"/></svg>
 const IconPhone    = () => <svg width="15" height="15" viewBox="0 0 24 24" fill="currentColor"><path d="M6.6 10.8a15.1 15.1 0 0 0 6.6 6.6l2.2-2.2a1 1 0 0 1 1-.25 11.4 11.4 0 0 0 3.6.57 1 1 0 0 1 1 1V20a1 1 0 0 1-1 1A17 17 0 0 1 3 4a1 1 0 0 1 1-1h3.5a1 1 0 0 1 1 1c0 1.25.2 2.45.57 3.57a1 1 0 0 1-.25 1z"/></svg>
@@ -296,6 +298,7 @@ const NAV_ITEMS = [
   { id: 'garments',      label: 'My garments',   Icon: IconGarments },
   { id: 'orders',        label: 'Orders',        Icon: IconOrders },
   { id: 'order-management', label: 'Order Management', Icon: IconManage },
+  { id: 'cod',           label: 'COD Remittance', Icon: IconCod },
   { id: 'create-order',  label: 'Create order',  Icon: IconCreateOrder },
   { id: 'sample',        label: 'Book a Sample', Icon: IconSample },
   { id: 'stock',         label: 'Stock Level',   Icon: IconStock },
@@ -309,7 +312,7 @@ const NAV_ITEMS = [
 
 // Sidebar order, like Unitee's. Trends stays out until it has real data.
 const MENU_ORDER = ['dashboard', 'catalogue', 'files', 'garments', 'products', 'sample', 'branding', 'enquiry', 'create-order', 'orders',
-  'stock', 'order-management', 'wallet', 'billing', 'notifications', 'settings', 'help']
+  'stock', 'order-management', 'cod', 'wallet', 'billing', 'notifications', 'settings', 'help']
 
 // ── Upgrade Modal ─────────────────────────────────────────────────────────────
 
@@ -661,6 +664,9 @@ export default function DashboardPage() {
   const [searchParams, setSearchParams] = useSearchParams()
 
   const [activeNav, setActiveNav]           = useState('dashboard')
+  // Settings opens on Billing, or on Bank Account from COD Remittance.
+  const [settingsTab, setSettingsTab]       = useState('billing')
+  useEffect(() => { if (activeNav !== 'settings') setSettingsTab('billing') }, [activeNav])
   // Phones: the sidebar is a drawer behind the ☰ button (see .pf-sidebar in index.css).
   const [menuOpen, setMenuOpen]             = useState(false)
   const [contactOpen, setContactOpen]       = useState(false)
@@ -1917,6 +1923,7 @@ export default function DashboardPage() {
             </div>
           )}
           {activeNav === 'stock' && <div style={{ position: 'relative', zIndex: 1 }}><StockLevel /></div>}
+          {activeNav === 'cod' && <div style={{ position: 'relative', zIndex: 1 }}><CodRemittance onOpenSettings={() => { setSettingsTab('bank'); setActiveNav('settings') }} onCreateOrder={() => setActiveNav('create-order')} /></div>}
           {activeNav === 'enquiry' && <div style={{ position: 'relative', zIndex: 1 }}><EnquiryView accountEmail={currentUser?.email} /></div>}
           {activeNav === 'garments' && catalogueOn && <div style={{ position: 'relative', zIndex: 1 }}><GarmentsView onOrderPlain={id => { setOrderDesignId(null); setOrderBlankId(id); setActiveNav('create-order') }} /></div>}
           {activeNav === 'files' && catalogueOn && <div style={{ position: 'relative', zIndex: 1 }}><FilesView onOrder={id => { setOrderBlankId(null); setOrderDesignId(id); setActiveNav('create-order') }} /></div>}
@@ -1926,7 +1933,7 @@ export default function DashboardPage() {
           {activeNav === 'wallet'   && <div style={{ position: 'relative', zIndex: 1 }}><WalletView /></div>}
           {activeNav === 'settings' && (
             <div style={{ position: 'relative', zIndex: 1 }}>
-              <AccountSettings email={currentUser?.email} shopDomain={shopDomain} onSignOut={logout}
+              <AccountSettings key={settingsTab} initialTab={settingsTab} email={currentUser?.email} shopDomain={shopDomain} onSignOut={logout}
                 onAddStore={() => { if (window.shopify) window.open(SHOPIFY_INSTALL_URL, '_top'); else window.location.href = SHOPIFY_INSTALL_URL }} />
             </div>
           )}

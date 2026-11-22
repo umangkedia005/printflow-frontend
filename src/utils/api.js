@@ -532,6 +532,15 @@ export async function fetchOrderManagement() {
   return data
 }
 
+// COD Remittance: the account's cash-on-delivery orders, what the courier
+// collected and what's been paid to its bank account.
+export async function fetchCodRemittance() {
+  const res = await fetch(`${BASE_URL}/cod-remittance`, { headers: await shopAuthHeaders() })
+  const data = await res.json()
+  if (!res.ok) throw new Error(data.error || 'Could not load your COD remittance')
+  return data
+}
+
 export async function fetchManualOrders() {
   const res = await fetch(`${BASE_URL}/manual-orders`, { headers: await shopAuthHeaders() })
   const data = await res.json()
