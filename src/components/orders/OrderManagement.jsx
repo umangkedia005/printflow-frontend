@@ -42,10 +42,10 @@ function toCsv(rows) {
     const s = v == null ? '' : String(v)
     return /[",\n]/.test(s) ? `"${s.replace(/"/g, '""')}"` : s
   }
-  const head = ['Order', 'Type', 'Store', 'Date', 'Customer', 'City', 'Pieces', 'Products', 'Status', 'Order total (your customer)', 'Paid from wallet', 'Invoice number', 'Courier', 'Tracking number', 'Reference', 'Cash on delivery (collect)', 'Returned (RTO)']
+  const head = ['Order', 'Type', 'Store', 'Date', 'Customer', 'City', 'Pieces', 'Products', 'Status', 'Selling price (your customer)', 'Paid from wallet', 'Invoice number', 'Courier', 'Tracking number', 'Reference', 'Cash on delivery (collect)', 'Returned (RTO)']
   const body = rows.map(r => [
     r.order_name, TYPES[r.type], r.shop || '', localDay(r.created_at), r.customer, r.city || '', r.pieces, r.products.join('; '),
-    STATUS[r.status]?.[0] || r.status, r.type === 'shopify' ? r.order_total : '', r.paid ?? '', r.invoice_number || '', r.tracking?.courier || '', r.tracking?.number || '', r.reference || '', r.cod?.amount ?? '', r.rto ? 'Yes' : '',
+    STATUS[r.status]?.[0] || r.status, r.type === 'shopify' ? r.order_total : (r.selling_total ?? ''), r.paid ?? '', r.invoice_number || '', r.tracking?.courier || '', r.tracking?.number || '', r.reference || '', r.cod?.amount ?? '', r.rto ? 'Yes' : '',
   ])
   return [head, ...body].map(line => line.map(cell).join(',')).join('\r\n')
 }
@@ -192,7 +192,7 @@ export default function OrderManagement({ onOpenOrders }) {
               <table style={{ width: '100%', borderCollapse: 'collapse', minWidth: '940px' }}>
                 <thead>
                   <tr style={{ background: '#FAFBF7' }}>
-                    {['Order', 'Date', 'Customer', 'Products', 'Pieces', 'Order total', 'Paid from wallet', 'Status', 'Invoice'].map(h => (
+                    {['Order', 'Date', 'Customer', 'Products', 'Pieces', 'Selling price', 'Paid from wallet', 'Status', 'Invoice'].map(h => (
                       <th key={h} style={{ textAlign: 'left', padding: '11px 14px', fontSize: '10.5px', fontWeight: 800, letterSpacing: '0.06em', textTransform: 'uppercase', color: SAGE, borderBottom: `1px solid ${LINE}`, whiteSpace: 'nowrap' }}>{h}</th>
                     ))}
                   </tr>
@@ -207,7 +207,7 @@ export default function OrderManagement({ onOpenOrders }) {
                         <td style={{ padding: '12px 14px', fontSize: '12.5px', color: INK }}>{r.customer}<div style={{ fontSize: '11px', color: SAGE }}>{r.city || ''}</div></td>
                         <td style={{ padding: '12px 14px', fontSize: '12px', color: INK, maxWidth: '240px' }}><div style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }} title={r.products.join('\n')}>{r.products[0] || '—'}</div>{r.products.length > 1 && <div style={{ fontSize: '11px', color: SAGE }}>+{r.products.length - 1} more</div>}</td>
                         <td style={{ padding: '12px 14px', fontSize: '13px', fontWeight: 700, color: INK }}>{r.pieces}</td>
-                        <td style={{ padding: '12px 14px', fontSize: '12.5px', color: SAGE, whiteSpace: 'nowrap' }}>{r.type === 'shopify' ? rupees(r.order_total) : '—'}</td>
+                        <td style={{ padding: '12px 14px', fontSize: '12.5px', color: SAGE, whiteSpace: 'nowrap' }}>{r.type === 'shopify' ? rupees(r.order_total) : r.selling_total != null ? rupees(r.selling_total) : '—'}</td>
                         <td style={{ padding: '12px 14px', fontSize: '13px', fontWeight: 800, color: r.paid == null ? SAGE : INK, whiteSpace: 'nowrap' }}>{r.paid == null ? 'Not paid yet' : rupees(r.paid)}</td>
                         <td style={{ padding: '12px 14px' }}>
                           <span style={{ background: bg, color: fg, padding: '3px 10px', borderRadius: '100px', fontSize: '11px', fontWeight: 700, whiteSpace: 'nowrap' }}>{label}</span>
@@ -229,7 +229,7 @@ export default function OrderManagement({ onOpenOrders }) {
           </>
         )}
       </div>
-      <p style={{ fontSize: '11.5px', color: SAGE, marginTop: '10px' }}>"Order total" is what your customer paid on Shopify; "Paid from wallet" is what printing and shipping cost you. The Excel file is a CSV that opens in Excel or Google Sheets.</p>
+      <p style={{ fontSize: '11.5px', color: SAGE, marginTop: '10px' }}>"Selling price" is what your customer pays you; "Paid from wallet" is what printing and shipping cost you. The Excel file is a CSV that opens in Excel or Google Sheets.</p>
     </div>
   )
 }

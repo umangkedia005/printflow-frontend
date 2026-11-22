@@ -103,6 +103,11 @@ function ProductPicker({ designs, blanks, onPick, onClose }) {
   )
 }
 
+const designPrice = (design, size) => {
+  const price = Number(design?.prices?.[size])
+  return price > 0 ? String(price) : ''
+}
+
 // initialDesignId: a design to start the order with (from My files → Order);
 // initialBlankId: a catalogue product to start with, plain (Catalogue → Order plain).
 function CreateOrder({ walletBalance, onTopUp, onPlaced, onCancel, initialDesignId = null, initialBlankId = null, initialBlankColor = null, sample = false }) {
@@ -132,8 +137,6 @@ function CreateOrder({ walletBalance, onTopUp, onPlaced, onCancel, initialDesign
   // Cash on delivery: the courier collects the brand's selling price from the
   // customer (minus anything already paid online); we pay it on, less the fee.
   const [payment, setPayment] = useState('prepaid')
-  const [codAmount, setCodAmount] = useState('')
-  const [codEdited, setCodEdited] = useState(false)
   const [codPrepaid, setCodPrepaid] = useState('')
   const [codInfo, setCodInfo] = useState(null)
   useEffect(() => {
@@ -187,6 +190,9 @@ function CreateOrder({ walletBalance, onTopUp, onPlaced, onCancel, initialDesign
       design: kind === 'design' ? item : null,
       name: kind === 'design' ? item.title : item.name,
       image, colors, sizes, color: colors.includes(preferColor) ? preferColor : colors[0], size: sizes[0], qty: 1,
+      // What the brand charges its customer per piece: starts from the design's
+      // price for this size; a blank has none until the brand types it.
+      selling: designPrice(kind === 'design' ? item : null, sizes[0]), sellingEdited: false,
     }])
     setPicking(false)
   }
@@ -196,17 +202,13 @@ function CreateOrder({ walletBalance, onTopUp, onPlaced, onCancel, initialDesign
     if (lines.length === 1) setQuote(null)
   }
 
-  // Start the amount to collect from the retail prices set on the designs.
-  const retail = lines.reduce((sum, l) => sum + (Number(l.design?.prices?.[l.size]) || 0) * Number(l.qty || 0), 0)
-  useEffect(() => {
-    if (!codEdited) setCodAmount(retail > 0 ? String(retail) : '')
-  }, [retail, codEdited])
+  const sellingTotal = Math.round(lines.reduce((sum, l) => sum + (Number(l.selling) || 0) * Number(l.qty || 0), 0) * 100) / 100
   // COD: the courier collects the whole selling price. Part paid: the
   // customer paid some online, the courier collects the rest.
   const cod = (payment === 'cod' || payment === 'partial') && !sample
   const partial = payment === 'partial' && !sample
   const onlinePaid = partial ? Number(codPrepaid || 0) : 0
-  const codNumber = Math.round((Number(codAmount || 0) - onlinePaid) * 100) / 100
+  const codNumber = Math.round((sellingTotal - onlinePaid) * 100) / 100
   const codFee = codInfo?.fee ?? 40
 
   const total = quote ? Number(quote.quote.total) : 0
@@ -219,9 +221,11 @@ function CreateOrder({ walletBalance, onTopUp, onPlaced, onCancel, initialDesign
   if (address.phone.replace(/\D/g, '').slice(-10).length !== 10) missing.push('Enter a 10-digit phone number')
   if (!address.address1.trim() || !address.city.trim() || !address.state.trim()) missing.push('Enter the address, city and state')
   if (!/^[1-9][0-9]{5}$/.test(address.pincode.trim())) missing.push('Enter a 6-digit pincode')
+  const unpriced = !sample && lines.some(l => !(Number(l.selling) > 0))
+  if (unpriced) missing.push('Enter a selling price for every product')
   if (partial && !(onlinePaid > 0)) missing.push('Enter how much the customer paid online')
-  if (partial && onlinePaid >= Number(codAmount || 0)) missing.push('Paid online must be less than the selling price (or choose Prepaid)')
-  else if (cod && !(codNumber > codFee)) missing.push(`The amount to collect must be more than the ₹${codFee} COD fee`)
+  if (!unpriced && partial && onlinePaid >= sellingTotal) missing.push('Paid online must be less than the selling price (or choose Prepaid)')
+  else if (!unpriced && cod && !(codNumber > codFee)) missing.push(`The amount to collect must be more than the ₹${codFee} COD fee`)
   if (cod && codNumber > 50000) missing.push('Cash on delivery is limited to ₹50,000 per order')
 
   async function handlePlace() {
@@ -230,7 +234,8 @@ function CreateOrder({ walletBalance, onTopUp, onPlaced, onCancel, initialDesign
     try {
       const { reference, ...addr } = address
       const res = await placeManualOrder({
-        lines: payload, shipping_method: method, address: addr, reference,
+        lines: sample ? payload : payload.map((l, i) => ({ ...l, selling_price: Number(lines[i].selling) })),
+        shipping_method: method, address: addr, reference,
         ...(sample ? { sample: true } : {}),
         ...(cod ? { payment: 'cod', cod_amount: codNumber, cod_prepaid: onlinePaid } : {}),
       })
@@ -281,12 +286,20 @@ function CreateOrder({ walletBalance, onTopUp, onPlaced, onCancel, initialDesign
                       <div style={{ fontSize: '11px', color: SAGE, marginTop: '2px' }}>{l.kind === 'design' ? 'Your design' : 'Blank, no print'}{priceOf(i) != null ? ` · ${rupees(priceOf(i))} each` : ''}</div>
                     </div>
                     <select value={l.color} onChange={e => setLine(l.key, { color: e.target.value })} style={{ ...INPUT, width: 'auto', padding: '8px 10px' }}>{l.colors.map(c => <option key={c}>{c}</option>)}</select>
-                    <select value={l.size} onChange={e => setLine(l.key, { size: e.target.value })} style={{ ...INPUT, width: 'auto', padding: '8px 10px' }}>{l.sizes.map(s => <option key={s}>{s}</option>)}</select>
+                    <select value={l.size} onChange={e => setLine(l.key, { size: e.target.value, ...(l.sellingEdited ? {} : { selling: designPrice(l.design, e.target.value) }) })} style={{ ...INPUT, width: 'auto', padding: '8px 10px' }}>{l.sizes.map(s => <option key={s}>{s}</option>)}</select>
                     <div style={{ display: 'flex', alignItems: 'center', border: '1px solid rgba(23,43,21,0.1)', borderRadius: '12px' }}>
                       <button onClick={() => setLine(l.key, { qty: Math.max(1, Number(l.qty) - 1) })} aria-label="Fewer" style={{ width: '32px', height: '36px', border: 'none', background: 'none', cursor: 'pointer', fontSize: '16px', color: INK }}>−</button>
                       <input value={l.qty} onChange={e => setLine(l.key, { qty: e.target.value.replace(/\D/g, '').slice(0, 3) })} aria-label="Quantity" style={{ width: '38px', border: 'none', textAlign: 'center', fontSize: '13px', fontWeight: 700, color: INK, outline: 'none' }} />
                       <button onClick={() => setLine(l.key, { qty: Math.min(500, Number(l.qty || 0) + 1) })} aria-label="More" style={{ width: '32px', height: '36px', border: 'none', background: 'none', cursor: 'pointer', fontSize: '16px', color: INK }}>+</button>
                     </div>
+                    {!sample && (
+                      <label style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '11px', fontWeight: 700, color: SAGE, whiteSpace: 'nowrap' }}>
+                        Sell at ₹
+                        <input value={l.selling} inputMode="decimal" placeholder="Price" aria-label={`Selling price for ${l.name}`}
+                          onChange={e => setLine(l.key, { selling: e.target.value.replace(/[^0-9.]/g, '').slice(0, 8), sellingEdited: true })}
+                          style={{ ...INPUT, width: '78px', padding: '8px 10px', borderColor: l.selling ? 'rgba(23,43,21,0.1)' : '#F6AD55' }} />
+                      </label>
+                    )}
                     {/* Line total and remove stay together at the end of the row. */}
                     <div style={{ display: 'flex', alignItems: 'center', gap: '6px', marginLeft: 'auto' }}>
                       <div style={{ minWidth: '70px', textAlign: 'right', fontSize: '14px', fontWeight: 800, color: INK, whiteSpace: 'nowrap' }}>{priceOf(i) != null ? rupees(priceOf(i) * Number(l.qty || 0)) : '—'}</div>
@@ -371,12 +384,11 @@ function CreateOrder({ walletBalance, onTopUp, onPlaced, onCancel, initialDesign
                     </button>
                   ))}
                 </div>
+                <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '13px', color: SAGE, marginTop: '12px' }}>
+                  <span>Selling price to your customer</span><b style={{ color: INK }}>{sellingTotal > 0 ? rupees(sellingTotal) : '—'}</b>
+                </div>
                 {cod && (
                   <div style={{ marginTop: '12px', display: 'flex', flexDirection: 'column', gap: '10px' }}>
-                    <Field label={partial ? 'Selling price (full order value)' : 'Amount to collect from customer'}>
-                      <input style={INPUT} inputMode="decimal" value={codAmount} placeholder="e.g. 899"
-                        onChange={e => { setCodEdited(true); setCodAmount(e.target.value.replace(/[^0-9.]/g, '').slice(0, 8)) }} />
-                    </Field>
                     {partial && (
                       <Field label="Paid online by the customer">
                         <input style={INPUT} inputMode="decimal" value={codPrepaid} placeholder="e.g. 99"
@@ -386,7 +398,7 @@ function CreateOrder({ walletBalance, onTopUp, onPlaced, onCancel, initialDesign
                     <div style={{ background: '#F6F7F2', borderRadius: '12px', padding: '10px 12px', fontSize: '12px', color: INK, lineHeight: 1.55 }}>
                       {codNumber > codFee && (!partial || onlinePaid > 0)
                         ? <>{partial && <>Customer paid you {rupees(onlinePaid)} online. </>}The courier collects <b>{rupees(codNumber)}</b>{partial ? ' (the rest)' : ''}. After delivery we pay <b>{rupees(codNumber - codFee)}</b> to your bank account ({rupees(codNumber)} − {rupees(codFee)} COD fee). If the parcel comes back, the return shipping is charged to your wallet.</>
-                        : <>{partial ? 'Enter the full selling price and how much the customer already paid online; the courier collects the rest.' : 'Enter your selling price: what the customer pays on delivery.'} {retail > 0 ? '' : 'Tip: set retail prices on your designs and the price fills in by itself.'}</>}
+                        : <>{partial ? 'Enter how much the customer already paid online; the courier collects the rest of the selling price.' : 'Enter a selling price for each product above; the courier collects the total.'}</>}
                     </div>
                     {codInfo && !codInfo.hasBank && (
                       <div style={{ background: '#FFF7ED', borderRadius: '12px', padding: '10px 12px', fontSize: '12px', color: '#C2410C' }}>
