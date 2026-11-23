@@ -290,6 +290,8 @@ const PRODUCT_GRADIENTS = [
   'linear-gradient(135deg, #FBCFE8, #EC4899)',
 ]
 
+const printCost = n => `₹${Number(n).toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`
+
 const NAV_ITEMS = [
   { id: 'dashboard',     label: 'Dashboard',     Icon: IconDashboard },
   { id: 'notifications', label: 'Notifications', Icon: IconNotifications },
@@ -1400,6 +1402,7 @@ export default function DashboardPage() {
                         : <span style={{ flexShrink: 0, background: '#FFF7ED', color: '#C2410C', padding: '3px 9px', borderRadius: '100px', fontSize: '11px', fontWeight: 600 }}>Needs setup</span>}
                     </div>
                     <div style={{ fontSize: '12px', color: '#999', marginTop: '3px' }}>Sizes: {p.variants.join(', ')}{p.factorySku ? ` · ${p.factorySku}` : ''}</div>
+                    <div style={{ fontSize: '12px', color: p.fulfillmentCost != null ? '#0A0A0A' : '#999', fontWeight: p.fulfillmentCost != null ? 700 : 500, marginTop: '3px' }}>{p.fulfillmentCost != null ? `Print cost ${printCost(p.fulfillmentCost)} per piece` : 'Print cost: price pending'}</div>
                     <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginTop: '10px' }}>
                       {p.printFileUrl ? (
                         <>
@@ -1414,7 +1417,7 @@ export default function DashboardPage() {
             ))}
           </div>
           <table className="pf-desktop-only" style={{ width: '100%', borderCollapse: 'collapse' }}>
-            <thead><tr>{['Product','Variants','Print File','Factory SKU','Status'].map(h=><th key={h} style={{ padding: '10px 20px', textAlign: 'left', fontSize: '10px', fontWeight: 600, color: '#C8C8C4', textTransform: 'uppercase', letterSpacing: '0.08em', borderBottom: '1px solid #E8E8E4', background: '#FCFCFB' }}>{h}</th>)}</tr></thead>
+            <thead><tr>{['Product','Variants','Print File','Factory SKU','Print cost','Status'].map(h=><th key={h} style={{ padding: '10px 20px', textAlign: 'left', fontSize: '10px', fontWeight: 600, color: '#C8C8C4', textTransform: 'uppercase', letterSpacing: '0.08em', borderBottom: '1px solid #E8E8E4', background: '#FCFCFB' }}>{h}</th>)}</tr></thead>
             <tbody>
               {products.map((p, i) => (
                 <tr key={p.id} style={{ borderBottom: i < products.length-1 ? '1px solid #F4F4F0' : 'none', transition: 'background 0.1s' }} onMouseOver={e=>e.currentTarget.style.background='#FAFAF8'} onMouseOut={e=>e.currentTarget.style.background='transparent'}>
@@ -1451,6 +1454,11 @@ export default function DashboardPage() {
                   <td style={{ padding: '14px 20px' }}>
                     {p.factorySku ? <span style={{ fontSize: '11px', color: '#555', fontFamily: 'monospace', background: '#F4F4F0', padding: '3px 8px', borderRadius: '5px' }}>{p.factorySku}</span>
                       : <span style={{ fontSize: '11px', color: '#BABAB6' }}>Pending setup</span>}
+                  </td>
+                  <td style={{ padding: '14px 20px', whiteSpace: 'nowrap' }}>
+                    {p.fulfillmentCost != null
+                      ? <><div style={{ fontSize: '13px', fontWeight: 700, color: '#0A0A0A' }}>{printCost(p.fulfillmentCost)}</div><div style={{ fontSize: '10px', color: '#999', marginTop: '2px' }}>per piece</div></>
+                      : <span title="Our team sets this price. You'll see it here and before you send an order to print." style={{ fontSize: '11px', color: '#BABAB6' }}>Price pending</span>}
                   </td>
                   <td style={{ padding: '14px 20px' }}>
                     {p.status === 'ready'
