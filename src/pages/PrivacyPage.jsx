@@ -5,7 +5,7 @@ const PrivacyPage = () => {
         <h1 style={{ fontFamily: "'Fraunces', sans-serif", fontSize: '32px', fontWeight: 800, marginBottom: '8px' }}>
           Privacy Policy
         </h1>
-        <p style={{ fontSize: '13px', color: '#889B8E', marginBottom: '40px' }}>Last updated: July 2026</p>
+        <p style={{ fontSize: '13px', color: '#889B8E', marginBottom: '40px' }}>Last updated: November 2026</p>
 
         <Section title="1. Introduction">
           No Limit Studio ("we", "us", "our") provides a print-on-demand fulfillment platform that connects to
@@ -38,9 +38,14 @@ const PrivacyPage = () => {
         </Section>
 
         <Section title="5. Data Retention">
-          We retain your account and order data for as long as your account is active, or as needed to comply
-          with legal obligations. You can request deletion of your account and associated data at any time by
-          contacting us.
+          <ul style={ulStyle}>
+            <li>Customer names, emails, phone numbers and addresses on finished orders are removed 2 years after the order.</li>
+            <li>When a customer or store asks for erasure through Shopify, those details are removed from the order and hidden from normal screens.</li>
+            <li>Issued GST tax invoices are kept unchanged for the period required by Indian tax law, generally about 6 years. Only authorised staff can open them, and each opening is recorded. Customer details are then erased from them.</li>
+            <li>Application logs are kept for 90 days and records of staff access for about 13 months.</li>
+            <li>Encrypted database backups are kept for up to 35 days, after which erased data no longer exists in them.</li>
+            <li>Your account data is kept while your account is active. You can request its deletion at any time by contacting us, except records we must keep by law.</li>
+          </ul>
         </Section>
 
         <Section title="6. Your Rights">
