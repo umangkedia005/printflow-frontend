@@ -16,7 +16,7 @@ const PrivacyPage = () => {
           <ul style={ulStyle}>
             <li>Your name and email address, when you sign in with Google.</li>
             <li>Your Shopify store domain and access token, when you connect a store.</li>
-            <li>Order data (customer name, shipping address, items, order total) synced from your connected Shopify store, for the purpose of fulfillment.</li>
+            <li>Order data synced from your connected Shopify store: your customer's name, email, phone number, shipping address (billing address only if there is no shipping address), items, prices, shipping method and tracking. We use this only to print, ship and invoice the order and to support you. We do not keep your customers' browser or device details, marketing choices or payment details.</li>
             <li>Basic usage data such as pages visited within the dashboard.</li>
           </ul>
         </Section>
@@ -32,9 +32,10 @@ const PrivacyPage = () => {
 
         <Section title="4. Data Sharing">
           We do not sell your data. We share order and shipping information only with our fulfillment and
-          logistics partners as needed to print and deliver your customers' orders. Subscription payments are
-          processed by Shopify. We use Razorpay to process wallet top-ups for fulfillment costs and Firebase
-          (Google) for authentication.
+          logistics partners, including our courier partner ProShip, as needed to print and deliver your
+          customers' orders. Our service runs on Amazon Web Services, which stores data and sends our emails, and
+          Netlify, which hosts our website. Subscription payments are processed by Shopify. We use Razorpay to
+          process wallet top-ups for fulfillment costs and Firebase (Google) for authentication.
         </Section>
 
         <Section title="5. Data Retention">

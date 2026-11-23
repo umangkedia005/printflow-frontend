@@ -5,7 +5,7 @@ const TermsPage = () => {
         <h1 style={{ fontFamily: "'Fraunces', sans-serif", fontSize: '32px', fontWeight: 800, marginBottom: '8px' }}>
           Terms of Service
         </h1>
-        <p style={{ fontSize: '13px', color: '#889B8E', marginBottom: '40px' }}>Last updated: July 2026</p>
+        <p style={{ fontSize: '13px', color: '#889B8E', marginBottom: '40px' }}>Last updated: November 2026</p>
 
         <Section title="1. Acceptance of Terms">
           By connecting your Shopify store to No Limit Studio, you agree to these Terms of Service.
@@ -41,12 +41,24 @@ const TermsPage = () => {
           access for violation of these terms.
         </Section>
 
-        <Section title="7. Limitation of Liability">
+        <Section title="7. Data Protection">
+          <ul style={ulStyle}>
+            <li>You control your customers' personal data. We process it on your behalf, only to print, ship and invoice your orders and to support you, as described in our Privacy Policy.</li>
+            <li>You are responsible for having a lawful basis to share this data with us and for telling your customers how it is used, including in your store's privacy policy.</li>
+            <li>We do not sell this data or use it for our own marketing.</li>
+            <li>We share it only with the service providers needed to run the service: Amazon Web Services, Netlify, Google Firebase, Razorpay, Shopify and our courier partners.</li>
+            <li>We protect it with encryption, restricted staff access, access records and backups.</li>
+            <li>We act on customer data and erasure requests received through Shopify. We keep issued tax invoices for the period required by law, as described in our Privacy Policy.</li>
+            <li>If a security incident affects your customers' data, we will notify you without undue delay and help you meet your legal duties.</li>
+          </ul>
+        </Section>
+
+        <Section title="8. Limitation of Liability">
           No Limit Studio is provided "as is". We are not liable for indirect or consequential damages arising
           from use of the service.
         </Section>
 
-        <Section title="8. Contact">
+        <Section title="9. Contact">
           Questions about these terms can be sent to{' '}
           <a href="mailto:hiddenappleclub@gmail.com" style={{ color: '#39B54A', fontWeight: 600 }}>hiddenappleclub@gmail.com</a>.
         </Section>
