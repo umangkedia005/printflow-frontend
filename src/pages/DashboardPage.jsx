@@ -812,9 +812,10 @@ export default function DashboardPage() {
 
       // A store installed through the embedded Shopify flow is linked here,
       // on the first load where an account is actually signed in. Left in
-      // place if it fails, so the next load retries.
+      // place if it fails, so the next load retries. Only inside Shopify's
+      // admin, which is what proves this person may connect the store.
       const pending = localStorage.getItem('pf_pending_link')
-      if (pending) {
+      if (pending && window.shopify?.idToken) {
         try {
           await linkStore(pending, currentUser.email)
           localStorage.removeItem('pf_pending_link')

@@ -108,11 +108,14 @@ export async function fetchMyStores() {
 // Tolerates an empty response body — the status is what matters here.
 export async function linkStore(shop, email) {
   const token = await getToken()
+  // Shopify's proof that this page is inside the store's admin.
+  const sessionToken = await window.shopify.idToken()
   const res = await fetch(`${BASE_URL}/link-store`, {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
       'Authorization': `Bearer ${token}`,
+      'X-Shopify-Session-Token': sessionToken,
     },
     body: JSON.stringify({ shop, email }),
   })

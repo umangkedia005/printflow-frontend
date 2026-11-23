@@ -26,8 +26,8 @@ const SuccessPage = () => {
 
   useEffect(() => {
     const shop = searchParams.get('shop')
-    if (shop && currentUser?.email) {
-      linkStore(shop, currentUser.email)
+    if (shop && currentUser?.email && window.shopify?.idToken) {
+      linkStore(shop, currentUser.email).catch(err => console.error('Could not link store:', err))
     }
   }, [searchParams, currentUser])
 
