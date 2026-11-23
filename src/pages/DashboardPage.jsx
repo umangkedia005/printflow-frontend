@@ -6,6 +6,7 @@ import OrderManagement from '../components/orders/OrderManagement'
 import BrandingView from '../components/branding/BrandingView'
 import StockLevel from '../components/stock/StockLevel'
 import EnquiryView from '../components/enquiry/EnquiryView'
+import PrintCost from '../components/orders/PrintCost'
 import CodRemittance from '../components/cod/CodRemittance'
 import AccountSettings from '../components/settings/AccountSettings'
 import { SUPPORT_EMAIL, SUPPORT_PHONES, openInvoice, fetchOrders, fetchSubscription, fetchMyStores, linkStore, updateSubscription, fetchPlans, fetchWallet, fulfillOrder, fetchProductMappings, updateProductMapping, createShopifySubscription, fetchCatalogue } from '../utils/api'
@@ -916,11 +917,11 @@ export default function DashboardPage() {
     }
   }, [shopDomain])
 
-  async function handleFulfillOrder(order) {
+  async function handleFulfillOrder(order, expectedTotal) {
     setFulfillLoading(true)
     setFulfillError('')
     try {
-      const result = await fulfillOrder(shopDomain, order.shopifyId)
+      const result = await fulfillOrder(shopDomain, order.shopifyId, expectedTotal)
       setSelectedOrder(o => o ? { ...o, status: 'printing' } : o)
       setOrders(prev => prev.map(o => o.shopifyId === order.shopifyId ? { ...o, status: 'printing' } : o))
       setWalletBalance(result.balance)
@@ -2410,16 +2411,14 @@ export default function DashboardPage() {
                   </div>
                 )}
                 {selectedOrder.status === 'queued' && (
-                  <button
-                    className="pf-btn"
-                    disabled={fulfillLoading}
-                    onClick={() => handleFulfillOrder(selectedOrder)}
-                    style={{ width: '100%', padding: '13px', marginBottom: '10px', marginTop: '16px', opacity: fulfillLoading ? 0.6 : 1, cursor: fulfillLoading ? 'not-allowed' : 'pointer' }}
-                    onMouseOver={e=>{ if (!fulfillLoading) e.currentTarget.style.opacity='0.82' }}
-                    onMouseOut={e=>{ if (!fulfillLoading) e.currentTarget.style.opacity='1' }}
-                  >
-                    {fulfillLoading ? 'Sending...' : 'Send to Print Factory →'}
-                  </button>
+                  <PrintCost
+                    shop={shopDomain}
+                    orderId={selectedOrder.shopifyId}
+                    sending={fulfillLoading}
+                    refreshKey={fulfillError}
+                    onSend={total => handleFulfillOrder(selectedOrder, total)}
+                    onTopUp={() => { setSelectedOrder(null); setActiveNav('wallet'); setShowTopup(true) }}
+                  />
                 )}
                 <a href={`https://${shopDomain}/admin/orders/${selectedOrder.shopifyId}`} target="_blank" rel="noopener noreferrer" className="pf-btn-outline" style={{ display: 'flex', padding: '12px', marginTop: selectedOrder.status === 'queued' ? '0' : '16px' }}>View in Shopify Admin ↗</a>
               </div>
