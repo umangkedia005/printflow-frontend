@@ -919,11 +919,11 @@ export default function DashboardPage() {
     }
   }, [shopDomain])
 
-  async function handleFulfillOrder(order, expectedTotal) {
+  async function handleFulfillOrder(order, expectedTotal, shippingMethod) {
     setFulfillLoading(true)
     setFulfillError('')
     try {
-      const result = await fulfillOrder(shopDomain, order.shopifyId, expectedTotal)
+      const result = await fulfillOrder(shopDomain, order.shopifyId, expectedTotal, shippingMethod)
       setSelectedOrder(o => o ? { ...o, status: 'printing' } : o)
       setOrders(prev => prev.map(o => o.shopifyId === order.shopifyId ? { ...o, status: 'printing' } : o))
       setWalletBalance(result.balance)
@@ -1402,7 +1402,7 @@ export default function DashboardPage() {
                         : <span style={{ flexShrink: 0, background: '#FFF7ED', color: '#C2410C', padding: '3px 9px', borderRadius: '100px', fontSize: '11px', fontWeight: 600 }}>Needs setup</span>}
                     </div>
                     <div style={{ fontSize: '12px', color: '#999', marginTop: '3px' }}>Sizes: {p.variants.join(', ')}{p.factorySku ? ` · ${p.factorySku}` : ''}</div>
-                    <div style={{ fontSize: '12px', color: p.fulfillmentCost != null ? '#0A0A0A' : '#999', fontWeight: p.fulfillmentCost != null ? 700 : 500, marginTop: '3px' }}>{p.fulfillmentCost != null ? `Print cost ${printCost(p.fulfillmentCost)} per piece` : 'Print cost: price pending'}</div>
+                    <div style={{ fontSize: '12px', color: p.fulfillmentCost != null ? '#0A0A0A' : '#999', fontWeight: p.fulfillmentCost != null ? 700 : 500, marginTop: '3px' }}>{p.fulfillmentCost != null ? `Print cost ${printCost(p.fulfillmentCost)} per piece + GST & shipping` : 'Print cost: price pending'}</div>
                     <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginTop: '10px' }}>
                       {p.printFileUrl ? (
                         <>
@@ -1457,7 +1457,7 @@ export default function DashboardPage() {
                   </td>
                   <td style={{ padding: '14px 20px', whiteSpace: 'nowrap' }}>
                     {p.fulfillmentCost != null
-                      ? <><div style={{ fontSize: '13px', fontWeight: 700, color: '#0A0A0A' }}>{printCost(p.fulfillmentCost)}</div><div style={{ fontSize: '10px', color: '#999', marginTop: '2px' }}>per piece</div></>
+                      ? <><div style={{ fontSize: '13px', fontWeight: 700, color: '#0A0A0A' }}>{printCost(p.fulfillmentCost)}</div><div style={{ fontSize: '10px', color: '#999', marginTop: '2px' }}>per piece + GST & shipping</div></>
                       : <span title="Our team sets this price. You'll see it here and before you send an order to print." style={{ fontSize: '11px', color: '#BABAB6' }}>Price pending</span>}
                   </td>
                   <td style={{ padding: '14px 20px' }}>
@@ -2424,7 +2424,7 @@ export default function DashboardPage() {
                     orderId={selectedOrder.shopifyId}
                     sending={fulfillLoading}
                     refreshKey={fulfillError}
-                    onSend={total => handleFulfillOrder(selectedOrder, total)}
+                    onSend={(total, method) => handleFulfillOrder(selectedOrder, total, method)}
                     onTopUp={() => { setSelectedOrder(null); setActiveNav('wallet'); setShowTopup(true) }}
                   />
                 )}

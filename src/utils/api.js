@@ -375,18 +375,19 @@ export async function updateProductMapping({ shop, shopifyProductId, printFileUr
 }
 
 // What sending an order to print will take from the wallet, before confirming.
-export async function fetchFulfillQuote(shop, orderId) {
-  const res = await fetch(`${BASE_URL}/orders/fulfill/quote?shop=${encodeURIComponent(shop)}&order_id=${encodeURIComponent(orderId)}`, { headers: await shopAuthHeaders() })
+export async function fetchFulfillQuote(shop, orderId, shippingMethod) {
+  const method = shippingMethod ? `&shipping_method=${encodeURIComponent(shippingMethod)}` : ''
+  const res = await fetch(`${BASE_URL}/orders/fulfill/quote?shop=${encodeURIComponent(shop)}&order_id=${encodeURIComponent(orderId)}${method}`, { headers: await shopAuthHeaders() })
   const data = await res.json()
   if (!res.ok) throw new Error(data.error || 'Could not load the print cost')
   return data
 }
 
-export async function fulfillOrder(shop, orderId, expectedTotal) {
+export async function fulfillOrder(shop, orderId, expectedTotal, shippingMethod) {
   const res = await fetch(`${BASE_URL}/orders/fulfill`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json', ...(await shopAuthHeaders()) },
-    body: JSON.stringify({ shop, order_id: orderId, expected_total: expectedTotal }),
+    body: JSON.stringify({ shop, order_id: orderId, expected_total: expectedTotal, shipping_method: shippingMethod }),
   })
   const data = await res.json()
   if (!res.ok) {
